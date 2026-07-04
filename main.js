@@ -13,27 +13,12 @@ function createWindow() {
     win.loadURL('http://localhost:3000');
 }
 
+autoUpdater.autoDownload = false; // ← не завантажувати
+
 autoUpdater.on('update-available', () => {
     dialog.showMessageBox({
-        title: 'Оновлення',
-        message: 'Доступна нова версія. Завантажую...'
-    });
-});
-
-// autoUpdater.on('update-downloaded', () => {
-//     dialog.showMessageBox({
-//         title: 'Оновлення готове',
-//         message: 'Оновлення завантажено. Натисни OK щоб перезапустити.',
-//         buttons: ['OK']
-//     }).then(() => {
-//         autoUpdater.quitAndInstall();
-//     });
-// });
-
-autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
-        title: 'Оновлення готове',
-        message: 'Нова версія готова! Скачай та встанови вручну.',
+        title: 'Доступне оновлення',
+        message: 'Нова версія доступна! Перейди на GitHub щоб скачати.',
         buttons: ['Відкрити GitHub', 'Пізніше']
     }).then((result) => {
         if (result.response === 0) {
