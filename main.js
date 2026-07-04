@@ -35,6 +35,14 @@ autoUpdater.on('error', (err) => {
     console.error('AutoUpdater error:', err);
 });
 
+autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...');
+});
+
+autoUpdater.on('update-not-available', () => {
+    console.log('Update not available');
+});
+
 app.whenReady().then(() => {
     setTimeout(createWindow, 1000);
     autoUpdater.checkForUpdatesAndNotify();
