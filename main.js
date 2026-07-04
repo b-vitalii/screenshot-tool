@@ -1,7 +1,6 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, shell } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
-
 require('./server');
 const fs = require("fs");
 
@@ -21,13 +20,25 @@ autoUpdater.on('update-available', () => {
     });
 });
 
+// autoUpdater.on('update-downloaded', () => {
+//     dialog.showMessageBox({
+//         title: 'Оновлення готове',
+//         message: 'Оновлення завантажено. Натисни OK щоб перезапустити.',
+//         buttons: ['OK']
+//     }).then(() => {
+//         autoUpdater.quitAndInstall();
+//     });
+// });
+
 autoUpdater.on('update-downloaded', () => {
     dialog.showMessageBox({
         title: 'Оновлення готове',
-        message: 'Оновлення завантажено. Натисни OK щоб перезапустити.',
-        buttons: ['OK']
-    }).then(() => {
-        autoUpdater.quitAndInstall();
+        message: 'Нова версія готова! Скачай та встанови вручну.',
+        buttons: ['Відкрити GitHub', 'Пізніше']
+    }).then((result) => {
+        if (result.response === 0) {
+            shell.openExternal('https://github.com/b-vitalii/screenshot-tool/releases/latest');
+        }
     });
 });
 
