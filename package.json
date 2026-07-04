@@ -1,0 +1,38 @@
+{
+  "name": "qa-tool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "archiver": "^5.3.2",
+    "express": "^5.2.1",
+    "playwright": "^1.61.0"
+  },
+  "devDependencies": {
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.hraymo.screenshottool",
+    "productName": "QA Screenshot Tool",
+    "asar": false,
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "!node_modules/.cache/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

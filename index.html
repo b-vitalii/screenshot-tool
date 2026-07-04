@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QA Screenshot Tool</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #1e1e1e;
+            color: #fff;
+            font-family: Inter, Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        label.title {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: #171717;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .lang-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .lang-grid label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .actions {
+            margin-bottom: 15px;
+        }
+
+        .actions button {
+            margin-right: 10px;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: #171717;
+            color: white;
+        }
+
+        button {
+            background: #2ea043;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            width: 100%;
+            font-size: 18px;
+            padding: 16px;
+        }
+
+        #cancelBtn {
+            width: 100%;
+            font-size: 18px;
+            padding: 16px;
+            margin-top: 10px;
+            background: #d73a49;
+        }
+
+        #status {
+            margin-top: 20px;
+            color: #9cdcfe;
+            font-size: 16px;
+        }
+
+        #langCount {
+            margin-bottom: 15px;
+            color: #9cdcfe;
+            font-weight: 600;
+        }
+
+        #gallery img {
+            transition: transform 0.2s;
+        }
+
+        #gallery img:hover {
+            transform: scale(1.05);
+        }
+
+        #gallery {
+            margin-top: 20px;
+        }
+
+        .folder {
+            margin-bottom: 30px;
+        }
+
+        .folder-title {
+            margin: 12px 0;
+            color: #9cdcfe;
+            font-size: 18px;
+        }
+
+        .folder-content {
+            margin-left: 20px;
+        }
+
+        .gallery-item {
+            width: 100%;
+            background: #2a2a2a;
+            padding: 6px;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+        }
+
+        .file-name {
+            margin-top: 6px;
+            font-size: 12px;
+            text-align: center;
+            color: #aaa;
+            word-break: break-word;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🎰 QA Screenshot Tool</h1>
+
+    <div class="card">
+
+        <label class="title">Game URL</label>
+
+        <input
+                id="url"
+                type="text"
+                placeholder="Paste game URL here..."
+        >
+
+    </div>
+
+    <div class="card">
+
+        <label class="title">Languages</label>
+
+        <div class="actions">
+            <button type="button" onclick="selectAll()">Select All</button>
+            <button type="button" onclick="clearAll()">Clear All</button>
+        </div>
+
+        <div id="langCount">
+            Selected languages: 0
+        </div>
+
+        <div class="lang-grid">
+
+            <label><input type="checkbox" class="lang" value="bg">BG</label>
+            <label><input type="checkbox" class="lang" value="de">DE</label>
+            <label><input type="checkbox" class="lang" value="el">EL</label>
+            <label><input type="checkbox" class="lang" value="en" checked>EN</label>
+            <label><input type="checkbox" class="lang" value="en-soc">EN-SOC</label>
+            <label><input type="checkbox" class="lang" value="es">ES</label>
+
+            <label><input type="checkbox" class="lang" value="fi">FI</label>
+            <label><input type="checkbox" class="lang" value="fr" checked>FR</label>
+            <label><input type="checkbox" class="lang" value="hr">HR</label>
+            <label><input type="checkbox" class="lang" value="hu">HU</label>
+            <label><input type="checkbox" class="lang" value="id">ID</label>
+            <label><input type="checkbox" class="lang" value="it">IT</label>
+
+            <label><input type="checkbox" class="lang" value="ja">JA</label>
+            <label><input type="checkbox" class="lang" value="ko">KO</label>
+            <label><input type="checkbox" class="lang" value="nl">NL</label>
+            <label><input type="checkbox" class="lang" value="no">NO</label>
+            <label><input type="checkbox" class="lang" value="pt">PT</label>
+            <label><input type="checkbox" class="lang" value="pt-br">PT-BR</label>
+
+            <label><input type="checkbox" class="lang" value="ro">RO</label>
+            <label><input type="checkbox" class="lang" value="ru">RU</label>
+            <label><input type="checkbox" class="lang" value="sv">SV</label>
+            <label><input type="checkbox" class="lang" value="th">TH</label>
+            <label><input type="checkbox" class="lang" value="tr">TR</label>
+            <label><input type="checkbox" class="lang" value="uk">UK</label>
+
+            <label><input type="checkbox" class="lang" value="vi">VI</label>
+            <label><input type="checkbox" class="lang" value="zh">ZH</label>
+            <label><input type="checkbox" class="lang" value="zh-hant">ZH-HANT</label>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <label class="title">Orientation</label>
+
+        <select id="mode">
+            <option value="landscape">Landscape</option>
+            <option value="portrait">Portrait</option>
+            <option value="both">Both</option>
+        </select>
+        <hr style="margin:20px 0; border:1px solid #333;" />
+        <div style="margin-top:15px;">
+            <label class="title">Browser mode</label>
+
+            <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="headless" checked>
+                Headless mode (run in background)
+            </label>
+        </div>
+        <hr style="margin:20px 0; border:1px solid #333;" />
+        <label class="title">Pages count (all)</label>
+
+        <input
+                id="pagesCount"
+                type="number"
+                min="1"
+                max="50"
+                value="10"
+                style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;"
+        >
+
+        <label class="title">Pages (optional)</label>
+
+        <input
+                id="pagesInput"
+                type="text"
+                placeholder="e.g. 1,2,5,10 or 3-7"
+                style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;"
+        >
+
+        <hr style="margin:20px 0; border:1px solid #333;" />
+        <label class="title">EN-SOC extra page</label>
+        <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="enSocExtra">
+            EN-SOC has +1 extra page
+        </label>
+
+        <hr style="margin:20px 0; border:1px solid #333;" />
+        <label class="title">Start screen screenshot</label>
+        <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="screenshotStartScreen">
+            Screenshot start screen
+        </label>
+
+        <hr style="margin:20px 0; border:1px solid #333;" />
+
+        <label class="title">Workers</label>
+
+        <select id="workers" style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 (if your pc monster)</option>
+        </select>
+
+    </div>
+
+    <button id="startBtn" onclick="start()">
+        🚀 Start Screenshots
+    </button>
+    <button id="cancelBtn" onclick="cancelJob()">
+        🛑 Cancel
+    </button>
+
+    <button onclick="downloadZip()" style="width:100%;margin-top:10px;">
+        📦 Download ZIP
+    </button>
+
+    <button onclick="clearScreenshots()" style="width:100%;margin-top:10px;background:#d73a49;">
+        🧹 Clear Screenshots
+    </button>
+
+    <button onclick="loadGallery()" style="margin-top:10px;width:100%;">
+        📁 Open Screenshots
+    </button>
+
+    <button onclick="closeGallery()" style="width:100%;margin-top:10px;background:#555;">
+        ❌ Close Screenshots
+    </button>
+
+    <div style="margin-top:20px;background:#111;border-radius:8px;overflow:hidden;height:20px;">
+        <div id="progressBar" style="height:100%;width:0%;background:#280cc7;transition:width 0.2s;"></div>
+    </div>
+
+    <div id="progressText" style="margin-top:8px;color:#9cdcfe;">
+        0%
+    </div>
+
+    <div id="status">Ready</div>
+
+    <div id="gallery" style="display:none; margin-top:20px;"></div>
+
+</div>
+
+<script>
+    let jobRunning = false;
+    let flatScreens = [];
+    let currentIndex = 0;
+    // async function downloadZip() {
+    //     const res = await fetch('/download-zip');
+    //
+    //     if (!res.ok) {
+    //         alert('No screenshots found');
+    //         return;
+    //     }
+    //
+    //     const blob = await res.blob();
+    //
+    //     const url = window.URL.createObjectURL(blob);
+    //     const a = document.createElement('a');
+    //
+    //     a.href = url;
+    //     a.download = 'screenshots.zip';
+    //
+    //     document.body.appendChild(a);
+    //     a.click();
+    //
+    //     a.remove();
+    //     window.URL.revokeObjectURL(url);
+    // }
+
+    async function downloadZip() {
+        const urlInput = document.getElementById('url').value.trim();
+        let gameName = 'screenshots';
+
+        try {
+            const u = new URL(urlInput);
+            gameName = u.searchParams.get('game') || 'screenshots';
+        } catch (e) {}
+
+        const today = new Date().toISOString().slice(0, 10);
+        const res = await fetch(`/download-zip?name=${encodeURIComponent(gameName)}`);
+
+        if (!res.ok) {
+            alert('No screenshots found');
+            return;
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        a.href = url;
+        a.download = `${gameName}_${today}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    }
+
+    async function clearScreenshots() {
+        const ok = confirm('Delete all screenshots?');
+
+        if (!ok) return;
+
+        const res = await fetch('/cleanup', {
+            method: 'POST'
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+            document.getElementById('status').innerText =
+                '🧹 Screenshots cleared';
+
+            document.getElementById('gallery').innerHTML = '';
+            document.getElementById('gallery').style.display = 'none';
+
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').innerText = '0%';
+        } else {
+            alert('Failed to clear screenshots');
+        }
+    }
+
+    function closeGallery() {
+        const gallery = document.getElementById('gallery');
+        gallery.style.display = 'none';
+        gallery.innerHTML = '';
+    }
+
+    async function loadGallery() {
+        const res = await fetch('/screenshots');
+        const data = await res.json();
+
+        const gallery = document.getElementById('gallery');
+        gallery.style.display = 'block';
+        gallery.innerHTML = render(data);
+
+        flatScreens = [];
+
+        function collect(items, lang = null, mode = null) {
+            items.forEach(i => {
+
+                if (i.type === 'file') {
+
+                    flatScreens.push({
+                        ...i,
+                        lang,
+                        mode
+                    });
+
+                } else {
+
+                    // folder name = en / fr / landscape / portrait
+                    const isLang = !lang && !['landscape', 'portrait'].includes(i.name);
+                    const isMode = ['landscape', 'portrait', 'startscreen'].includes(i.name);
+
+                    collect(
+                        i.children || [],
+                        isLang ? i.name : lang,
+                        isMode ? i.name : mode
+                    );
+                }
+            });
+        }
+
+        collect(data);
+    }
+
+    // function render(items) {
+    //
+    //     const files = items.filter(i => i.type === 'file');
+    //     const folders = items.filter(i => i.type !== 'file');
+    //
+    //     let html = '';
+    //
+    //     folders.forEach(folder => {
+    //         html += `
+    //         <div class="folder">
+    //             <div class="folder-title">
+    //                 📁 ${folder.name}
+    //             </div>
+    //
+    //             ${render(folder.children || [])}
+    //         </div>
+    //     `;
+    //     });
+    //
+    //     if (files.length) {
+    //
+    //         html += `<div class="images-grid">`;
+    //
+    //         files.forEach(file => {
+    //
+    //             html += `
+    //             <div class="gallery-item">
+    //                 <img
+    //                     src="${file.url}"
+    //                     onclick="openImage('${file.url}')"
+    //                 />
+    //
+    //                 <div class="file-name">
+    //                     ${file.name}
+    //                 </div>
+    //             </div>
+    //         `;
+    //         });
+    //
+    //         html += `</div>`;
+    //     }
+    //
+    //     return html;
+    // }
+
+    function render(items) {
+        const ts = Date.now(); // ← додай
+
+        const files = items.filter(i => i.type === 'file');
+        const folders = items.filter(i => i.type !== 'file');
+
+        let html = '';
+
+        folders.forEach(folder => {
+            html += `
+        <div class="folder">
+            <div class="folder-title">📁 ${folder.name}</div>
+            ${render(folder.children || [])}
+        </div>
+    `;
+        });
+
+        if (files.length) {
+            html += `<div class="images-grid">`;
+            files.forEach(file => {
+                html += `
+            <div class="gallery-item">
+                <img
+                    src="${file.url}?t=${ts}"
+                    onclick="openImage('${file.url}')"
+                />
+                <div class="file-name">${file.name}</div>
+            </div>
+        `;
+            });
+            html += `</div>`;
+        }
+
+        return html;
+    }
+
+    function updateLangCount() {
+
+        const count = document.querySelectorAll('input.lang:checked').length;
+
+        document.getElementById('langCount').innerText =
+            `Selected languages: ${count}`;
+
+        validateForm();
+    }
+
+    function validateForm() {
+
+        const url = document
+            .getElementById('url')
+            .value
+            .trim();
+
+        const count = document.querySelectorAll('input.lang:checked').length;
+
+        document.getElementById('startBtn').disabled =
+            !url || count === 0;
+    }
+
+    function selectAll() {
+
+        document
+            .querySelectorAll('input.lang')
+            .forEach(cb => cb.checked = true);
+
+        updateLangCount();
+    }
+
+    function clearAll() {
+
+        document
+            .querySelectorAll('input.lang')
+            .forEach(cb => cb.checked = false);
+
+        updateLangCount();
+    }
+
+    async function start() {
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').innerText = '0%';
+        closeGallery();
+        const status = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const headless = document.getElementById('headless').checked;
+        const url = document.getElementById('url').value.trim();
+
+        const workers = parseInt(document.getElementById('workers').value, 10);
+
+        const langs = Array
+            .from(document.querySelectorAll('input.lang:checked'))
+            .map(el => el.value);
+
+        const mode = document.getElementById('mode').value;
+
+        const pagesCount = parseInt(document.getElementById('pagesCount').value || '10', 10);
+        const pagesRaw = document.getElementById('pagesInput').value;
+
+        const pages = parsePages(pagesRaw, pagesCount);
+        const enSocExtra = document.getElementById('enSocExtra').checked;
+        const screenshotStartScreen = document.getElementById('screenshotStartScreen').checked;
+
+        startBtn.disabled = true;
+
+        if (!url) {
+            status.innerText = '❌ Please enter Game URL';
+            validateForm();
+            return;
+        }
+
+        if (langs.length === 0) {
+            status.innerText = '❌ Please select at least one language';
+            validateForm();
+            return;
+        }
+
+        status.innerText = '⏳ Starting...';
+
+        try {
+
+            await fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url,
+                    langs,
+                    mode,
+                    pagesCount,
+                    pages,
+                    headless,
+                    workers,
+                    enSocExtra,
+                    screenshotStartScreen
+                })
+            });
+
+            jobRunning = true;
+
+        } catch (e) {
+
+            status.innerText = '❌ Error';
+
+            startBtn.disabled = false;
+            validateForm();
+
+            console.error(e);
+        }
+    }
+
+    function parsePages(input, maxPages) {
+        if (!input.trim()) return null; // всі сторінки
+
+        const result = new Set();
+
+        input.split(',').forEach(part => {
+            part = part.trim();
+
+            if (part.includes('-')) {
+                const [a, b] = part.split('-').map(Number);
+
+                for (let i = a; i <= b; i++) {
+                    result.add(i);
+                }
+            } else {
+                result.add(Number(part));
+            }
+        });
+
+        return Array.from(result).filter(n => n >= 1 && n <= maxPages);
+    }
+
+    async function cancelJob() {
+
+        const res = await fetch('/cancel', {
+            method: 'POST'
+        });
+
+        const data = await res.json();
+
+        document.getElementById('status').innerText =
+            data.ok ? '🛑 Cancelling...' : data.message;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('imgModal').style.display !== 'flex') return;
+
+        if (e.key === 'ArrowRight') {
+            showImage(currentIndex + 1);
+        }
+
+        if (e.key === 'ArrowLeft') {
+            showImage(currentIndex - 1);
+        }
+
+        updateModalInfo();
+    });
+
+    function downloadCurrent() {
+        const item = flatScreens[currentIndex];
+        if (!item) return;
+
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.download = item.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function openImage(src) {
+        currentIndex = flatScreens.findIndex(i => i.url === src);
+
+        const modal = document.getElementById('imgModal');
+        const img = document.getElementById('modalImg');
+
+        img.src = src;
+        modal.style.display = 'flex';
+
+        updateModalInfo();
+    }
+
+    function showImage(index) {
+        if (index < 0 || index >= flatScreens.length) return;
+
+        currentIndex = index;
+
+        const item = flatScreens[index];
+
+        const img = document.getElementById('modalImg');
+        img.src = item.url;
+
+        updateModalInfo();
+    }
+
+    function closeModal() {
+        document.getElementById('imgModal').style.display = 'none';
+    }
+
+    function updateModalInfo() {
+        const item = flatScreens[currentIndex];
+
+        document.getElementById('modalInfo').innerText =
+            `${item.lang?.toUpperCase() || '—'} / ${item.mode?.toUpperCase() || '—'} / ${item.name}`;
+    }
+
+    async function refreshStatus() {
+        try {
+            const res = await fetch('/status');
+            const data = await res.json();
+            const startBtn = document.getElementById('startBtn');
+            console.log('STATUS UI:', data);
+            if (data.finished) {
+                if (!jobRunning) return;
+                jobRunning = false;
+
+                startBtn.disabled = false;
+
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressText').innerText = `100% (${data.total} tasks)`;
+
+                if (data.message.startsWith('🛑')) {
+                    document.getElementById('status').innerText =
+                        '🛑 Cancelled';
+                } else {
+                    document.getElementById('status').innerText =
+                        '✅ Done! You can download ZIP';
+
+                    // const gallery = document.getElementById('gallery');
+                    // if (gallery.style.display !== 'none') {
+                    //     loadGallery();
+                    // }
+                }
+
+                return;
+            }
+
+            document.getElementById('status').innerText =
+                data.message + (data.stage ? ` (${data.stage})` : '');
+
+            if (data.total > 0) {
+
+                const percent = data.progress ?? 0;
+
+                document.getElementById('progressBar').style.width = percent + '%';
+
+                document.getElementById('progressText').innerText =
+                    `${percent}% (${data.total} tasks)`;
+            }
+
+            if (data.running) {
+                jobRunning = true;
+                startBtn.disabled = true;
+            } else {
+                startBtn.disabled = false;
+                validateForm();
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    document
+        .querySelectorAll('input[type=checkbox]')
+        .forEach(cb => {
+            cb.addEventListener('change', updateLangCount);
+        });
+
+    document
+        .getElementById('url')
+        .addEventListener('input', validateForm);
+
+    updateLangCount();
+    validateForm();
+
+    setInterval(refreshStatus, 300);
+
+</script>
+
+<div id="imgModal" onclick="closeModal()" style="
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.85);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+">
+
+    <div id="modalInfo" style="
+    position:absolute;
+    top:15px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#9cdcfe;
+    font-size:16px;
+    background:#00000066;
+    padding:6px 12px;
+    border-radius:8px;
+">
+    </div>
+
+    <button onclick="event.stopPropagation(); showImage(currentIndex - 1)"
+            style="position:absolute; left:20px; font-size:30px;">
+        ⬅
+    </button>
+
+    <img id="modalImg" style="
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+    ">
+
+    <button onclick="event.stopPropagation(); showImage(currentIndex + 1)"
+            style="position:absolute; right:20px; font-size:30px;">
+        ➡
+    </button>
+
+    <button onclick="event.stopPropagation(); downloadCurrent()"
+            style="position:absolute; bottom:20px; right:20px;">
+        ⬇ Download
+    </button>
+
+</div>
+
+</body>
+</html>
+
