@@ -181,7 +181,8 @@
 
 <div class="container">
 
-    <h1>🎰 QA Screenshot Tool</h1>
+<!--    <h1>🎰 QA Screenshot Tool</h1>-->
+    <h1>🎰 QA Screenshot Tool <span id="appVersion" style="font-size:14px;color:#666;font-weight:400;"></span></h1>
 
     <div class="card">
 
@@ -353,28 +354,6 @@
     let jobRunning = false;
     let flatScreens = [];
     let currentIndex = 0;
-    // async function downloadZip() {
-    //     const res = await fetch('/download-zip');
-    //
-    //     if (!res.ok) {
-    //         alert('No screenshots found');
-    //         return;
-    //     }
-    //
-    //     const blob = await res.blob();
-    //
-    //     const url = window.URL.createObjectURL(blob);
-    //     const a = document.createElement('a');
-    //
-    //     a.href = url;
-    //     a.download = 'screenshots.zip';
-    //
-    //     document.body.appendChild(a);
-    //     a.click();
-    //
-    //     a.remove();
-    //     window.URL.revokeObjectURL(url);
-    // }
 
     async function downloadZip() {
         const urlInput = document.getElementById('url').value.trim();
@@ -474,51 +453,6 @@
 
         collect(data);
     }
-
-    // function render(items) {
-    //
-    //     const files = items.filter(i => i.type === 'file');
-    //     const folders = items.filter(i => i.type !== 'file');
-    //
-    //     let html = '';
-    //
-    //     folders.forEach(folder => {
-    //         html += `
-    //         <div class="folder">
-    //             <div class="folder-title">
-    //                 📁 ${folder.name}
-    //             </div>
-    //
-    //             ${render(folder.children || [])}
-    //         </div>
-    //     `;
-    //     });
-    //
-    //     if (files.length) {
-    //
-    //         html += `<div class="images-grid">`;
-    //
-    //         files.forEach(file => {
-    //
-    //             html += `
-    //             <div class="gallery-item">
-    //                 <img
-    //                     src="${file.url}"
-    //                     onclick="openImage('${file.url}')"
-    //                 />
-    //
-    //                 <div class="file-name">
-    //                     ${file.name}
-    //                 </div>
-    //             </div>
-    //         `;
-    //         });
-    //
-    //         html += `</div>`;
-    //     }
-    //
-    //     return html;
-    // }
 
     function render(items) {
         const ts = Date.now(); // ← додай
@@ -788,10 +722,6 @@
                     document.getElementById('status').innerText =
                         '✅ Done! You can download ZIP';
 
-                    // const gallery = document.getElementById('gallery');
-                    // if (gallery.style.display !== 'none') {
-                    //     loadGallery();
-                    // }
                 }
 
                 return;
@@ -837,6 +767,12 @@
     validateForm();
 
     setInterval(refreshStatus, 300);
+
+    fetch('/version')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('appVersion').innerText = `v${data.version}`;
+        });
 
 </script>
 

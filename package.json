@@ -1,6 +1,6 @@
 {
   "name": "qa-tool",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -27,6 +27,9 @@
       "provider": "github",
       "owner": "b-vitalii",
       "repo": "screenshot-tool"
+    },
+    "mac": {
+      "icon": "icon.icns"
     },
     "asar": false,
     "files": [

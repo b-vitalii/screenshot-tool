@@ -27,6 +27,12 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+//version
+app.get('/version', (req, res) => {
+    const pkg = require('./package.json');
+    res.json({ version: pkg.version });
+});
+
 // статус
 // app.get('/status', (req, res) => {
 //     res.json(status);
