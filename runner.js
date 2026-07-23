@@ -7,15 +7,20 @@ const viewports = {
     portrait: { width: 600, height: 1000 }
 };
 
-const coords = {
-    landscape: { x: 1200, y: 122 },
-    portrait: { x: 46, y: 786 }
-};
-
-const nextPageCoords = {
-    landscape: { x: 1200, y: 450 },
-    portrait: { x: 389, y: 359 }
-};
+// const coords = {
+//     landscape: { x: 583, y: 327 },
+//     portrait: { x: 577, y: 907 }
+// };
+//
+// const coordsPaytable = {
+//     landscape: { x: 583, y: 282 },
+//     portrait: { x: 559, y: 804 }
+// };
+//
+// const nextPageCoords = {
+//     landscape: { x: 280, y: 160 },
+//     portrait: { x: 320, y: 320 }
+// };
 
 async function skipStartScreen(page) {
     await page.evaluate(() => {
@@ -144,7 +149,6 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
     for (let m = 0; m < modes.length; m++) {
 
         const mode = modes[m];
-
         checkCancel(status);
 
         // status.stage = `${lang} - ${mode}`;
@@ -153,15 +157,19 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
             mode
         };
 
-        const isLandscape = mode === 'landscape';
+        // const isLandscape = mode === 'landscape';
 
-        const point = isLandscape
-            ? coords.landscape
-            : coords.portrait;
-
-        const nextPage = isLandscape
-            ? nextPageCoords.landscape
-            : nextPageCoords.portrait;
+        // const point = isLandscape
+        //     ? coords.landscape
+        //     : coords.portrait;
+        //
+        // const paytable = isLandscape
+        //     ? coordsPaytable.landscape
+        //     : coordsPaytable.portrait;
+        //
+        // const nextPage = isLandscape
+        //     ? nextPageCoords.landscape
+        //     : nextPageCoords.portrait;
 
         const dir = path.join(baseDir, mode);
         fs.mkdirSync(dir, { recursive: true });
@@ -170,11 +178,27 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
         await page.waitForTimeout(500);
 
         if (m === 0){
-            await page.mouse.click(point.x, point.y);
+            // await page.mouse.click(point.x, point.y);
+            // await page.waitForTimeout(200);
+            // await page.mouse.click(paytable.x, paytable.y)
+            await page.evaluate(() => {
+                GR.UI.view.rules_menu.visible(true);
+            });
             await page.waitForTimeout(50);
         }
 
-        for (let i = 1; i <= pagesCounts; i++) {
+        const realPagesCount = await page.evaluate(() => {
+            try {
+                const vals = GR.UI.view.rules_menu.values();
+                return Array.isArray(vals) ? vals.length : null;
+            } catch (e) {
+                return null;
+            }
+        });
+
+        const totalPages = realPagesCount || pagesCounts;
+
+        for (let i = 1; i <= totalPages; i++) {
             checkCancel(status);
 
             const shouldScreenshot =
@@ -182,7 +206,6 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
                 || selectedPages.includes(i);
 
             if (shouldScreenshot) {
-
                 await page.screenshot({
                     path: path.join(dir, `${lang}_page-${i}.png`)
                 });
@@ -192,8 +215,11 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
                 }
             }
 
-            if (i < pagesCounts) {
-                await page.mouse.click(nextPage.x, nextPage.y);
+            if (i < totalPages) {
+                // await page.mouse.click(nextPage.x, nextPage.y);
+                await page.evaluate(() => {
+                    GR.UI.view.rules_menu.down.click();
+                });
                 await page.waitForTimeout(50);
             }
         }
@@ -201,7 +227,10 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
         const hasNextMode = m < modes.length - 1;
 
         if (hasNextMode) {
-            await page.mouse.click(nextPage.x, nextPage.y);
+            // await page.mouse.click(nextPage.x, nextPage.y);
+            await page.evaluate(() => {
+                GR.UI.view.rules_menu.down.click();
+            });
             await page.waitForTimeout(50);
         }
     }
