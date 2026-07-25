@@ -3,352 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <title>QA Screenshot Tool</title>
-
     <style>
-
-        body {
-            margin: 0;
-            padding: 40px;
-            background: #1e1e1e;
-            color: #fff;
-            font-family: Inter, Arial, sans-serif;
+        :root {
+            --bg: #16161f; --card: #1e1e2e; --card2: #191925; --input-bg: #16161f;
+            --text: #fff; --muted: #8b8ba7; --accent: #6366f1; --accent2: #818cf8;
+            --accent-grad: linear-gradient(145deg, #818cf8, #6366f1);
+            --lbl: #6366f1; --shadow-dark: #131320; --shadow-light: #292940;
+            --border: #2a2a3a; --status: #a5b4fc;
+            --font: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 40px 20px; background: var(--bg); color: var(--text); font-family: var(--font); transition: background 0.4s; }
+        .container { max-width: 720px; margin: 0 auto; }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
+        /* custom scrollbar */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-grad); border-radius: 10px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+        * { scrollbar-width: thin; scrollbar-color: var(--accent) var(--input-bg); }
+        body.cyber ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #06b6d4, #10b981); box-shadow: 0 0 8px rgba(6,182,212,0.5); border: 2px solid #030812; }
+        body.cyber ::-webkit-scrollbar-track { background: #060e1c; }
+
+        .theme-switch { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+        .theme-switch button { padding: 10px 22px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font); }
+        .theme-switch button:hover { color: var(--text); }
+        .theme-switch button.active { background: var(--accent); border-color: var(--accent2); color: #fff; }
+
+        .cyber-strip { display: none; }
+        body.cyber .cyber-strip {
+            display: flex; align-items: center; gap: 14px; padding: 12px 18px; margin-bottom: 18px;
+            background: linear-gradient(90deg, rgba(6,182,212,0.12), rgba(16,185,129,0.08));
+            border: 1px solid #123a4d; border-radius: 10px;
         }
+        .cyber-strip .led { width: 9px; height: 9px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: blink 1.4s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+        .cyber-strip .s-name { font-size: 12px; color: #22d3ee; letter-spacing: 2px; font-family: 'SF Mono', monospace; }
+        .cyber-strip .eq { margin-left: auto; display: flex; align-items: flex-end; gap: 3px; height: 18px; }
+        .cyber-strip .eq span { width: 3px; background: #06b6d4; box-shadow: 0 0 6px #06b6d4; animation: eqbounce 0.8s ease-in-out infinite; }
+        .cyber-strip .eq span:nth-child(2){animation-delay:.15s} .cyber-strip .eq span:nth-child(3){animation-delay:.3s}
+        .cyber-strip .eq span:nth-child(4){animation-delay:.45s} .cyber-strip .eq span:nth-child(5){animation-delay:.6s}
+        @keyframes eqbounce { 0%,100% { height: 4px; } 50% { height: 18px; } }
 
-        h1 {
-            margin-top: 0;
-            margin-bottom: 30px;
+        .app-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+        .icon-badge { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; background: var(--accent-grad); box-shadow: 0 6px 20px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+        h1 { margin: 0; font-size: 24px; font-weight: 800; background: linear-gradient(90deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h1 .ver { font-size: 13px; font-weight: 400; -webkit-text-fill-color: var(--muted); }
+        .app-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+        .card { background: linear-gradient(160deg, var(--card) 0%, var(--card2) 100%); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 18px; }
+        label.title { display: block; margin-bottom: 14px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
+
+        input[type=text] { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: 14px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+        input[type=text]:focus { outline: 1px solid var(--accent); }
+
+        .lang-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .lang-grid label { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 8px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 600; background: var(--card); color: var(--muted); box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); border: 2px solid var(--border); transition: all 0.18s; user-select: none; }
+        .lang-grid label:hover { color: var(--text); border-color: var(--accent2); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(129,140,248,0.4), 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); }
+        .lang-grid label.checked { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: inset 4px 4px 8px rgba(55,48,163,0.8), inset -4px -4px 8px rgba(129,140,248,0.6); }
+        .lang-grid label input { display: none; }
+
+        .actions { margin-bottom: 16px; display: flex; gap: 10px; }
+        .actions button { padding: 10px 18px; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer; font-weight: 600; font-family: var(--font); font-size: 13px; background: var(--card); color: var(--muted); box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); transition: all 0.15s; }
+        .actions button:hover { color: var(--text); transform: translateY(-2px); border-color: var(--accent2); box-shadow: 0 4px 14px rgba(99,102,241,0.3), 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); }
+        #langCount { margin-bottom: 16px; color: var(--status); font-weight: 600; font-size: 13px; }
+
+        .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 6px; border-radius: 14px; background: var(--input-bg); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
+        .seg { padding: 12px 8px; border-radius: 10px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 5px; user-select: none; }
+        .seg .seg-ic { font-size: 18px; }
+        .seg:hover { color: var(--text); }
+        .seg.active { background: var(--accent-grad); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.5); }
+
+        .dd { position: relative; user-select: none; }
+        .dd-trigger { width: 100%; padding: 15px 44px 15px 16px; border-radius: 14px; background: var(--input-bg); color: var(--text); font-size: 14px; font-weight: 600; box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
+        .dd-trigger .dd-ic { font-size: 16px; opacity: 0.8; }
+        .dd-trigger::after { content: '▾'; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--accent2); font-size: 14px; transition: transform 0.25s; }
+        .dd.open .dd-trigger::after { transform: translateY(-50%) rotate(180deg); }
+        .dd.open .dd-trigger { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light), 0 0 0 2px var(--accent); }
+        .dd-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 200; background: #2a2a3d; border: 1px solid #3d3d55; border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-8px); pointer-events: none; transition: all 0.2s; }
+        .dd.open { z-index: 300; position: relative; }
+        .card:has(.dd.open) { z-index: 300; position: relative; }
+        .dd.open .dd-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .dd-opt { padding: 12px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; }
+        .dd-opt:hover { background: var(--input-bg); color: var(--text); }
+        .dd-opt.sel { background: var(--accent-grad); color: #fff; }
+        .dd-opt .check { opacity: 0; font-size: 13px; }
+        .dd-opt.sel .check { opacity: 1; }
+        .dd-opt .sub { font-size: 11px; opacity: 0.7; font-weight: 400; }
+        body.light .dd-menu { background: #f0eee8; border: 1px solid #c5cad6; }
+        body.dark .dd-opt:hover { background: #38384f; color: #fff; }
+
+        .toggle-field { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 14px; background: var(--input-bg); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); cursor: pointer; user-select: none; border: 2px solid transparent; transition: all 0.2s; }
+        .toggle-field.on { border-color: var(--accent2); background: color-mix(in srgb, var(--accent) 12%, var(--input-bg)); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light), 0 0 16px rgba(99,102,241,0.25); }
+        .toggle-field.on .tf-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+        .toggle-field .tf-text { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .toggle-field .tf-icon { font-size: 18px; }
+        .toggle-field .tf-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .switch { width: 50px; height: 28px; border-radius: 16px; background: #0e0e16; position: relative; flex-shrink: 0; transition: all 0.25s; box-shadow: inset 2px 2px 4px #0a0a12, inset -2px -2px 4px #22223a; }
+        .switch::after { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); top: 3px; left: 3px; transition: all 0.25s; }
+        .toggle-field.on .switch { background: var(--accent-grad); box-shadow: 0 0 14px rgba(99,102,241,0.6); }
+        .toggle-field.on .switch::after { left: 25px; background: #fff; }
+
+        .pages-input { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: 14px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+        .pages-input:focus { outline: 1px solid var(--accent); }
+        .divider { margin: 20px 0; border: none; border-top: 1px solid var(--border); }
+
+        .btn { border: none; cursor: pointer; font-weight: 700; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; color: #fff; }
+        #startBtn { width: 100%; padding: 18px; font-size: 16px; border-radius: 14px; background: var(--accent-grad); position: relative; overflow: hidden; margin-bottom: 12px; border: 2px solid transparent; box-shadow: 0 6px 18px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.3); }
+        #startBtn:hover:not(:disabled) { transform: translateY(-2px); border-color: #c4b5fd; box-shadow: 0 8px 22px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.4); }
+        #startBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #cancelBtn { width: 100%; padding: 14px; font-size: 14px; border-radius: 14px; background: linear-gradient(145deg, #f87171, #ef4444); margin-bottom: 14px; border: 2px solid transparent; box-shadow: 0 6px 16px rgba(239,68,68,0.3); }
+        #cancelBtn:hover { transform: translateY(-2px); border-color: #fca5a5; box-shadow: 0 8px 20px rgba(239,68,68,0.45); }
+        .btn-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .btn-sm { padding: 13px; font-size: 13px; border-radius: 12px; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); }
+        .btn-sm:hover { color: var(--text); transform: translateY(-2px); border-color: var(--accent2); box-shadow: 0 4px 14px rgba(99,102,241,0.25); }
+        .btn-sm.danger:hover { color: #f87171; border-color: #f87171; box-shadow: 0 4px 14px rgba(239,68,68,0.25); }
+
+        .progress-section { margin: 22px 0; }
+        .progress-wrap { position: relative; height: 44px; border-radius: 14px; overflow: hidden; background: var(--input-bg); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); border: 1.5px solid var(--border); }
+        #progressBar { height: 100%; width: 0%; min-width: 0; border-radius: 12px; background: var(--accent-grad); transition: width 0.3s ease; position: relative; overflow: hidden; box-shadow: 0 0 20px var(--accent); }
+        #progressBar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .progress-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--text); z-index: 2; letter-spacing: 0.5px; }
+        .progress-track-glow { position: absolute; inset: 0; z-index: 0; opacity: 0.5; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(129,140,248,0.08) 10px, rgba(129,140,248,0.08) 20px); }
+        #status { margin-top: 14px; color: var(--status); font-size: 15px; text-align: center; }
+
+        #gallery { margin-top: 20px; }
+
+        /* gallery header: search + filter chips */
+        .gallery-controls { margin-bottom: 24px; }
+        .gallery-search-wrap { position: relative; margin-bottom: 16px; }
+        .gallery-search {
+            width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px; border: none;
+            background: var(--input-bg); color: var(--text); font-family: var(--font); font-size: 14px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
         }
-
-        .card {
-            background: #2a2a2a;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
+        .gallery-search:focus { outline: 1px solid var(--accent); }
+        .gallery-search-ic { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 16px; pointer-events: none; }
+        .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .lang-chip {
+            padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+            background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; user-select: none;
         }
+        .lang-chip:hover { color: var(--text); border-color: var(--accent2); }
+        .lang-chip.active { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+        .lang-chip .cnt { opacity: 0.7; margin-left: 4px; font-weight: 400; }
 
-        label.title {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
+        .folder { margin-bottom: 28px; }
+        .folder-lang {
+            display: flex; align-items: center; gap: 12px; margin: 28px 0 16px;
+            font-size: 18px; font-weight: 700; color: var(--text);
         }
-
-        input[type=text] {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            background: #171717;
-            color: white;
-            box-sizing: border-box;
+        .folder-lang .lang-badge {
+            padding: 8px 18px; border-radius: 10px; font-size: 16px; font-weight: 800;
+            background: var(--accent-grad); color: #fff; letter-spacing: 1px;
+            box-shadow: 0 6px 20px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
         }
-
-        .lang-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
+        .folder-lang .lang-line { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), transparent); }
+        .folder-mode {
+            display: inline-flex; align-items: center; gap: 8px; margin: 18px 0 12px;
+            font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            padding: 8px 16px; border-radius: 20px; color: var(--text);
+            background: var(--card); border: 1.5px solid var(--accent2);
+            box-shadow: 0 4px 14px rgba(99,102,241,0.2);
         }
+        .folder-mode .mode-ic { font-size: 16px; }
 
-        .lang-grid label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .actions {
-            margin-bottom: 15px;
-        }
-
-        .actions button {
-            margin-right: 10px;
-        }
-
-        select {
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            background: #171717;
-            color: white;
-        }
-
-        button {
-            background: #2ea043;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        button:hover:not(:disabled) {
-            opacity: 0.8;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #startBtn {
-            width: 100%;
-            font-size: 18px;
-            padding: 16px;
-        }
-
-        #cancelBtn {
-            width: 100%;
-            font-size: 18px;
-            padding: 16px;
-            margin-top: 10px;
-            background: #d73a49;
-        }
-
-        #status {
-            margin-top: 20px;
-            color: #9cdcfe;
-            font-size: 16px;
-        }
-
-        #langCount {
-            margin-bottom: 15px;
-            color: #9cdcfe;
-            font-weight: 600;
-        }
-
-        #gallery img {
-            transition: transform 0.2s;
-        }
-
-        #gallery img:hover {
-            transform: scale(1.05);
-        }
-
-        #gallery {
-            margin-top: 20px;
-        }
-
-        .folder {
-            margin-bottom: 30px;
-        }
-
-        .folder-title {
-            margin: 12px 0;
-            color: #9cdcfe;
-            font-size: 18px;
-        }
-
-        .folder-content {
-            margin-left: 20px;
-        }
-
+        .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .gallery-item {
-            width: 100%;
-            background: #2a2a2a;
-            padding: 6px;
-            border-radius: 10px;
-            box-sizing: border-box;
+            position: relative; background: var(--card); border-radius: 16px; overflow: hidden;
+            border: 1px solid var(--border); cursor: pointer; transition: all 0.25s;
         }
-
-        .gallery-item img {
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-            display: block;
+        .gallery-item:hover { transform: translateY(-6px); border-color: var(--accent2); box-shadow: 0 14px 34px rgba(99,102,241,0.3); }
+        .gallery-item .img-frame { position: relative; overflow: hidden; background: #000; }
+        .gallery-item img { width: 100%; display: block; transition: transform 0.35s; }
+        .gallery-item:hover img { transform: scale(1.08); }
+        .gallery-item .img-overlay {
+            position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 50%);
+            opacity: 0; transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 14px;
         }
-
-        .file-name {
-            margin-top: 6px;
-            font-size: 12px;
-            text-align: center;
-            color: #aaa;
-            word-break: break-word;
+        .gallery-item:hover .img-overlay { opacity: 1; }
+        .img-overlay .view-btn {
+            padding: 8px 18px; border-radius: 20px; background: var(--accent-grad); color: #fff;
+            font-size: 12px; font-weight: 700; box-shadow: 0 4px 14px rgba(99,102,241,0.5);
         }
+        .gallery-item .file-name { padding: 10px 12px; font-size: 12px; text-align: center; color: var(--muted); word-break: break-word; font-weight: 500; }
+        .gallery-empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 15px; }
 
-        .images-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
+        /* light theme gallery */
+        body.light .gallery-item .img-overlay { background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 50%); }
+        body.light .folder-mode { background: #f0eee8; border-color: #8b5cf6; color: #44403c; }
+
+        /* cyber theme gallery */
+        body.cyber .gallery-search { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #67e8f9; font-family: var(--font); box-shadow: none; border-radius: 6px; }
+        body.cyber .gallery-search:focus { outline: none; border-color: #06b6d4; box-shadow: 0 0 16px rgba(6,182,212,0.3); }
+        body.cyber .lang-chip { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 4px; }
+        body.cyber .lang-chip:hover { border-color: #06b6d4; }
+        body.cyber .lang-chip.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; box-shadow: 0 0 14px rgba(6,182,212,0.5); }
+        body.cyber .folder-lang { color: #67e8f9; font-family: var(--font); }
+        body.cyber .folder-lang .lang-badge { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; border-radius: 6px; box-shadow: 0 0 20px rgba(6,182,212,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+        body.cyber .folder-lang .lang-line { background: linear-gradient(90deg, #06b6d4, transparent); }
+        body.cyber .folder-mode { color: #67e8f9; font-family: var(--font); background: rgba(6,182,212,0.08); border: 1.5px solid #06b6d4; box-shadow: 0 0 14px rgba(6,182,212,0.3); border-radius: 6px; }
+        body.cyber .gallery-item { background: #060e1c; border: 1px solid #123a4d; border-radius: 8px; }
+        body.cyber .gallery-item:hover { border-color: #06b6d4; box-shadow: 0 0 30px rgba(6,182,212,0.4); }
+        body.cyber .img-overlay .view-btn { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); }
+        body.cyber .gallery-item .file-name { color: #0891b2; font-family: var(--font); }
+
+        body.light {
+            --bg: #cdc9c3; --card: #e0ddd6; --card2: #e0ddd6; --input-bg: #cdc9c3;
+            --text: #292524; --muted: #78716c; --accent: #7c3aed; --accent2: #a78bfa;
+            --accent-grad: linear-gradient(145deg, #8b5cf6, #7c3aed);
+            --lbl: #7c3aed; --shadow-dark: #b3afa9; --shadow-light: #edeae4; --border: #c5cad6; --status: #7c3aed;
         }
+        body.light h1 { background: linear-gradient(90deg, #7c3aed, #6d28d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body.light h1 .ver { -webkit-text-fill-color: var(--muted); }
+        body.light .card { background: var(--card); }
+        body.light .progress-label { color: #44403c; }
+        body.light .switch { background: #c0bcb5; box-shadow: inset 2px 2px 4px #b3afa9, inset -2px -2px 4px #edeae4; }
+        body.light .lang-grid label.checked { box-shadow: inset 3px 3px 6px #6d28d9, inset -3px -3px 6px #a78bfa; }
+        body.light .btn-sm:hover { border-color: #8b5cf6; box-shadow: 0 4px 14px rgba(124,58,237,0.25); }
 
+        body.cyber { --bg: #030812; --font: 'SF Mono','Fira Code',monospace; --text: #67e8f9; --muted: #0e7490; --status: #22d3ee; background: #030812; }
+        body.cyber .theme-switch button { background: #060e1c; border-color: #123a4d; color: #0891b2; font-family: var(--font); }
+        body.cyber .theme-switch button.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; border-color: #67e8f9; }
+        body.cyber .icon-badge { background: linear-gradient(145deg, #06b6d4, #0891b2); border-radius: 8px; box-shadow: 0 0 20px rgba(6,182,212,0.6); color: #012; }
+        body.cyber h1 { font-family: var(--font); font-size: 20px; letter-spacing: 1px; color: #67e8f9; -webkit-text-fill-color: #67e8f9; background: none; text-shadow: 0 0 15px rgba(103,232,249,0.6); cursor: default; }
+        body.cyber h1:hover { animation: glitch 0.3s steps(2) infinite; }
+        @keyframes glitch { 0%{text-shadow:0 0 15px rgba(103,232,249,0.6);transform:translate(0)} 25%{text-shadow:-2px 0 #ff00ff,2px 0 #00ffff;transform:translate(-1px,1px)} 50%{text-shadow:2px 0 #ff00ff,-2px 0 #00ffff;transform:translate(1px,-1px)} 75%{text-shadow:-2px 0 #00ffff,2px 0 #ff00ff;transform:translate(-1px)} 100%{text-shadow:0 0 15px rgba(103,232,249,0.6);transform:translate(0)} }
+        body.cyber h1 .ver { -webkit-text-fill-color: #0891b2; color: #0891b2; }
+        body.cyber .app-sub { color: #0e7490; font-family: var(--font); font-size: 12px; }
+        body.cyber .card { background: #060e1c; border: 1px solid #123a4d; border-radius: 10px; position: relative; box-shadow: 0 0 40px rgba(6,182,212,0.12); background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(6,182,212,0.02) 3px, rgba(6,182,212,0.02) 6px); }
+        body.cyber label.title { color: #06b6d4; font-family: var(--font); }
+        body.cyber label.title::before { content: '> '; }
+        body.cyber input[type=text], body.cyber .pages-input { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #67e8f9; font-family: var(--font); box-shadow: none; border-radius: 4px; }
+        body.cyber input[type=text]:focus, body.cyber .pages-input:focus { outline: none; border-color: #06b6d4; box-shadow: 0 0 16px rgba(6,182,212,0.3); }
+        body.cyber .lang-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        body.cyber .lang-grid label { position: relative; justify-content: flex-start; gap: 12px; padding: 10px 14px 10px 64px; background: rgba(6,182,212,0.03); border: 1px solid #123a4d; border-radius: 6px; color: #7dd3fc; font-family: var(--font); box-shadow: none; }
+        body.cyber .lang-grid label:hover { border-color: #06b6d4; box-shadow: 0 0 12px rgba(6,182,212,0.25); transform: none; }
+        body.cyber .lang-grid label::before { content: ''; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 42px; height: 22px; border-radius: 12px; background: #0a1a2e; border: 1px solid #1e4a5f; flex-shrink: 0; transition: all 0.25s; }
+        body.cyber .lang-grid label::after { content: ''; position: absolute; left: 17px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; border-radius: 50%; background: #2a5a6e; transition: all 0.25s; }
+        body.cyber .lang-grid label.checked { border-color: #06b6d4; background: rgba(6,182,212,0.08); color: #67e8f9; text-shadow: 0 0 8px rgba(103,232,249,0.5); box-shadow: none; }
+        body.cyber .lang-grid label.checked::before { background: linear-gradient(90deg,#06b6d4,#10b981); border-color: #67e8f9; box-shadow: 0 0 12px rgba(6,182,212,0.6); }
+        body.cyber .lang-grid label.checked::after { left: 37px; background: #012; box-shadow: 0 0 6px rgba(255,255,255,0.5); }
+        body.cyber .actions button { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #22d3ee; font-family: var(--font); box-shadow: none; border-radius: 4px; }
+        body.cyber .actions button:hover { border-color: #06b6d4; transform: none; }
+        body.cyber #langCount { color: #10b981; font-family: var(--font); }
+        body.cyber #langCount::before { content: '// '; }
+        body.cyber .segmented { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; box-shadow: none; }
+        body.cyber .seg { color: #7dd3fc; font-family: var(--font); }
+        body.cyber .seg.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; box-shadow: 0 0 16px rgba(6,182,212,0.5); }
+        body.cyber .dd-trigger { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #67e8f9; font-family: var(--font); box-shadow: none; border-radius: 6px; }
+        body.cyber .dd-trigger::after { color: #06b6d4; }
+        body.cyber .dd.open .dd-trigger { box-shadow: 0 0 16px rgba(6,182,212,0.3); border-color: #06b6d4; }
+        body.cyber .dd-menu { background: #08111f; border: 1px solid #1e4a5f; border-radius: 6px; box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 30px rgba(6,182,212,0.3); }
+        body.cyber .dd-opt { color: #7dd3fc; font-family: var(--font); border-radius: 4px; }
+        body.cyber .dd-opt:hover { background: rgba(6,182,212,0.1); color: #67e8f9; }
+        body.cyber .dd-opt.sel { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; }
+        body.cyber .toggle-field { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; box-shadow: none; border-radius: 6px; }
+        body.cyber .toggle-field.on { border-color: #06b6d4; background: rgba(6,182,212,0.12); box-shadow: 0 0 18px rgba(6,182,212,0.35), inset 0 0 20px rgba(6,182,212,0.08); }
+        body.cyber .toggle-field.on .tf-icon { filter: drop-shadow(0 0 6px #06b6d4); }
+        body.cyber .toggle-field.on .tf-text { color: #67e8f9; }
+        body.cyber .toggle-field .tf-text { color: #7dd3fc; }
+        body.cyber .switch { background: #0a1a2e; border: 1px solid #1e4a5f; box-shadow: none; }
+        body.cyber .switch::after { background: #2a5a6e; }
+        body.cyber .toggle-field.on .switch { background: linear-gradient(90deg,#06b6d4,#10b981); box-shadow: 0 0 12px rgba(6,182,212,0.6); }
+        body.cyber .toggle-field.on .switch::after { background: #012; }
+        body.cyber .divider { border-top: 1px solid #123a4d; }
+        body.cyber #startBtn { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; border: 2px solid #67e8f9; font-family: var(--font); letter-spacing: 2px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 0 20px rgba(6,182,212,0.4), inset 0 0 20px rgba(255,255,255,0.12); }
+        body.cyber #startBtn::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.5), transparent 55%); animation: breathe 2.2s ease-in-out infinite; z-index: 0; }
+        body.cyber #startBtn::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; z-index: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: sweepx 3s ease-in-out infinite; }
+        @keyframes breathe { 0%,100% { opacity: 0.3; } 50% { opacity: 0.9; } }
+        @keyframes sweepx { 0% { left: -60%; } 60%,100% { left: 130%; } }
+        body.cyber #startBtn .btn-label { position: relative; z-index: 2; }
+        body.cyber #startBtn:hover:not(:disabled) { transform: translateY(-2px); border-color: #a5f3fc; box-shadow: 0 0 45px rgba(6,182,212,0.9), inset 0 0 25px rgba(255,255,255,0.3); }
+        body.cyber #cancelBtn { background: linear-gradient(90deg,#f43f5e,#e11d48); color: #fff; border: 2px solid #fb7185; font-family: var(--font); border-radius: 6px; box-shadow: 0 0 16px rgba(244,63,94,0.4); }
+        body.cyber #cancelBtn:hover { transform: translateY(-2px); border-color: #fecdd3; box-shadow: 0 0 36px rgba(244,63,94,0.8); }
+        body.cyber .btn-sm { background: rgba(6,182,212,0.05); border: 1.5px solid #123a4d; color: #22d3ee; font-family: var(--font); border-radius: 6px; }
+        body.cyber .btn-sm:hover { color: #67e8f9; border-color: #06b6d4; box-shadow: 0 0 16px rgba(6,182,212,0.4); }
+        body.cyber .btn-sm.danger:hover { color: #fb7185; border-color: #fb7185; box-shadow: 0 0 16px rgba(244,63,94,0.4); }
+        body.cyber .progress-wrap { background: #020509; border: 1.5px solid #1e4a5f; box-shadow: inset 0 0 20px rgba(6,182,212,0.1); }
+        body.cyber .progress-track-glow { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(6,182,212,0.08) 10px, rgba(6,182,212,0.08) 20px); }
+        body.cyber #progressBar { background: linear-gradient(90deg,#06b6d4,#10b981); box-shadow: 0 0 20px #06b6d4; }
+        body.cyber .progress-label { color: #67e8f9; font-family: var(--font); text-shadow: 0 0 8px rgba(6,182,212,0.5); }
+        body.cyber #status { color: #22d3ee; font-family: var(--font); }
+
+        /* ===== MODAL ===== */
+        #imgModal { display: none; position: fixed; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(30,30,45,0.85), rgba(8,8,14,0.95)); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 20px 24px; z-index: 5; }
+        .modal-info { color: #fff; font-size: 15px; font-weight: 700; background: var(--accent-grad); padding: 11px 20px; border-radius: 12px; box-shadow: 0 6px 24px rgba(99,102,241,0.6); font-family: var(--font); letter-spacing: 0.3px; }
+        .modal-counter { color: #fff; font-size: 13px; font-weight: 600; background: rgba(40,40,55,0.85); padding: 9px 15px; border-radius: 10px; font-family: var(--font); }
+        .modal-close { margin-left: auto; width: 48px; height: 48px; border-radius: 14px; border: none; background: rgba(40,40,55,0.85); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #ef4444; transform: rotate(90deg) scale(1.08); box-shadow: 0 6px 24px rgba(239,68,68,0.7); }
+
+        /* image with soft glow aura behind - no border */
+        .modal-img-wrap {
+            position: relative; max-width: 86vw; max-height: 80vh;
+            border-radius: 14px; overflow: hidden;
+            box-shadow: 0 0 80px 10px rgba(129,140,248,0.35), 0 0 140px 30px rgba(99,102,241,0.2), 0 30px 80px rgba(0,0,0,0.5);
+        }
+        .modal-img-wrap img { max-width: 86vw; max-height: 80vh; object-fit: contain; display: block; }
+
+        /* chevron nav - no heavy circle */
+        .modal-nav {
+            position: absolute; top: 50%; transform: translateY(-50%); width: 64px; height: 100px;
+            border: none; background: transparent; color: #fff; font-size: 52px; font-weight: 300;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+            z-index: 5; opacity: 0.65; text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+        }
+        .modal-nav:hover { opacity: 1; color: var(--accent2); transform: translateY(-50%) scale(1.2); text-shadow: 0 0 20px var(--accent); }
+        .modal-nav:active { transform: translateY(-50%) scale(0.95); }
+        .modal-prev { left: 20px; }
+        .modal-next { right: 20px; }
+
+        .modal-download {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 10px; padding: 16px 34px; border-radius: 16px;
+            border: none; background: var(--accent-grad); color: #fff; font-size: 15px; font-weight: 700;
+            font-family: var(--font); cursor: pointer; letter-spacing: 0.5px; z-index: 5;
+            box-shadow: 0 10px 30px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.35);
+            transition: transform 0.12s, box-shadow 0.2s;
+        }
+        .modal-download:hover { transform: translateX(-50%) translateY(-3px); box-shadow: 0 16px 44px rgba(99,102,241,0.85), inset 0 1px 0 rgba(255,255,255,0.4); }
+        .modal-download:active { transform: translateX(-50%) translateY(2px) scale(0.97); box-shadow: 0 3px 12px rgba(99,102,241,0.5), inset 0 3px 10px rgba(0,0,0,0.3); }
+        .modal-download span { font-size: 18px; }
+
+        body.cyber #imgModal { background: radial-gradient(circle at 50% 45%, rgba(6,30,40,0.85), rgba(3,8,18,0.96)); }
+        body.cyber .modal-info { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); box-shadow: 0 6px 24px rgba(6,182,212,0.6); }
+        body.cyber .modal-counter { background: rgba(6,20,30,0.85); color: #67e8f9; font-family: var(--font); }
+        body.cyber .modal-close { background: rgba(6,20,30,0.85); color: #67e8f9; }
+        body.cyber .modal-close:hover { background: #f43f5e; color: #fff; box-shadow: 0 6px 24px rgba(244,63,94,0.7); }
+        body.cyber .modal-img-wrap { box-shadow: 0 0 80px 10px rgba(6,182,212,0.4), 0 0 140px 30px rgba(16,185,129,0.2), 0 30px 80px rgba(0,0,0,0.5); }
+        body.cyber .modal-nav:hover { color: #06b6d4; text-shadow: 0 0 20px rgba(6,182,212,0.9); }
+        body.cyber .modal-download { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); box-shadow: 0 10px 30px rgba(6,182,212,0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
     </style>
 </head>
-<body>
+<body class="dark">
 
 <div class="container">
 
-<!--    <h1>🎰 QA Screenshot Tool</h1>-->
-    <h1>🎰 QA Screenshot Tool <span id="appVersion" style="font-size:14px;color:#666;font-weight:400;"></span></h1>
+    <div class="theme-switch">
+        <button onclick="setTheme('light')" id="th-light">☀️ Light</button>
+        <button onclick="setTheme('dark')" id="th-dark" class="active">🌙 Dark</button>
+        <button onclick="setTheme('cyber')" id="th-cyber">⚡ Cyberpunk</button>
+    </div>
+
+    <div class="cyber-strip">
+        <span class="led"></span>
+        <span class="s-name">SCREENSHOT-TOOL</span>
+        <span class="s-name" id="stripVer" style="margin-left:8px;color:#0891b2;"></span>
+        <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="app-head">
+        <div class="icon-badge">🎰</div>
+        <h1>QA Screenshot Tool <span class="ver" id="appVersion"></span></h1>
+    </div>
+    <div class="app-sub">Automated multi-language game screenshots</div>
 
     <div class="card">
-
         <label class="title">Game URL</label>
-
-        <input
-                id="url"
-                type="text"
-                placeholder="Paste game URL here..."
-        >
-
+        <input id="url" type="text" placeholder="Paste game URL here...">
     </div>
 
     <div class="card">
-
         <label class="title">Languages</label>
-
         <div class="actions">
             <button type="button" onclick="selectAll()">Select All</button>
             <button type="button" onclick="clearAll()">Clear All</button>
         </div>
-
-        <div id="langCount">
-            Selected languages: 0
-        </div>
-
+        <div id="langCount">Selected languages: 0</div>
         <div class="lang-grid">
-
             <label><input type="checkbox" class="lang" value="bg">BG</label>
             <label><input type="checkbox" class="lang" value="de">DE</label>
             <label><input type="checkbox" class="lang" value="el">EL</label>
             <label><input type="checkbox" class="lang" value="en" checked>EN</label>
             <label><input type="checkbox" class="lang" value="en-soc">EN-SOC</label>
             <label><input type="checkbox" class="lang" value="es">ES</label>
-
             <label><input type="checkbox" class="lang" value="fi">FI</label>
             <label><input type="checkbox" class="lang" value="fr" checked>FR</label>
             <label><input type="checkbox" class="lang" value="hr">HR</label>
             <label><input type="checkbox" class="lang" value="hu">HU</label>
             <label><input type="checkbox" class="lang" value="id">ID</label>
             <label><input type="checkbox" class="lang" value="it">IT</label>
-
             <label><input type="checkbox" class="lang" value="ja">JA</label>
             <label><input type="checkbox" class="lang" value="ko">KO</label>
             <label><input type="checkbox" class="lang" value="nl">NL</label>
             <label><input type="checkbox" class="lang" value="no">NO</label>
             <label><input type="checkbox" class="lang" value="pt">PT</label>
             <label><input type="checkbox" class="lang" value="pt-br">PT-BR</label>
-
             <label><input type="checkbox" class="lang" value="ro">RO</label>
             <label><input type="checkbox" class="lang" value="ru">RU</label>
             <label><input type="checkbox" class="lang" value="sv">SV</label>
             <label><input type="checkbox" class="lang" value="th">TH</label>
             <label><input type="checkbox" class="lang" value="tr">TR</label>
             <label><input type="checkbox" class="lang" value="uk">UK</label>
-
             <label><input type="checkbox" class="lang" value="vi">VI</label>
             <label><input type="checkbox" class="lang" value="zh">ZH</label>
             <label><input type="checkbox" class="lang" value="zh-hant">ZH-HANT</label>
-
         </div>
-
     </div>
 
     <div class="card">
-
         <label class="title">Orientation</label>
-
-        <select id="mode">
-            <option value="landscape">Landscape</option>
-            <option value="portrait">Portrait</option>
-            <option value="both">Both</option>
-        </select>
-        <hr style="margin:20px 0; border:1px solid #333;" />
-        <div style="margin-top:15px;">
-            <label class="title">Browser mode</label>
-
-            <label style="display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="headless" checked>
-                Headless mode (run in background)
-            </label>
+        <div class="segmented" id="orientation">
+            <div class="seg active" data-mode="landscape" onclick="pickOrientation(this)"><span class="seg-ic">🖥️</span>Landscape</div>
+            <div class="seg" data-mode="portrait" onclick="pickOrientation(this)"><span class="seg-ic">📱</span>Portrait</div>
+            <div class="seg" data-mode="both" onclick="pickOrientation(this)"><span class="seg-ic">⊞</span>Both</div>
         </div>
-        <hr style="margin:20px 0; border:1px solid #333;" />
-<!--        <label class="title">Pages count (all)</label>-->
+        <input type="hidden" id="mode" value="landscape">
 
-<!--        <input-->
-<!--                id="pagesCount"-->
-<!--                type="number"-->
-<!--                min="1"-->
-<!--                max="50"-->
-<!--                value="10"-->
-<!--                style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;"-->
-<!--        >-->
-        <input id="pagesCount" type="hidden" value="10">
-
-        <label class="title">Pages (optional)</label>
-
-        <input
-                id="pagesInput"
-                type="text"
-                placeholder="e.g. 1,2,5,10 or 3-7"
-                style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;"
-        >
-
-<!--        <hr style="margin:20px 0; border:1px solid #333;" />-->
-<!--        <label class="title">EN-SOC extra page</label>-->
-<!--        <label style="display:flex;align-items:center;gap:8px;">-->
-<!--            <input type="checkbox" id="enSocExtra">-->
-<!--            EN-SOC has +1 extra page-->
-<!--        </label>-->
-        <input type="checkbox" id="enSocExtra" style="display:none;">
-
-        <hr style="margin:20px 0; border:1px solid #333;" />
-        <label class="title">Start screen screenshot</label>
-        <label style="display:flex;align-items:center;gap:8px;">
-            <input type="checkbox" id="screenshotStartScreen">
-            Screenshot start screen
-        </label>
-
-        <hr style="margin:20px 0; border:1px solid #333;" />
+        <hr class="divider" />
 
         <label class="title">Workers</label>
-
-        <select id="workers" style="width:100%;padding:12px;border-radius:8px;border:none;background:#171717;color:white;">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4 (if your pc monster)</option>
-        </select>
-
+        <div class="dd" id="workersDD">
+            <div class="dd-trigger" onclick="toggleDD(event)">
+                <span class="dd-ic">⚙️</span>
+                <span class="dd-val">1 worker</span>
+            </div>
+            <div class="dd-menu">
+                <div class="dd-opt sel" data-val="1" onclick="pickWorker(this,'1 worker')"><span>1 worker</span><span class="check">✓</span></div>
+                <div class="dd-opt" data-val="2" onclick="pickWorker(this,'2 workers')"><span>2 workers</span><span class="check">✓</span></div>
+                <div class="dd-opt" data-val="3" onclick="pickWorker(this,'3 workers')"><span>3 workers</span><span class="check">✓</span></div>
+                <div class="dd-opt" data-val="4" onclick="pickWorker(this,'4 workers')"><span>4 workers <span class="sub">· if your pc is a monster</span></span><span class="check">✓</span></div>
+            </div>
+        </div>
+        <input type="hidden" id="workers" value="1">
     </div>
 
-    <button id="startBtn" onclick="start()">
-        🚀 Start Screenshot
-    </button>
-    <button id="cancelBtn" onclick="cancelJob()">
-        🛑 Cancel
-    </button>
+    <div class="card">
+        <label class="title">Options</label>
 
-    <button onclick="downloadZip()" style="width:100%;margin-top:10px;">
-        📦 Download ZIP
-    </button>
+        <div class="toggle-field on" id="headlessToggle" onclick="toggleField('headlessToggle','headless')">
+            <div class="tf-text"><span class="tf-icon">👁️</span><div>Headless mode<div class="tf-desc">Run in background</div></div></div>
+            <div class="switch"></div>
+        </div>
+        <input type="checkbox" id="headless" checked style="display:none;">
 
-    <button onclick="clearScreenshots()" style="width:100%;margin-top:10px;background:#d73a49;">
-        🧹 Clear Screenshots
-    </button>
+        <div style="height:12px"></div>
 
-    <button onclick="loadGallery()" style="margin-top:10px;width:100%;">
-        📁 Open Screenshots
-    </button>
+        <div class="toggle-field" id="startScreenToggle" onclick="toggleField('startScreenToggle','screenshotStartScreen')">
+            <div class="tf-text"><span class="tf-icon">🎬</span><div>Start screen screenshot<div class="tf-desc">Capture the start screen</div></div></div>
+            <div class="switch"></div>
+        </div>
+        <input type="checkbox" id="screenshotStartScreen" style="display:none;">
 
-    <button onclick="closeGallery()" style="width:100%;margin-top:10px;background:#555;">
-        ❌ Close Screenshots
-    </button>
+        <hr class="divider" />
 
-    <div style="margin-top:20px;background:#111;border-radius:8px;overflow:hidden;height:20px;">
-        <div id="progressBar" style="height:100%;width:0%;background:#7c3aed;transition:width 0.2s;"></div>
+        <label class="title">Pages (optional)</label>
+        <input id="pagesInput" class="pages-input" type="text" placeholder="e.g. 1,2,5,10 or 3-7">
+        <input id="pagesCount" type="hidden" value="10">
+        <input type="checkbox" id="enSocExtra" style="display:none;">
     </div>
 
-    <div id="progressText" style="margin-top:8px;color:#9cdcfe;">
-        0%
+    <button id="startBtn" class="btn" onclick="start()"><span class="btn-label">📸 Start Screenshots</span></button>
+    <button id="cancelBtn" class="btn" onclick="cancelJob()">🛑 Cancel</button>
+
+    <div class="btn-row">
+        <button class="btn btn-sm" onclick="downloadZip()">📦 Download ZIP</button>
+        <button class="btn btn-sm danger" onclick="clearScreenshots()">🧹 Clear Screenshots</button>
+        <button class="btn btn-sm" onclick="loadGallery()">📁 Open Gallery</button>
+        <button class="btn btn-sm" onclick="closeGallery()">❌ Close Gallery</button>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-wrap">
+            <div class="progress-track-glow"></div>
+            <div id="progressBar"></div>
+            <div class="progress-label" id="progressLabel">Ready to capture</div>
+        </div>
     </div>
 
     <div id="status">Ready</div>
 
-    <div id="gallery" style="display:none; margin-top:20px;"></div>
+    <div id="gallery" style="display:none;"></div>
 
 </div>
 
@@ -357,349 +484,332 @@
     let flatScreens = [];
     let currentIndex = 0;
 
+    function setTheme(t) {
+        document.body.className = t;
+        ['light','dark','cyber'].forEach(x => document.getElementById('th-'+x).classList.toggle('active', x === t));
+        try { localStorage.setItem('qa-theme', t); } catch(e) {}
+        const label = document.querySelector('#startBtn .btn-label');
+        if (label) label.textContent = (t === 'cyber') ? '▶ Initiate Capture' : '📸 Start Screenshots';
+    }
+    (function initTheme() {
+        let t = 'dark';
+        try { t = localStorage.getItem('qa-theme') || 'dark'; } catch(e) {}
+        setTheme(t);
+    })();
+
+    function pickOrientation(el) {
+        el.parentNode.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('mode').value = el.dataset.mode;
+    }
+
+    function toggleDD(e) {
+        e.stopPropagation();
+        document.getElementById('workersDD').classList.toggle('open');
+    }
+    function pickWorker(el, label) {
+        el.parentNode.querySelectorAll('.dd-opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+        document.querySelector('#workersDD .dd-val').textContent = label;
+        document.getElementById('workers').value = el.dataset.val;
+        document.getElementById('workersDD').classList.remove('open');
+    }
+    document.addEventListener('click', (e) => {
+        const dd = document.getElementById('workersDD');
+        if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+    });
+
+    function toggleField(fieldId, inputId) {
+        const field = document.getElementById(fieldId);
+        field.classList.toggle('on');
+        document.getElementById(inputId).checked = field.classList.contains('on');
+    }
+
+    function syncLangLabels() {
+        document.querySelectorAll('.lang-grid label').forEach(lab => {
+            const cb = lab.querySelector('input.lang');
+            lab.classList.toggle('checked', cb.checked);
+        });
+    }
+
     async function downloadZip() {
         const urlInput = document.getElementById('url').value.trim();
         let gameName = 'screenshots';
-
-        try {
-            const u = new URL(urlInput);
-            gameName = u.searchParams.get('game') || 'screenshots';
-        } catch (e) {}
-
+        try { const u = new URL(urlInput); gameName = u.searchParams.get('game') || 'screenshots'; } catch (e) {}
         const today = new Date().toISOString().slice(0, 10);
         const res = await fetch(`/download-zip?name=${encodeURIComponent(gameName)}`);
-
-        if (!res.ok) {
-            alert('No screenshots found');
-            return;
-        }
-
+        if (!res.ok) { alert('No screenshots found'); return; }
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-
-        a.href = url;
-        a.download = `${gameName}_${today}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        a.href = url; a.download = `${gameName}_${today}.zip`;
+        document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
     }
 
     async function clearScreenshots() {
-        const ok = confirm('Delete all screenshots?');
-
-        if (!ok) return;
-
-        const res = await fetch('/cleanup', {
-            method: 'POST'
-        });
-
+        if (!confirm('Delete all screenshots?')) return;
+        const res = await fetch('/cleanup', { method: 'POST' });
         const data = await res.json();
-
         if (data.ok) {
-            document.getElementById('status').innerText =
-                '🧹 Screenshots cleared';
-
+            document.getElementById('status').innerText = '🧹 Screenshots cleared';
             document.getElementById('gallery').innerHTML = '';
             document.getElementById('gallery').style.display = 'none';
-
             document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('progressText').innerText = '0%';
-        } else {
-            alert('Failed to clear screenshots');
-        }
+            document.getElementById('progressLabel').innerText = 'Ready to capture';
+        } else { alert('Failed to clear screenshots'); }
     }
 
     function closeGallery() {
-        const gallery = document.getElementById('gallery');
-        gallery.style.display = 'none';
-        gallery.innerHTML = '';
+        const g = document.getElementById('gallery');
+        g.style.display = 'none'; g.innerHTML = '';
     }
+
+    let galleryData = [];
+    let activeLangFilter = 'all';
+    let searchQuery = '';
 
     async function loadGallery() {
         const res = await fetch('/screenshots');
         const data = await res.json();
+        galleryData = data;
+        activeLangFilter = 'all';
+        searchQuery = '';
 
-        const gallery = document.getElementById('gallery');
-        gallery.style.display = 'block';
-        gallery.innerHTML = render(data);
-
+        // build flatScreens for modal navigation
         flatScreens = [];
-
         function collect(items, lang = null, mode = null) {
             items.forEach(i => {
-
-                if (i.type === 'file') {
-
-                    flatScreens.push({
-                        ...i,
-                        lang,
-                        mode
-                    });
-
-                } else {
-
-                    // folder name = en / fr / landscape / portrait
-                    const isLang = !lang && !['landscape', 'portrait'].includes(i.name);
+                if (i.type === 'file') { flatScreens.push({ ...i, lang, mode }); }
+                else {
+                    const isLang = !lang && !['landscape', 'portrait', 'startscreen'].includes(i.name);
                     const isMode = ['landscape', 'portrait', 'startscreen'].includes(i.name);
-
-                    collect(
-                        i.children || [],
-                        isLang ? i.name : lang,
-                        isMode ? i.name : mode
-                    );
+                    collect(i.children || [], isLang ? i.name : lang, isMode ? i.name : mode);
                 }
             });
         }
-
         collect(data);
+
+        const g = document.getElementById('gallery');
+        g.style.display = 'block';
+        renderGallery();
     }
 
-    function render(items) {
-        const ts = Date.now(); // ← додай
+    function getLangs() {
+        // top-level folders are languages
+        return galleryData.filter(i => i.type !== 'file').map(f => f.name);
+    }
 
-        const files = items.filter(i => i.type === 'file');
-        const folders = items.filter(i => i.type !== 'file');
+    function countFilesInLang(langFolder) {
+        let n = 0;
+        (function walk(items) {
+            items.forEach(i => { if (i.type === 'file') n++; else walk(i.children || []); });
+        })(langFolder.children || []);
+        return n;
+    }
 
-        let html = '';
+    const modeIcon = { landscape: '🖥️', portrait: '📱', startscreen: '🎬' };
 
-        folders.forEach(folder => {
-            html += `
-        <div class="folder">
-            <div class="folder-title">📁 ${folder.name}</div>
-            ${render(folder.children || [])}
-        </div>
-    `;
+    function renderGallery() {
+        const g = document.getElementById('gallery');
+        const langs = getLangs();
+
+        // controls
+        let html = '<div class="gallery-controls">';
+        html += `<div class="gallery-search-wrap"><span class="gallery-search-ic">🔍</span><input class="gallery-search" id="gallerySearch" placeholder="Search by language or file..." value="${searchQuery}"></div>`;
+        html += '<div class="lang-chips">';
+        const totalFiles = flatScreens.length;
+        html += `<div class="lang-chip ${activeLangFilter==='all'?'active':''}" onclick="filterLang('all')">All<span class="cnt">${totalFiles}</span></div>`;
+        galleryData.filter(i => i.type !== 'file').forEach(folder => {
+            const c = countFilesInLang(folder);
+            html += `<div class="lang-chip ${activeLangFilter===folder.name?'active':''}" onclick="filterLang('${folder.name}')">${folder.name.toUpperCase()}<span class="cnt">${c}</span></div>`;
+        });
+        html += '</div></div>';
+
+        // body
+        const langFolders = galleryData.filter(i => i.type !== 'file');
+        const visible = langFolders.filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
+
+        let bodyHtml = '';
+        visible.forEach(langFolder => {
+            const langBlock = renderLangFolder(langFolder);
+            if (langBlock) bodyHtml += langBlock;
         });
 
-        if (files.length) {
-            html += `<div class="images-grid">`;
-            files.forEach(file => {
-                html += `
-            <div class="gallery-item">
-                <img
-                    src="${file.url}?t=${ts}"
-                    onclick="openImage('${file.url}')"
-                />
-                <div class="file-name">${file.name}</div>
-            </div>
-        `;
-            });
-            html += `</div>`;
+        if (!bodyHtml) bodyHtml = '<div class="gallery-empty">🔍 No screenshots match your search</div>';
+
+        g.innerHTML = html + bodyHtml;
+
+        const search = document.getElementById('gallerySearch');
+        if (search) {
+            search.oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderGallery(); requestAnimationFrame(() => { const s = document.getElementById('gallerySearch'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }); };
+        }
+    }
+
+    function matchesSearch(lang, fileName) {
+        if (!searchQuery) return true;
+        return (lang && lang.toLowerCase().includes(searchQuery)) || (fileName && fileName.toLowerCase().includes(searchQuery));
+    }
+
+    function renderLangFolder(langFolder) {
+        const ts = Date.now();
+        const lang = langFolder.name;
+        // modes inside language
+        const modeFolders = (langFolder.children || []).filter(i => i.type !== 'file');
+        const directFiles = (langFolder.children || []).filter(i => i.type === 'file');
+
+        let inner = '';
+
+        // direct files (rare)
+        const df = directFiles.filter(f => matchesSearch(lang, f.name));
+        if (df.length) {
+            inner += '<div class="images-grid">';
+            df.forEach(file => { inner += galleryCard(file, ts); });
+            inner += '</div>';
         }
 
-        return html;
+        modeFolders.forEach(modeFolder => {
+            const files = (modeFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name));
+            if (!files.length) return;
+            const mIc = modeIcon[modeFolder.name] || '📁';
+            inner += `<div class="folder-mode"><span class="mode-ic">${mIc}</span>${modeFolder.name}</div>`;
+            inner += '<div class="images-grid">';
+            files.forEach(file => { inner += galleryCard(file, ts); });
+            inner += '</div>';
+        });
+
+        if (!inner) return '';
+
+        return `<div class="folder"><div class="folder-lang"><span class="lang-badge">${lang.toUpperCase()}</span><span class="lang-line"></span></div>${inner}</div>`;
+    }
+
+    function galleryCard(file, ts) {
+        return `<div class="gallery-item" onclick="openImage('${file.url}')">
+            <div class="img-frame">
+                <img src="${file.url}?t=${ts}" loading="lazy" />
+                <div class="img-overlay"><span class="view-btn">👁 View</span></div>
+            </div>
+            <div class="file-name">${file.name}</div>
+        </div>`;
+    }
+
+    function filterLang(lang) {
+        activeLangFilter = lang;
+        renderGallery();
     }
 
     function updateLangCount() {
-
         const count = document.querySelectorAll('input.lang:checked').length;
-
-        document.getElementById('langCount').innerText =
-            `Selected languages: ${count}`;
-
+        document.getElementById('langCount').innerText = `Selected languages: ${count}`;
+        syncLangLabels();
         validateForm();
     }
 
     function validateForm() {
-
-        const url = document
-            .getElementById('url')
-            .value
-            .trim();
-
+        const url = document.getElementById('url').value.trim();
         const count = document.querySelectorAll('input.lang:checked').length;
-
-        document.getElementById('startBtn').disabled =
-            !url || count === 0;
+        document.getElementById('startBtn').disabled = !url || count === 0;
     }
 
-    function selectAll() {
-
-        document
-            .querySelectorAll('input.lang')
-            .forEach(cb => cb.checked = true);
-
-        updateLangCount();
-    }
-
-    function clearAll() {
-
-        document
-            .querySelectorAll('input.lang')
-            .forEach(cb => cb.checked = false);
-
-        updateLangCount();
-    }
+    function selectAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = true); updateLangCount(); }
+    function clearAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = false); updateLangCount(); }
 
     async function start() {
         document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('progressText').innerText = '0%';
+        document.getElementById('progressLabel').innerText = 'Starting... 0%';
         closeGallery();
         const status = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const headless = document.getElementById('headless').checked;
         const url = document.getElementById('url').value.trim();
-
         const workers = parseInt(document.getElementById('workers').value, 10);
-
-        const langs = Array
-            .from(document.querySelectorAll('input.lang:checked'))
-            .map(el => el.value);
-
+        const langs = Array.from(document.querySelectorAll('input.lang:checked')).map(el => el.value);
         const mode = document.getElementById('mode').value;
-
         const pagesCount = parseInt(document.getElementById('pagesCount').value || '10', 10);
         const pagesRaw = document.getElementById('pagesInput').value;
-
         const pages = parsePages(pagesRaw, pagesCount);
         const enSocExtra = document.getElementById('enSocExtra').checked;
         const screenshotStartScreen = document.getElementById('screenshotStartScreen').checked;
 
         startBtn.disabled = true;
 
-        if (!url) {
-            status.innerText = '❌ Please enter Game URL';
-            validateForm();
-            return;
-        }
-
-        if (langs.length === 0) {
-            status.innerText = '❌ Please select at least one language';
-            validateForm();
-            return;
-        }
+        if (!url) { status.innerText = '❌ Please enter Game URL'; validateForm(); return; }
+        if (langs.length === 0) { status.innerText = '❌ Please select at least one language'; validateForm(); return; }
 
         status.innerText = '⏳ Starting...';
 
         try {
-
             await fetch('/run', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url,
-                    langs,
-                    mode,
-                    pagesCount,
-                    pages,
-                    headless,
-                    workers,
-                    enSocExtra,
-                    screenshotStartScreen
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, enSocExtra, screenshotStartScreen })
             });
-
             jobRunning = true;
-
         } catch (e) {
-
             status.innerText = '❌ Error';
-
             startBtn.disabled = false;
             validateForm();
-
             console.error(e);
         }
     }
 
     function parsePages(input, maxPages) {
-        if (!input.trim()) return null; // всі сторінки
-
+        if (!input.trim()) return null;
         const result = new Set();
-
         input.split(',').forEach(part => {
             part = part.trim();
-
             if (part.includes('-')) {
                 const [a, b] = part.split('-').map(Number);
-
-                for (let i = a; i <= b; i++) {
-                    result.add(i);
-                }
-            } else {
-                result.add(Number(part));
-            }
+                for (let i = a; i <= b; i++) result.add(i);
+            } else { result.add(Number(part)); }
         });
-
         return Array.from(result).filter(n => n >= 1 && n <= maxPages);
     }
 
     async function cancelJob() {
-
-        const res = await fetch('/cancel', {
-            method: 'POST'
-        });
-
+        const res = await fetch('/cancel', { method: 'POST' });
         const data = await res.json();
-
-        document.getElementById('status').innerText =
-            data.ok ? '🛑 Cancelling...' : data.message;
+        document.getElementById('status').innerText = data.ok ? '🛑 Cancelling...' : data.message;
     }
 
     document.addEventListener('keydown', (e) => {
         if (document.getElementById('imgModal').style.display !== 'flex') return;
-
-        if (e.key === 'ArrowRight') {
-            showImage(currentIndex + 1);
-        }
-
-        if (e.key === 'ArrowLeft') {
-            showImage(currentIndex - 1);
-        }
-
-        updateModalInfo();
+        if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+        if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+        if (e.key === 'Escape') closeModal();
     });
 
     function downloadCurrent() {
         const item = flatScreens[currentIndex];
         if (!item) return;
-
         const a = document.createElement('a');
-        a.href = item.url;
-        a.download = item.name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        a.href = item.url; a.download = item.name;
+        document.body.appendChild(a); a.click(); a.remove();
     }
 
     function openImage(src) {
         currentIndex = flatScreens.findIndex(i => i.url === src);
-
-        const modal = document.getElementById('imgModal');
-        const img = document.getElementById('modalImg');
-
-        img.src = src;
-        modal.style.display = 'flex';
-
+        document.getElementById('modalImg').src = src;
+        document.getElementById('imgModal').style.display = 'flex';
         updateModalInfo();
     }
 
     function showImage(index) {
         if (index < 0 || index >= flatScreens.length) return;
-
         currentIndex = index;
-
-        const item = flatScreens[index];
-
-        const img = document.getElementById('modalImg');
-        img.src = item.url;
-
+        document.getElementById('modalImg').src = flatScreens[index].url;
         updateModalInfo();
     }
 
-    function closeModal() {
-        document.getElementById('imgModal').style.display = 'none';
-    }
+    function closeModal() { document.getElementById('imgModal').style.display = 'none'; }
 
     function updateModalInfo() {
         const item = flatScreens[currentIndex];
-
+        if (!item) return;
         document.getElementById('modalInfo').innerText =
-            `${item.lang?.toUpperCase() || '—'} / ${item.mode?.toUpperCase() || '—'} / ${item.name}`;
+            `${item.lang?.toUpperCase() || '—'} · ${item.mode?.toUpperCase() || '—'} · ${item.name}`;
+        const counter = document.getElementById('modalCounter');
+        if (counter) counter.innerText = `${currentIndex + 1} / ${flatScreens.length}`;
     }
 
     async function refreshStatus() {
@@ -707,127 +817,58 @@
             const res = await fetch('/status');
             const data = await res.json();
             const startBtn = document.getElementById('startBtn');
-            console.log('STATUS UI:', data);
+            const bar = document.getElementById('progressBar');
+            const label = document.getElementById('progressLabel');
             if (data.finished) {
                 if (!jobRunning) return;
                 jobRunning = false;
-
                 startBtn.disabled = false;
-
-                document.getElementById('progressBar').style.width = '100%';
-                document.getElementById('progressText').innerText = `100% (${data.total} tasks)`;
-
-                if (data.message.startsWith('🛑')) {
-                    document.getElementById('status').innerText =
-                        '🛑 Cancelled';
-                } else {
-                    document.getElementById('status').innerText =
-                        '✅ Done! You can download ZIP';
-
-                }
-
+                bar.style.width = '100%';
+                label.innerText = `100% · ${data.total} tasks`;
+                document.getElementById('status').innerText =
+                    data.message.startsWith('🛑') ? '🛑 Cancelled' : '✅ Done! You can download ZIP';
                 return;
             }
-
-            document.getElementById('status').innerText =
-                data.message + (data.stage ? ` (${data.stage})` : '');
-
+            document.getElementById('status').innerText = data.message + (data.stage ? ` (${data.stage})` : '');
             if (data.total > 0) {
-
                 const percent = data.progress ?? 0;
-
-                document.getElementById('progressBar').style.width = percent + '%';
-
-                document.getElementById('progressText').innerText =
-                    `${percent}% (${data.total} tasks)`;
+                bar.style.width = percent + '%';
+                label.innerText = `${percent}% · ${data.total} tasks`;
             }
-
-            if (data.running) {
-                jobRunning = true;
-                startBtn.disabled = true;
-            } else {
-                startBtn.disabled = false;
-                validateForm();
-            }
-
-        } catch (e) {
-            console.error(e);
-        }
+            if (data.running) { jobRunning = true; startBtn.disabled = true; }
+            else { startBtn.disabled = false; validateForm(); }
+        } catch (e) { console.error(e); }
     }
 
-    document
-        .querySelectorAll('input[type=checkbox]')
-        .forEach(cb => {
-            cb.addEventListener('change', updateLangCount);
-        });
-
-    document
-        .getElementById('url')
-        .addEventListener('input', validateForm);
+    document.querySelectorAll('input.lang').forEach(cb => cb.addEventListener('change', updateLangCount));
+    document.getElementById('url').addEventListener('input', validateForm);
 
     updateLangCount();
     validateForm();
-
     setInterval(refreshStatus, 300);
 
     fetch('/version')
         .then(r => r.json())
         .then(data => {
             document.getElementById('appVersion').innerText = `v${data.version}`;
+            const sv = document.getElementById('stripVer');
+            if (sv) sv.innerText = `v${data.version} · SYS ONLINE`;
         });
-
 </script>
 
-<div id="imgModal" onclick="closeModal()" style="
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.85);
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
-">
-
-    <div id="modalInfo" style="
-    position:absolute;
-    top:15px;
-    left:50%;
-    transform:translateX(-50%);
-    color:#9cdcfe;
-    font-size:16px;
-    background:#00000066;
-    padding:6px 12px;
-    border-radius:8px;
-">
+<div id="imgModal" onclick="closeModal()">
+    <div class="modal-topbar" onclick="event.stopPropagation()">
+        <div id="modalInfo" class="modal-info"></div>
+        <div class="modal-counter" id="modalCounter"></div>
+        <button class="modal-close" onclick="event.stopPropagation(); closeModal()">✕</button>
     </div>
-
-    <button onclick="event.stopPropagation(); showImage(currentIndex - 1)"
-            style="position:absolute; left:20px; font-size:30px;">
-        ⬅
-    </button>
-
-    <img id="modalImg" style="
-        max-width: 90vw;
-        max-height: 90vh;
-        object-fit: contain;
-        border-radius: 8px;
-    ">
-
-    <button onclick="event.stopPropagation(); showImage(currentIndex + 1)"
-            style="position:absolute; right:20px; font-size:30px;">
-        ➡
-    </button>
-
-    <button onclick="event.stopPropagation(); downloadCurrent()"
-            style="position:absolute; bottom:20px; right:20px;">
-        ⬇ Download
-    </button>
-
+    <button class="modal-nav modal-prev" onclick="event.stopPropagation(); showImage(currentIndex - 1)">‹</button>
+    <div class="modal-img-wrap" onclick="event.stopPropagation()">
+        <img id="modalImg">
+    </div>
+    <button class="modal-nav modal-next" onclick="event.stopPropagation(); showImage(currentIndex + 1)">›</button>
+    <button class="modal-download" onclick="event.stopPropagation(); downloadCurrent()"><span>⬇</span> Download</button>
 </div>
 
 </body>
 </html>
-
