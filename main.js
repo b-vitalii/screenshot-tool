@@ -32,7 +32,7 @@ function showUpdateWindow(version) {
 
     updateWindow = new BrowserWindow({
         width: 560,
-        height: 760,
+        height: 820,
         resizable: false,
         minimizable: false,
         maximizable: false,
