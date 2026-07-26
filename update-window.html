@@ -1,137 +1,137 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Оновлення</title>
-<style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Arial, sans-serif;
-        background: #16161f;
-        color: #fff;
-        padding: 28px;
-        user-select: none;
-        overflow: hidden;
-    }
-    .head {
-        display: flex; align-items: center; gap: 14px; margin-bottom: 8px;
-    }
-    .badge {
-        width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
-        display: flex; align-items: center; justify-content: center; font-size: 26px;
-        background: linear-gradient(145deg, #818cf8, #6366f1);
-        box-shadow: 0 6px 20px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
-    }
-    h1 {
-        font-size: 20px; font-weight: 800;
-        background: linear-gradient(90deg, #818cf8, #c084fc);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .ver { font-size: 13px; color: #8b8ba7; margin-bottom: 22px; margin-left: 62px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Available</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Arial, sans-serif;
+            background: #16161f;
+            color: #fff;
+            padding: 28px;
+            user-select: none;
+            overflow: hidden;
+        }
+        .head {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 8px;
+        }
+        .badge {
+            width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 26px;
+            background: linear-gradient(145deg, #818cf8, #6366f1);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        h1 {
+            font-size: 20px; font-weight: 800;
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .ver { font-size: 13px; color: #8b8ba7; margin-bottom: 22px; margin-left: 62px; }
 
-    .step {
-        background: linear-gradient(160deg, #1e1e2e, #191925);
-        border: 1px solid #2a2a3a;
-        border-radius: 14px;
-        padding: 16px 18px;
-        margin-bottom: 12px;
-        display: flex;
-        gap: 14px;
-        align-items: flex-start;
-    }
-    .step-num {
-        width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-        background: linear-gradient(145deg, #818cf8, #6366f1); color: #fff;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 13px; font-weight: 800;
-        box-shadow: 0 3px 10px rgba(99,102,241,0.4);
-    }
-    .step-body { flex: 1; }
-    .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .step-desc { font-size: 12.5px; color: #8b8ba7; line-height: 1.5; }
+        .step {
+            background: linear-gradient(160deg, #1e1e2e, #191925);
+            border: 1px solid #2a2a3a;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .step-num {
+            width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+            background: linear-gradient(145deg, #818cf8, #6366f1); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 800;
+            box-shadow: 0 3px 10px rgba(99,102,241,0.4);
+        }
+        .step-body { flex: 1; }
+        .step-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .step-desc { font-size: 12.5px; color: #8b8ba7; line-height: 1.5; }
 
-    .btn {
-        margin-top: 10px;
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 10px 18px; border-radius: 10px; border: none;
-        font-size: 13px; font-weight: 700; cursor: pointer;
-        font-family: inherit; color: #fff;
-        background: linear-gradient(145deg, #818cf8, #6366f1);
-        box-shadow: 0 6px 18px rgba(99,102,241,0.45);
-        transition: transform 0.12s, box-shadow 0.2s;
-    }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 9px 24px rgba(99,102,241,0.65); }
-    .btn:active { transform: translateY(1px) scale(0.98); }
+        .btn {
+            margin-top: 10px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px; border: none;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            font-family: inherit; color: #fff;
+            background: linear-gradient(145deg, #818cf8, #6366f1);
+            box-shadow: 0 6px 18px rgba(99,102,241,0.45);
+            transition: transform 0.12s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 9px 24px rgba(99,102,241,0.65); }
+        .btn:active { transform: translateY(1px) scale(0.98); }
 
-    .cmd-box {
-        margin-top: 10px;
-        background: #0e0e16; border: 1px solid #2a2a3a; border-radius: 10px;
-        padding: 12px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
-        font-size: 12px; color: #a5b4fc; word-break: break-all; line-height: 1.5;
-        position: relative;
-    }
-    .copy-btn {
-        margin-top: 10px;
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 9px 16px; border-radius: 10px; border: 1px solid #3d3d55;
-        font-size: 12.5px; font-weight: 700; cursor: pointer;
-        font-family: inherit; color: #a5b4fc; background: #2a2a3d;
-        transition: all 0.15s;
-    }
-    .copy-btn:hover { background: #34344a; color: #fff; }
-    .copy-btn.copied { background: linear-gradient(145deg, #22c55e, #16a34a); color: #fff; border-color: transparent; }
+        .cmd-box {
+            margin-top: 10px;
+            background: #0e0e16; border: 1px solid #2a2a3a; border-radius: 10px;
+            padding: 12px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 12px; color: #a5b4fc; word-break: break-all; line-height: 1.5;
+            position: relative;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 16px; border-radius: 10px; border: 1px solid #3d3d55;
+            font-size: 12.5px; font-weight: 700; cursor: pointer;
+            font-family: inherit; color: #a5b4fc; background: #2a2a3d;
+            transition: all 0.15s;
+        }
+        .copy-btn:hover { background: #34344a; color: #fff; }
+        .copy-btn.copied { background: linear-gradient(145deg, #22c55e, #16a34a); color: #fff; border-color: transparent; }
 
-    .footer {
-        margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;
-    }
-    .btn-ghost {
-        padding: 10px 18px; border-radius: 10px; border: 1px solid #2a2a3a;
-        background: #1e1e2e; color: #8b8ba7; font-size: 13px; font-weight: 600;
-        cursor: pointer; font-family: inherit; transition: all 0.15s;
-    }
-    .btn-ghost:hover { color: #fff; border-color: #818cf8; }
-</style>
+        .footer {
+            margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;
+        }
+        .btn-ghost {
+            padding: 10px 18px; border-radius: 10px; border: 1px solid #2a2a3a;
+            background: #1e1e2e; color: #8b8ba7; font-size: 13px; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .btn-ghost:hover { color: #fff; border-color: #818cf8; }
+    </style>
 </head>
 <body>
-    <div class="head">
-        <div class="badge">🎉</div>
-        <div>
-            <h1>Доступна нова версія</h1>
-        </div>
+<div class="head">
+    <div class="badge">🎉</div>
+    <div>
+        <h1>New version available</h1>
     </div>
-    <div class="ver" id="verLine">Оновіть застосунок за 3 кроки</div>
+</div>
+<div class="ver" id="verLine">Update the app in 3 steps</div>
 
-    <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-            <div class="step-title">Завантажити нову версію</div>
-            <div class="step-desc">Відкрий сторінку релізів і завантаж свіжий <b>.dmg</b>.</div>
-            <button class="btn" id="openGithub"><span>⬇</span> Відкрити GitHub</button>
-        </div>
+<div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+        <div class="step-title">Download the new version</div>
+        <div class="step-desc">Open the releases page and download the latest <b>.dmg</b>.</div>
+        <button class="btn" id="openGithub"><span>⬇</span> Open GitHub</button>
     </div>
+</div>
 
-    <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-            <div class="step-title">Встановити</div>
-            <div class="step-desc">Відкрий завантажений <b>.dmg</b> і перетягни застосунок у папку <b>Applications</b> (замінити наявний).</div>
-        </div>
+<div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+        <div class="step-title">Install</div>
+        <div class="step-desc">Open the downloaded <b>.dmg</b> and drag the app into your <b>Applications</b> folder (replace the existing one).</div>
     </div>
+</div>
 
-    <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-            <div class="step-title">Дозволити запуск</div>
-            <div class="step-desc">Якщо macOS каже, що застосунок «пошкоджений» — встав цю команду в <b>Термінал</b> і натисни Enter:</div>
-            <div class="cmd-box" id="cmdText">xattr -cr "/Applications/QA Screenshot Tool.app"</div>
-            <button class="copy-btn" id="copyCmd"><span>📋</span> Копіювати команду</button>
-        </div>
+<div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+        <div class="step-title">Allow it to run</div>
+        <div class="step-desc">If macOS says the app is "damaged" — paste this command into <b>Terminal</b> and press Enter:</div>
+        <div class="cmd-box" id="cmdText">xattr -cr "/Applications/QA Screenshot Tool.app"</div>
+        <button class="copy-btn" id="copyCmd"><span>📋</span> Copy command</button>
     </div>
+</div>
 
-    <div class="footer">
-        <button class="btn-ghost" id="closeBtn">Пізніше</button>
-    </div>
+<div class="footer">
+    <button class="btn-ghost" id="closeBtn">Later</button>
+</div>
 
 <script>
     const { ipcRenderer, clipboard, shell } = require('electron');
@@ -145,10 +145,10 @@
         clipboard.writeText(cmd);
         const btn = document.getElementById('copyCmd');
         btn.classList.add('copied');
-        btn.innerHTML = '<span>✓</span> Скопійовано!';
+        btn.innerHTML = '<span>✓</span> Copied!';
         setTimeout(() => {
             btn.classList.remove('copied');
-            btn.innerHTML = '<span>📋</span> Копіювати команду';
+            btn.innerHTML = '<span>📋</span> Copy command';
         }, 1600);
     });
 
@@ -159,7 +159,7 @@
     // receive version number from main
     ipcRenderer.on('update-version', (_e, version) => {
         if (version) {
-            document.getElementById('verLine').innerText = `Версія ${version} · оновіть за 3 кроки`;
+            document.getElementById('verLine').innerText = `Version ${version} · update in 3 steps`;
         }
     });
 </script>

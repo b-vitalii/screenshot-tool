@@ -28,7 +28,7 @@ function showUpdateWindow(version) {
         resizable: false,
         minimizable: false,
         maximizable: false,
-        title: 'Доступне оновлення',
+        title: 'Update Available',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
