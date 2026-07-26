@@ -100,7 +100,7 @@
         <h1>New version available</h1>
     </div>
 </div>
-<div class="ver" id="verLine">Update the app in 3 steps</div>
+<div class="ver" id="verLine">Update the app in 4 steps</div>
 
 <div class="step">
     <div class="step-num">1</div>
@@ -122,8 +122,16 @@
 <div class="step">
     <div class="step-num">3</div>
     <div class="step-body">
+        <div class="step-title">Open Terminal</div>
+        <div class="step-desc">Press <b>⌘ + Space</b>, type <b>Terminal</b> and press Enter. (Or open Finder → Applications → Utilities → Terminal.)</div>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
         <div class="step-title">Allow it to run</div>
-        <div class="step-desc">If macOS says the app is "damaged" — paste this command into <b>Terminal</b> and press Enter:</div>
+        <div class="step-desc">If macOS says the app is "damaged" — paste this command into Terminal and press Enter:</div>
         <div class="cmd-box" id="cmdText">xattr -cr "/Applications/QA Screenshot Tool.app"</div>
         <button class="copy-btn" id="copyCmd"><span>📋</span> Copy command</button>
     </div>
@@ -159,7 +167,7 @@
     // receive version number from main
     ipcRenderer.on('update-version', (_e, version) => {
         if (version) {
-            document.getElementById('verLine').innerText = `Version ${version} · update in 3 steps`;
+            document.getElementById('verLine').innerText = `Version ${version} · update in 4 steps`;
         }
     });
 </script>
