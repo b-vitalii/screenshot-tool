@@ -5,14 +5,22 @@ require('./server');
 const fs = require("fs");
 
 let updateWindow = null;
+let mainWindow = null;
 
 function createWindow() {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1400,
         height: 1000
     });
 
-    win.loadURL('http://localhost:3000');
+    mainWindow.loadURL('http://localhost:3000');
+
+    // check for updates only after the main window is ready & shown
+    mainWindow.webContents.once('did-finish-load', () => {
+        setTimeout(() => {
+            autoUpdater.checkForUpdatesAndNotify();
+        }, 1500);
+    });
 }
 
 function showUpdateWindow(version) {
@@ -29,6 +37,9 @@ function showUpdateWindow(version) {
         minimizable: false,
         maximizable: false,
         title: 'Update Available',
+        parent: mainWindow || undefined,   // attach to main window
+        modal: true,                        // block main window until closed/dismissed
+        show: false,                        // show only when ready (no flash before content)
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -39,6 +50,11 @@ function showUpdateWindow(version) {
 
     updateWindow.webContents.on('did-finish-load', () => {
         updateWindow.webContents.send('update-version', version);
+    });
+
+    updateWindow.once('ready-to-show', () => {
+        updateWindow.show();
+        updateWindow.focus();
     });
 
     updateWindow.on('closed', () => {
@@ -73,5 +89,4 @@ autoUpdater.on('update-not-available', () => {
 
 app.whenReady().then(() => {
     setTimeout(createWindow, 1000);
-    autoUpdater.checkForUpdatesAndNotify();
 });
