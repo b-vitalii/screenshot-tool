@@ -1,8 +1,10 @@
-const { app, BrowserWindow, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 require('./server');
 const fs = require("fs");
+
+let updateWindow = null;
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -13,18 +15,48 @@ function createWindow() {
     win.loadURL('http://localhost:3000');
 }
 
-autoUpdater.autoDownload = false; // ← не завантажувати
+function showUpdateWindow(version) {
+    // don't open twice
+    if (updateWindow && !updateWindow.isDestroyed()) {
+        updateWindow.focus();
+        return;
+    }
 
-autoUpdater.on('update-available', () => {
-    dialog.showMessageBox({
+    updateWindow = new BrowserWindow({
+        width: 560,
+        height: 640,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
         title: 'Доступне оновлення',
-        message: 'Нова версія доступна! Перейди на GitHub щоб скачати.',
-        buttons: ['Відкрити GitHub', 'Пізніше']
-    }).then((result) => {
-        if (result.response === 0) {
-            shell.openExternal('https://github.com/b-vitalii/screenshot-tool/releases/latest');
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
         }
     });
+
+    updateWindow.loadFile(path.join(__dirname, 'update-window.html'));
+
+    updateWindow.webContents.on('did-finish-load', () => {
+        updateWindow.webContents.send('update-version', version);
+    });
+
+    updateWindow.on('closed', () => {
+        updateWindow = null;
+    });
+}
+
+ipcMain.on('close-update-window', () => {
+    if (updateWindow && !updateWindow.isDestroyed()) {
+        updateWindow.close();
+    }
+});
+
+autoUpdater.autoDownload = false; // ← не завантажувати
+
+autoUpdater.on('update-available', (info) => {
+    const version = info && info.version ? info.version : '';
+    showUpdateWindow(version);
 });
 
 autoUpdater.on('error', (err) => {
