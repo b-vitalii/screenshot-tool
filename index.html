@@ -159,7 +159,22 @@
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .progress-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--text); z-index: 2; letter-spacing: 0.5px; }
         .progress-track-glow { position: absolute; inset: 0; z-index: 0; opacity: 0.5; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(129,140,248,0.08) 10px, rgba(129,140,248,0.08) 20px); }
-        #status { margin-top: 14px; color: var(--status); font-size: 15px; text-align: center; }
+        #status {
+            margin: 16px auto 0; font-size: 14px; font-weight: 600; text-align: center;
+            display: inline-flex; align-items: center; gap: 9px; padding: 11px 22px; border-radius: 24px;
+            color: var(--status); background: var(--input-bg);
+            box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+            transition: all 0.3s; max-width: 100%;
+        }
+        .status-wrap { text-align: center; margin-top: 4px; }
+        #status .st-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--status); flex-shrink: 0; box-shadow: 0 0 8px var(--status); }
+        #status.running { color: var(--accent2); box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light), 0 0 16px rgba(99,102,241,0.3); }
+        #status.running .st-dot { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); animation: stPulse 1s ease-in-out infinite; }
+        #status.done { color: #22c55e; }
+        #status.done .st-dot { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        #status.err { color: #ef4444; }
+        #status.err .st-dot { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        @keyframes stPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
 
         #gallery { margin-top: 20px; }
 
@@ -363,7 +378,44 @@
         body.cyber .progress-track-glow { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(6,182,212,0.08) 10px, rgba(6,182,212,0.08) 20px); }
         body.cyber #progressBar { background: linear-gradient(90deg,#06b6d4,#10b981); box-shadow: 0 0 20px #06b6d4; }
         body.cyber .progress-label { color: #67e8f9; font-family: var(--font); text-shadow: 0 0 8px rgba(6,182,212,0.5); }
-        body.cyber #status { color: #22d3ee; font-family: var(--font); }
+        body.cyber #status { color: #22d3ee; font-family: var(--font); background: rgba(6,182,212,0.05); border: 1px solid #123a4d; box-shadow: none; }
+        body.cyber #status .st-dot { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+        body.cyber #status.running { color: #67e8f9; box-shadow: 0 0 16px rgba(6,182,212,0.4); }
+        body.cyber #status.running .st-dot { background: #06b6d4; box-shadow: 0 0 10px #06b6d4; }
+        body.cyber #status.done { color: #10b981; }
+        body.cyber #status.done .st-dot { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        body.cyber #status.err { color: #f43f5e; }
+        body.cyber #status.err .st-dot { background: #f43f5e; box-shadow: 0 0 10px #f43f5e; }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        #toastWrap { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast {
+            position: relative; display: flex; align-items: center; gap: 14px; padding: 18px 24px 18px 20px;
+            border-radius: 16px; font-size: 15px; font-weight: 700; font-family: var(--font);
+            color: #fff; min-width: 280px; max-width: 400px; pointer-events: auto; overflow: hidden;
+            animation: toastIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+            box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+        }
+        .toast.leaving { animation: toastOut 0.3s ease forwards; }
+        .toast .toast-ic {
+            font-size: 20px; flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .toast .toast-msg { flex: 1; line-height: 1.35; text-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+        .toast::after { content: ''; position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,0.5); animation: toastBar linear forwards; animation-duration: var(--dur, 3000ms); }
+        .toast.success { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 14px 40px rgba(34,197,94,0.5); }
+        .toast.error { background: linear-gradient(135deg, #f87171, #ef4444); box-shadow: 0 14px 40px rgba(239,68,68,0.5); }
+        .toast.info { background: var(--accent-grad); box-shadow: 0 14px 40px rgba(99,102,241,0.5); }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(50px) scale(0.85); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(50px) scale(0.85); } }
+        @keyframes toastBar { from { width: 100%; } to { width: 0%; } }
+
+        body.cyber .toast { font-family: var(--font); }
+        body.cyber .toast.success { background: linear-gradient(135deg, #06b6d4, #10b981); color: #012; box-shadow: 0 0 40px rgba(6,182,212,0.6); }
+        body.cyber .toast.error { background: linear-gradient(135deg, #fb7185, #e11d48); box-shadow: 0 0 40px rgba(244,63,94,0.6); }
+        body.cyber .toast.info { background: linear-gradient(135deg, #06b6d4, #10b981); color: #012; box-shadow: 0 0 40px rgba(6,182,212,0.6); }
+        body.cyber .toast.info .toast-ic, body.cyber .toast.success .toast-ic { background: rgba(0,0,0,0.15); }
 
         /* ===== MODAL ===== */
         #imgModal { display: none; position: fixed; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(30,30,45,0.85), rgba(8,8,14,0.95)); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; }
@@ -588,7 +640,7 @@
         </div>
     </div>
 
-    <div id="status">Ready</div>
+    <div class="status-wrap"><div id="status"><span class="st-dot"></span><span id="statusText">Ready</span></div></div>
 
     <div id="gallery" style="display:none;"></div>
 
@@ -597,6 +649,44 @@
 <script>
     let jobRunning = false;
     let flatScreens = [];
+    let isCancelling = false;
+
+    /* ===== TOAST ===== */
+    function showToast(message, type = 'info', duration = 3000) {
+        const wrap = document.getElementById('toastWrap');
+        if (!wrap) return;
+        const icons = { success: '✓', error: '⚠', info: 'ℹ' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.style.setProperty('--dur', duration + 'ms');
+        toast.innerHTML = `<span class="toast-ic">${icons[type] || 'ℹ'}</span><span class="toast-msg">${message}</span>`;
+        wrap.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('leaving');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    /* ===== STATUS ===== */
+    function setStatus(text, state = '') {
+        const el = document.getElementById('status');
+        const txt = document.getElementById('statusText');
+        if (txt) txt.innerText = text;
+        if (el) el.className = state; // '', 'running', 'done', 'err'
+    }
+
+    // count real screenshot files on disk (server clears total on cancel)
+    async function countScreenshots() {
+        try {
+            const res = await fetch('/screenshots');
+            const data = await res.json();
+            let n = 0;
+            (function walk(items) {
+                items.forEach(i => { if (i.type === 'file') n++; else walk(i.children || []); });
+            })(data);
+            return n;
+        } catch (e) { return 0; }
+    }
 
     /* ===== GAMES + URL BUILDER ===== */
     const GAMES = [
@@ -760,6 +850,12 @@
     }
 
     async function downloadZip() {
+        // check there are actually screenshots first
+        const count = await countScreenshots();
+        if (count === 0) {
+            showToast('No screenshots to download', 'error');
+            return;
+        }
         let gameName = 'screenshots';
         if (selectedGame) {
             gameName = selectedGame;
@@ -769,13 +865,14 @@
         }
         const today = new Date().toISOString().slice(0, 10);
         const res = await fetch(`/download-zip?name=${encodeURIComponent(gameName)}`);
-        if (!res.ok) { alert('No screenshots found'); return; }
+        if (!res.ok) { showToast('No screenshots found', 'error'); return; }
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = `${gameName}_${today}.zip`;
         document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
+        showToast(`ZIP downloaded · ${count} screenshot${count>1?'s':''}`, 'success');
     }
 
     async function clearScreenshots() {
@@ -783,12 +880,13 @@
         const res = await fetch('/cleanup', { method: 'POST' });
         const data = await res.json();
         if (data.ok) {
-            document.getElementById('status').innerText = '🧹 Screenshots cleared';
+            setStatus('Screenshots cleared', 'done');
             document.getElementById('gallery').innerHTML = '';
             document.getElementById('gallery').style.display = 'none';
             document.getElementById('progressBar').style.width = '0%';
             document.getElementById('progressLabel').innerText = 'Ready to capture';
-        } else { alert('Failed to clear screenshots'); }
+            showToast('Screenshots cleared', 'success');
+        } else { showToast('Failed to clear screenshots', 'error'); }
     }
 
     function closeGallery() {
@@ -1088,7 +1186,6 @@
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressLabel').innerText = 'Starting... 0%';
         closeGallery();
-        const status = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const headless = document.getElementById('headless').checked;
         const url = resolveGameUrl();
@@ -1103,10 +1200,10 @@
 
         startBtn.disabled = true;
 
-        if (!url) { status.innerText = '❌ Please enter Game URL'; validateForm(); return; }
-        if (langs.length === 0) { status.innerText = '❌ Please select at least one language'; validateForm(); return; }
+        if (!url) { setStatus('Please select a game or enter URL', 'err'); showToast('Please select a game or enter URL', 'error'); validateForm(); return; }
+        if (langs.length === 0) { setStatus('Select at least one language', 'err'); showToast('Select at least one language', 'error'); validateForm(); return; }
 
-        status.innerText = '⏳ Starting...';
+        setStatus('Starting...', 'running');
 
         try {
             await fetch('/run', {
@@ -1115,8 +1212,9 @@
                 body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, enSocExtra, screenshotStartScreen })
             });
             jobRunning = true;
+            showToast(`Capture started · ${langs.length} lang${langs.length>1?'s':''}`, 'info');
         } catch (e) {
-            status.innerText = '❌ Error';
+            setStatus('Error starting capture', 'err');
             startBtn.disabled = false;
             validateForm();
             console.error(e);
@@ -1139,7 +1237,31 @@
     async function cancelJob() {
         const res = await fetch('/cancel', { method: 'POST' });
         const data = await res.json();
-        document.getElementById('status').innerText = data.ok ? '🛑 Cancelling...' : data.message;
+        if (!data.ok) { setStatus(data.message || 'No running job', ''); return; }
+
+        isCancelling = true;
+        setStatus('Cancelling...', 'running');
+        jobRunning = false;
+        document.getElementById('startBtn').disabled = false;
+
+        // give the server a moment to stop, then show real result
+        setTimeout(async () => {
+            const realCount = await countScreenshots();
+            const bar = document.getElementById('progressBar');
+            const label = document.getElementById('progressLabel');
+            bar.style.width = '0%';
+            if (realCount > 0) {
+                label.innerText = `Stopped · ${realCount} captured`;
+                setStatus(`Cancelled · ${realCount} screenshot${realCount>1?'s':''} saved`, 'err');
+                showToast(`Cancelled · ${realCount} screenshot${realCount>1?'s':''} saved`, 'error', 4000);
+            } else {
+                label.innerText = 'Ready to capture';
+                setStatus('Cancelled', 'err');
+                showToast('Capture cancelled', 'error');
+            }
+            validateForm();
+            isCancelling = false;
+        }, 800);
     }
 
     document.addEventListener('keydown', (e) => {
@@ -1241,6 +1363,7 @@
 
     async function refreshStatus() {
         try {
+            if (isCancelling) return; // cancelJob handles the final state
             const res = await fetch('/status');
             const data = await res.json();
             const startBtn = document.getElementById('startBtn');
@@ -1250,13 +1373,26 @@
                 if (!jobRunning) return;
                 jobRunning = false;
                 startBtn.disabled = false;
-                bar.style.width = '100%';
-                label.innerText = `100% · ${data.total} tasks`;
-                document.getElementById('status').innerText =
-                    data.message.startsWith('🛑') ? '🛑 Cancelled' : '✅ Done! You can download ZIP';
+                const cancelled = data.message.startsWith('🛑');
+
+                // count real captured files (server clears total on cancel)
+                const realCount = await countScreenshots();
+
+                if (cancelled) {
+                    bar.style.width = '0%';
+                    label.innerText = realCount > 0 ? `Stopped · ${realCount} captured` : 'Cancelled';
+                    setStatus(realCount > 0 ? `Cancelled · ${realCount} screenshot${realCount>1?'s':''} saved` : 'Cancelled', 'err');
+                    showToast(realCount > 0 ? `Cancelled · ${realCount} screenshot${realCount>1?'s':''} saved` : 'Capture cancelled', 'error', 4000);
+                } else {
+                    bar.style.width = '100%';
+                    label.innerText = `100% · ${realCount} screenshot${realCount>1?'s':''}`;
+                    setStatus('Done! You can download ZIP', 'done');
+                    showToast(`Done! ${realCount} screenshot${realCount>1?'s':''} captured`, 'success', 4000);
+                }
                 return;
             }
-            document.getElementById('status').innerText = data.message + (data.stage ? ` (${data.stage})` : '');
+            const cleanMsg = data.message.replace(/^[^\w]+\s*/, '');
+            setStatus((cleanMsg || data.message) + (data.stage ? ` · ${data.stage}` : ''), data.running ? 'running' : '');
             if (data.total > 0) {
                 const percent = data.progress ?? 0;
                 bar.style.width = percent + '%';
@@ -1307,6 +1443,8 @@
         <button class="modal-btn" onclick="downloadCurrent()"><span>⬇</span> Download</button>
     </div>
 </div>
+
+<div id="toastWrap"></div>
 
 </body>
 </html>

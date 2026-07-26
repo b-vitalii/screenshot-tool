@@ -34,9 +34,6 @@ app.get('/version', (req, res) => {
 });
 
 // статус
-// app.get('/status', (req, res) => {
-//     res.json(status);
-// });
 
 app.get('/status', (req, res) => {
 
