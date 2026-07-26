@@ -132,6 +132,38 @@
 
         /* gallery header: search + filter chips */
         .gallery-controls { margin-bottom: 24px; }
+        .gallery-view-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .view-tab { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; }
+        .view-tab:hover { color: var(--text); }
+        .view-tab.active { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
+        .compare-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+        .compare-controls .cc-group { display: flex; align-items: center; gap: 8px; }
+        .compare-controls .cc-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
+        .compare-seg { display: flex; gap: 6px; padding: 4px; border-radius: 12px; background: var(--input-bg); box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
+        .compare-seg .cs { padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--muted); transition: all 0.15s; }
+        .compare-seg .cs.active { background: var(--accent-grad); color: #fff; }
+        .page-picker { display: flex; flex-wrap: wrap; gap: 6px; }
+        .page-num { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; }
+        .page-num:hover { color: var(--text); border-color: var(--accent2); }
+        .page-num.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+        .compare-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .compare-card { background: var(--card); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); transition: all 0.2s; cursor: pointer; }
+        .compare-card:hover { transform: translateY(-4px); border-color: var(--accent2); box-shadow: 0 12px 30px rgba(99,102,241,0.3); }
+        .compare-card .cc-lang { padding: 10px 12px; font-size: 13px; font-weight: 800; letter-spacing: 0.5px; background: var(--accent-grad); color: #fff; text-align: center; }
+        .compare-card img { width: 100%; display: block; background: #111; }
+        .compare-card { min-height: 60px; }
+        .compare-empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+
+        body.cyber .view-tab { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+        body.cyber .view-tab.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; }
+        body.cyber .compare-controls .cc-label { color: #06b6d4; font-family: var(--font); }
+        body.cyber .compare-seg { background: rgba(6,182,212,0.05); box-shadow: none; border: 1px solid #123a4d; }
+        body.cyber .compare-seg .cs { color: #7dd3fc; font-family: var(--font); }
+        body.cyber .compare-seg .cs.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; }
+        body.cyber .page-num { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+        body.cyber .page-num.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; }
+        body.cyber .compare-card { background: #060e1c; border: 1px solid #123a4d; }
+        body.cyber .compare-card .cc-lang { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); }
         .gallery-search-wrap { position: relative; margin-bottom: 16px; }
         .gallery-search {
             width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px; border: none;
@@ -315,17 +347,23 @@
         .modal-prev { left: 20px; }
         .modal-next { right: 20px; }
 
-        .modal-download {
+        .modal-actions {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 10px; padding: 16px 34px; border-radius: 16px;
-            border: none; background: var(--accent-grad); color: #fff; font-size: 15px; font-weight: 700;
-            font-family: var(--font); cursor: pointer; letter-spacing: 0.5px; z-index: 5;
-            box-shadow: 0 10px 30px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.35);
-            transition: transform 0.12s, box-shadow 0.2s;
+            display: flex; gap: 12px; z-index: 5;
         }
-        .modal-download:hover { transform: translateX(-50%) translateY(-3px); box-shadow: 0 16px 44px rgba(99,102,241,0.85), inset 0 1px 0 rgba(255,255,255,0.4); }
-        .modal-download:active { transform: translateX(-50%) translateY(2px) scale(0.97); box-shadow: 0 3px 12px rgba(99,102,241,0.5), inset 0 3px 10px rgba(0,0,0,0.3); }
-        .modal-download span { font-size: 18px; }
+        .modal-btn {
+            display: flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 16px;
+            border: none; background: var(--accent-grad); color: #fff; font-size: 15px; font-weight: 700;
+            font-family: var(--font); cursor: pointer; letter-spacing: 0.5px;
+            box-shadow: 0 10px 30px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.35);
+            transition: transform 0.12s, box-shadow 0.2s, background 0.2s;
+        }
+        .modal-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(99,102,241,0.85), inset 0 1px 0 rgba(255,255,255,0.4); }
+        .modal-btn:active { transform: translateY(2px) scale(0.97); box-shadow: 0 3px 12px rgba(99,102,241,0.5), inset 0 3px 10px rgba(0,0,0,0.3); }
+        .modal-btn span { font-size: 18px; }
+        .modal-btn.copied { background: linear-gradient(145deg, #22c55e, #16a34a); box-shadow: 0 10px 30px rgba(34,197,94,0.5); }
+        .modal-btn.copy-btn { background: rgba(50,50,68,0.9); }
+        .modal-btn.copy-btn:hover { background: rgba(65,65,88,0.95); }
 
         body.cyber #imgModal { background: radial-gradient(circle at 50% 45%, rgba(6,30,40,0.85), rgba(3,8,18,0.96)); }
         body.cyber .modal-info { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); box-shadow: 0 6px 24px rgba(6,182,212,0.6); }
@@ -334,7 +372,10 @@
         body.cyber .modal-close:hover { background: #f43f5e; color: #fff; box-shadow: 0 6px 24px rgba(244,63,94,0.7); }
         body.cyber .modal-img-wrap { box-shadow: 0 0 80px 10px rgba(6,182,212,0.4), 0 0 140px 30px rgba(16,185,129,0.2), 0 30px 80px rgba(0,0,0,0.5); }
         body.cyber .modal-nav:hover { color: #06b6d4; text-shadow: 0 0 20px rgba(6,182,212,0.9); }
-        body.cyber .modal-download { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); box-shadow: 0 10px 30px rgba(6,182,212,0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
+        body.cyber .modal-btn { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); box-shadow: 0 10px 30px rgba(6,182,212,0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
+        body.cyber .modal-btn.copy-btn { background: rgba(6,20,30,0.9); color: #67e8f9; }
+        body.cyber .modal-btn.copy-btn:hover { background: rgba(10,30,44,0.95); }
+        body.cyber .modal-btn.copied { background: linear-gradient(145deg, #22c55e, #16a34a); color: #012; }
     </style>
 </head>
 <body class="dark">
@@ -566,6 +607,7 @@
     }
 
     let galleryData = [];
+    let galleryTs = Date.now();
     let activeLangFilter = 'all';
     let searchQuery = '';
 
@@ -573,8 +615,11 @@
         const res = await fetch('/screenshots');
         const data = await res.json();
         galleryData = data;
+        galleryTs = Date.now();
         activeLangFilter = 'all';
         searchQuery = '';
+        galleryView = 'grid';
+        comparePage = 1;
 
         // build flatScreens for modal navigation
         flatScreens = [];
@@ -610,40 +655,175 @@
 
     const modeIcon = { landscape: '🖥️', portrait: '📱', startscreen: '🎬' };
 
+    let galleryView = 'grid'; // 'grid' | 'compare'
+    let compareMode = 'landscape';
+    let comparePage = 1;
+
+    function setGalleryView(v) {
+        galleryView = v;
+        renderGallery();
+    }
+
     function renderGallery() {
         const g = document.getElementById('gallery');
-        const langs = getLangs();
 
-        // controls
+        // view tabs
         let html = '<div class="gallery-controls">';
-        html += `<div class="gallery-search-wrap"><span class="gallery-search-ic">🔍</span><input class="gallery-search" id="gallerySearch" placeholder="Search by language or file..." value="${searchQuery}"></div>`;
-        html += '<div class="lang-chips">';
-        const totalFiles = flatScreens.length;
-        html += `<div class="lang-chip ${activeLangFilter==='all'?'active':''}" onclick="filterLang('all')">All<span class="cnt">${totalFiles}</span></div>`;
-        galleryData.filter(i => i.type !== 'file').forEach(folder => {
-            const c = countFilesInLang(folder);
-            html += `<div class="lang-chip ${activeLangFilter===folder.name?'active':''}" onclick="filterLang('${folder.name}')">${folder.name.toUpperCase()}<span class="cnt">${c}</span></div>`;
+        html += '<div class="gallery-view-tabs">';
+        html += `<div class="view-tab ${galleryView==='grid'?'active':''}" onclick="setGalleryView('grid')">🖼️ Grid</div>`;
+        html += `<div class="view-tab ${galleryView==='compare'?'active':''}" onclick="setGalleryView('compare')">⚖️ Compare Languages</div>`;
+        html += '</div>';
+
+        if (galleryView === 'grid') {
+            html += `<div class="gallery-search-wrap"><span class="gallery-search-ic">🔍</span><input class="gallery-search" id="gallerySearch" placeholder="Search by language or file..." value="${searchQuery}"></div>`;
+            html += '<div class="lang-chips">';
+            const totalFiles = flatScreens.length;
+            html += `<div class="lang-chip ${activeLangFilter==='all'?'active':''}" onclick="filterLang('all')">All<span class="cnt">${totalFiles}</span></div>`;
+            galleryData.filter(i => i.type !== 'file').forEach(folder => {
+                const c = countFilesInLang(folder);
+                html += `<div class="lang-chip ${activeLangFilter===folder.name?'active':''}" onclick="filterLang('${folder.name}')">${folder.name.toUpperCase()}<span class="cnt">${c}</span></div>`;
+            });
+            html += '</div></div>';
+
+            const langFolders = galleryData.filter(i => i.type !== 'file');
+            const visible = langFolders.filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
+            let bodyHtml = '';
+            visible.forEach(langFolder => {
+                const langBlock = renderLangFolder(langFolder);
+                if (langBlock) bodyHtml += langBlock;
+            });
+            if (!bodyHtml) bodyHtml = '<div class="gallery-empty">🔍 No screenshots match your search</div>';
+            g.innerHTML = html + bodyHtml;
+
+            const search = document.getElementById('gallerySearch');
+            if (search) {
+                search.oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderGallery(); requestAnimationFrame(() => { const s = document.getElementById('gallerySearch'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }); };
+            }
+        } else {
+            html += renderCompareControls();
+            html += '</div>';
+            html += '<div id="compareGridWrap">' + renderCompareGrid() + '</div>';
+            g.innerHTML = html;
+        }
+    }
+
+    function getAvailableModes() {
+        const modes = new Set();
+        galleryData.filter(i => i.type !== 'file').forEach(lang => {
+            (lang.children || []).forEach(m => { if (m.type !== 'file') modes.add(m.name); });
+        });
+        return [...modes];
+    }
+
+    function getMaxPagesForMode(mode) {
+        let max = 0;
+        galleryData.filter(i => i.type !== 'file').forEach(lang => {
+            const mf = (lang.children || []).find(m => m.name === mode && m.type !== 'file');
+            if (mf) {
+                const cnt = (mf.children || []).filter(f => f.type === 'file').length;
+                if (cnt > max) max = cnt;
+            }
+        });
+        return max;
+    }
+
+    function renderCompareControls() {
+        const modes = getAvailableModes();
+        if (!modes.length) return '';
+        if (!modes.includes(compareMode)) compareMode = modes[0];
+        const modeLabels = { landscape: '🖥️ Landscape', portrait: '📱 Portrait', startscreen: '🎬 Start Screen' };
+
+        let html = '<div class="compare-controls">';
+        html += '<div class="cc-group"><span class="cc-label">Orientation</span><div class="compare-seg">';
+        modes.forEach(m => {
+            html += `<div class="cs ${compareMode===m?'active':''}" data-mode="${m}" onclick="setCompareMode('${m}')">${modeLabels[m]||m}</div>`;
         });
         html += '</div></div>';
 
-        // body
-        const langFolders = galleryData.filter(i => i.type !== 'file');
-        const visible = langFolders.filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
-
-        let bodyHtml = '';
-        visible.forEach(langFolder => {
-            const langBlock = renderLangFolder(langFolder);
-            if (langBlock) bodyHtml += langBlock;
-        });
-
-        if (!bodyHtml) bodyHtml = '<div class="gallery-empty">🔍 No screenshots match your search</div>';
-
-        g.innerHTML = html + bodyHtml;
-
-        const search = document.getElementById('gallerySearch');
-        if (search) {
-            search.oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderGallery(); requestAnimationFrame(() => { const s = document.getElementById('gallerySearch'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }); };
+        const maxPages = getMaxPagesForMode(compareMode);
+        if (comparePage > maxPages) comparePage = 1;
+        html += '<div class="cc-group"><span class="cc-label">Page</span><div class="page-picker">';
+        for (let i = 1; i <= maxPages; i++) {
+            html += `<div class="page-num ${comparePage===i?'active':''}" onclick="setComparePage(${i})">${i}</div>`;
         }
+        html += '</div></div>';
+        return html;
+    }
+
+    function setCompareMode(m) {
+        compareMode = m; comparePage = 1;
+        updateCompareControlsUI();
+        updateCompareGrid();
+    }
+    function setComparePage(p) {
+        comparePage = p;
+        updateCompareControlsUI();
+        updateCompareGrid();
+    }
+
+    function updateCompareControlsUI() {
+        document.querySelectorAll('.compare-seg .cs').forEach(el => {
+            el.classList.toggle('active', el.dataset.mode === compareMode);
+        });
+        const picker = document.querySelector('.page-picker');
+        if (picker) {
+            const maxPages = getMaxPagesForMode(compareMode);
+            if (comparePage > maxPages) comparePage = 1;
+            let ph = '';
+            for (let i = 1; i <= maxPages; i++) {
+                ph += `<div class="page-num ${comparePage===i?'active':''}" onclick="setComparePage(${i})">${i}</div>`;
+            }
+            picker.innerHTML = ph;
+        }
+    }
+
+    function getCompareItems() {
+        const langFolders = galleryData.filter(i => i.type !== 'file');
+        const items = [];
+        langFolders.forEach(lang => {
+            const mf = (lang.children || []).find(m => m.name === compareMode && m.type !== 'file');
+            if (!mf) return;
+            const files = (mf.children || []).filter(f => f.type === 'file');
+            const file = files[comparePage - 1];
+            if (!file) return;
+            items.push({ lang: lang.name, url: file.url });
+        });
+        return items;
+    }
+
+    function updateCompareGrid() {
+        const wrap = document.getElementById('compareGridWrap');
+        if (!wrap) return;
+        const items = getCompareItems();
+        const existing = wrap.querySelectorAll('.compare-card');
+
+        // if card count matches, mutate in place (no flicker)
+        if (existing.length === items.length && items.length > 0) {
+            existing.forEach((card, idx) => {
+                const it = items[idx];
+                const img = card.querySelector('img');
+                const lbl = card.querySelector('.cc-lang');
+                const newSrc = `${it.url}?t=${galleryTs}`;
+                if (img.getAttribute('src') !== newSrc) img.setAttribute('src', newSrc);
+                if (lbl.textContent !== it.lang.toUpperCase()) lbl.textContent = it.lang.toUpperCase();
+                card.setAttribute('onclick', `openImage('${it.url}')`);
+            });
+        } else {
+            wrap.innerHTML = renderCompareGrid();
+        }
+    }
+
+    function renderCompareGrid() {
+        const items = getCompareItems();
+        if (!items.length) return '<div class="compare-empty">No screenshots for this page/orientation</div>';
+        let cards = '';
+        items.forEach(it => {
+            cards += `<div class="compare-card" onclick="openImage('${it.url}')">
+                <div class="cc-lang">${it.lang.toUpperCase()}</div>
+                <img src="${it.url}?t=${galleryTs}" loading="lazy" />
+            </div>`;
+        });
+        return `<div class="compare-grid">${cards}</div>`;
     }
 
     function matchesSearch(lang, fileName) {
@@ -652,7 +832,7 @@
     }
 
     function renderLangFolder(langFolder) {
-        const ts = Date.now();
+        const ts = galleryTs;
         const lang = langFolder.name;
         // modes inside language
         const modeFolders = (langFolder.children || []).filter(i => i.type !== 'file');
@@ -780,36 +960,93 @@
     });
 
     function downloadCurrent() {
-        const item = flatScreens[currentIndex];
+        const item = modalScreens[currentIndex];
         if (!item) return;
         const a = document.createElement('a');
         a.href = item.url; a.download = item.name;
         document.body.appendChild(a); a.click(); a.remove();
     }
 
+    async function copyCurrent() {
+        const item = modalScreens[currentIndex];
+        if (!item) return;
+        const btn = document.getElementById('copyBtn');
+        try {
+            const res = await fetch(item.url);
+            const blob = await res.blob();
+            // clipboard needs png
+            let toCopy = blob;
+            if (blob.type !== 'image/png') {
+                toCopy = await convertToPng(blob);
+            }
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': toCopy })]);
+            btn.classList.add('copied');
+            btn.innerHTML = '<span>✓</span> Copied!';
+            setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '<span>📋</span> Copy'; }, 1600);
+        } catch (e) {
+            console.error('Copy failed', e);
+            btn.innerHTML = '<span>⚠️</span> Failed';
+            setTimeout(() => { btn.innerHTML = '<span>📋</span> Copy'; }, 1600);
+        }
+    }
+
+    function convertToPng(blob) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(blob);
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                canvas.toBlob(b => { URL.revokeObjectURL(url); b ? resolve(b) : reject(new Error('toBlob failed')); }, 'image/png');
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img load failed')); };
+            img.src = url;
+        });
+    }
+
+    let modalScreens = [];
+
+    function buildCompareScreens() {
+        // same page across all languages for current compareMode
+        const langFolders = galleryData.filter(i => i.type !== 'file');
+        const arr = [];
+        langFolders.forEach(lang => {
+            const mf = (lang.children || []).find(m => m.name === compareMode && m.type !== 'file');
+            if (!mf) return;
+            const files = (mf.children || []).filter(f => f.type === 'file');
+            const file = files[comparePage - 1];
+            if (file) arr.push({ ...file, lang: lang.name, mode: compareMode });
+        });
+        return arr;
+    }
+
     function openImage(src) {
-        currentIndex = flatScreens.findIndex(i => i.url === src);
+        // choose navigation set based on current gallery view
+        modalScreens = (galleryView === 'compare') ? buildCompareScreens() : flatScreens;
+        currentIndex = modalScreens.findIndex(i => i.url === src);
+        if (currentIndex < 0) currentIndex = 0;
         document.getElementById('modalImg').src = src;
         document.getElementById('imgModal').style.display = 'flex';
         updateModalInfo();
     }
 
     function showImage(index) {
-        if (index < 0 || index >= flatScreens.length) return;
+        if (index < 0 || index >= modalScreens.length) return;
         currentIndex = index;
-        document.getElementById('modalImg').src = flatScreens[index].url;
+        document.getElementById('modalImg').src = modalScreens[index].url;
         updateModalInfo();
     }
 
     function closeModal() { document.getElementById('imgModal').style.display = 'none'; }
 
     function updateModalInfo() {
-        const item = flatScreens[currentIndex];
+        const item = modalScreens[currentIndex];
         if (!item) return;
         document.getElementById('modalInfo').innerText =
             `${item.lang?.toUpperCase() || '—'} · ${item.mode?.toUpperCase() || '—'} · ${item.name}`;
         const counter = document.getElementById('modalCounter');
-        if (counter) counter.innerText = `${currentIndex + 1} / ${flatScreens.length}`;
+        if (counter) counter.innerText = `${currentIndex + 1} / ${modalScreens.length}`;
     }
 
     async function refreshStatus() {
@@ -867,7 +1104,10 @@
         <img id="modalImg">
     </div>
     <button class="modal-nav modal-next" onclick="event.stopPropagation(); showImage(currentIndex + 1)">›</button>
-    <button class="modal-download" onclick="event.stopPropagation(); downloadCurrent()"><span>⬇</span> Download</button>
+    <div class="modal-actions" onclick="event.stopPropagation()">
+        <button class="modal-btn copy-btn" id="copyBtn" onclick="copyCurrent()"><span>📋</span> Copy</button>
+        <button class="modal-btn" onclick="downloadCurrent()"><span>⬇</span> Download</button>
+    </div>
 </div>
 
 </body>
