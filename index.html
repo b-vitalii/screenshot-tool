@@ -252,8 +252,10 @@
         .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .gallery-item {
             position: relative; background: var(--card); border-radius: 16px; overflow: hidden;
-            border: 1px solid var(--border); cursor: pointer; transition: all 0.25s;
+            border: 1px solid var(--border); cursor: pointer; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            animation: cardIn 0.4s ease both;
         }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .gallery-item:hover { transform: translateY(-6px); border-color: var(--accent2); box-shadow: 0 14px 34px rgba(99,102,241,0.3); }
         .gallery-item .img-frame { position: relative; overflow: hidden; background: #000; }
         .gallery-item img { width: 100%; display: block; transition: transform 0.35s; }
@@ -896,6 +898,7 @@
 
     let galleryData = [];
     let galleryTs = Date.now();
+    let cardAnimIndex = 0;
     let activeLangFilter = 'all';
     let searchQuery = '';
 
@@ -954,6 +957,7 @@
 
     function renderGallery() {
         const g = document.getElementById('gallery');
+        cardAnimIndex = 0; // restart stagger wave
 
         // view tabs
         let html = '<div class="gallery-controls">';
@@ -1152,7 +1156,9 @@
     }
 
     function galleryCard(file, ts) {
-        return `<div class="gallery-item" onclick="openImage('${file.url}')">
+        const delay = (cardAnimIndex % 12) * 0.04; // wave effect, caps so it never drags
+        cardAnimIndex++;
+        return `<div class="gallery-item" style="animation-delay:${delay}s" onclick="openImage('${file.url}')">
             <div class="img-frame">
                 <img src="${file.url}?t=${ts}" loading="lazy" />
                 <div class="img-overlay"><span class="view-btn">👁 View</span></div>

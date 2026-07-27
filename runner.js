@@ -101,7 +101,7 @@ async function runForLang(browser, { url, lang, workerId, modes, pagesCount, sel
         return c && c.width > 0;
     });
 
-    // await page.waitForTimeout(100);
+    await page.waitForTimeout(1000);
     // await safeSkipIntro(page);
     // await skipStartScreen(page);
 
