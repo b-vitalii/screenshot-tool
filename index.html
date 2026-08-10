@@ -130,6 +130,22 @@
         .toggle-field.on { border-color: var(--accent2); background: color-mix(in srgb, var(--accent) 12%, var(--input-bg)); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light), 0 0 16px rgba(99,102,241,0.25); }
         .toggle-field.on .tf-icon { filter: drop-shadow(0 0 6px var(--accent)); }
         .toggle-field .tf-text { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        /* extra checks belong to Text checks — they appear only once it is on */
+        .sub-checks { display: none; }
+        .sub-checks.show { display: block; animation: subIn 0.22s ease both; }
+        @keyframes subIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+        .toggle-field.tf-sub { margin: 10px 0 0 26px; position: relative; padding: 11px 16px; }
+        .toggle-field.tf-sub::before {
+            content: ''; position: absolute; left: -15px; top: 50%; width: 13px; height: 2px;
+            border-radius: 2px; background: var(--border);
+        }
+        .toggle-field.tf-sub::after {
+            content: ''; position: absolute; left: -17px; bottom: 50%; width: 2px;
+            border-radius: 2px; background: var(--border);
+        }
+        #suspectsToggle::after { height: 26px; }
+        #overlapToggle::after  { height: 94px; }
+
         .toggle-field .tf-icon { font-size: 18px; }
         .toggle-field .tf-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
         .switch { width: 50px; height: 28px; border-radius: 16px; background: #0e0e16; position: relative; flex-shrink: 0; transition: all 0.25s; box-shadow: inset 2px 2px 4px #0a0a12, inset -2px -2px 4px #22223a; }
@@ -248,6 +264,115 @@
             box-shadow: 0 4px 14px rgba(99,102,241,0.2);
         }
         .folder-mode .mode-ic { font-size: 16px; }
+
+        .folder-ratio { display: flex; align-items: center; gap: 12px; margin: 20px 0 12px; }
+        .folder-ratio .fr-badge {
+            display: inline-flex; align-items: baseline; gap: 9px;
+            padding: 8px 18px; border-radius: 12px;
+            font-size: 17px; font-weight: 800; letter-spacing: 0.5px;
+            color: #f59e0b; background: rgba(245,158,11,0.14);
+            border: 2px solid #f59e0b;
+        }
+        .folder-ratio .fr-dim { font-size: 12px; font-weight: 600; opacity: 0.85; letter-spacing: 0; }
+        .folder-ratio .fr-count { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); white-space: nowrap; }
+        .folder-ratio .fr-line { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(245,158,11,0.55), transparent); }
+        body.cyber .folder-ratio .fr-badge { font-family: var(--font); border-radius: 4px; }
+
+        .gallery-item .ratio-tag {
+            position: absolute; top: 8px; left: 8px; z-index: 3;
+            padding: 3px 9px; border-radius: 7px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+            color: #f59e0b; background: rgba(10,10,15,0.78);
+            border: 1px solid rgba(245,158,11,0.75); backdrop-filter: blur(3px);
+            pointer-events: none;
+        }
+
+        /* aspect-ratio picker */
+        .ratio-block { margin-top: 6px; }
+        .ratio-block.hidden { display: none; }
+        .ratio-head { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; }
+        .ratio-head .rh-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); display: flex; align-items: center; gap: 6px; }
+        .ratio-head .rh-base { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+        .ratio-head .rh-base input {
+            width: 62px; padding: 6px 8px; font-size: 12px; text-align: center; border-radius: 8px;
+            background: var(--input-bg); color: var(--text); border: 1px solid var(--border); box-shadow: none; margin: 0;
+        }
+        .ratio-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .ratio-grid .ratio-opt {
+            display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px;
+            padding: 9px 6px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700;
+            background: var(--card); color: var(--muted); border: 2px solid var(--border);
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            transition: all 0.18s; user-select: none;
+        }
+        .ratio-grid .ratio-opt .rg-dim { font-size: 10px; font-weight: 500; opacity: 0.7; }
+        .ratio-grid .ratio-opt:hover { color: var(--text); border-color: var(--accent2); transform: translateY(-2px); }
+        .ratio-grid .ratio-opt.checked { background: var(--accent-grad); color: #fff; border-color: transparent; }
+        .ratio-custom { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+        .ratio-custom input {
+            width: 66px; padding: 8px; font-size: 13px; text-align: center; border-radius: 10px;
+            background: var(--input-bg); color: var(--text); border: 1px solid var(--border); box-shadow: none; margin: 0;
+        }
+        .ratio-custom .rc-sep { font-weight: 700; color: var(--muted); }
+        .ratio-custom input.rc-spec { width: 150px; text-align: left; padding-left: 10px; }
+        .ratio-custom .rc-preview { font-size: 11px; font-weight: 700; color: var(--accent2); white-space: nowrap; }
+        .ratio-grid .ratio-opt { position: relative; }
+        /* a custom preset is marked by a dashed edge, and reveals its remove
+           control only on hover — no permanent red dot shouting at you */
+        .ratio-grid .ratio-opt.is-custom { border-style: dashed; }
+        .ratio-grid .ratio-opt.is-custom.checked { border-style: solid; }
+        .ratio-grid .ratio-opt .rg-del {
+            position: absolute; top: 1px; right: 3px;
+            width: 16px; height: 16px; border-radius: 5px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 500; font-family: system-ui, sans-serif;
+            color: var(--muted); background: transparent; cursor: pointer;
+            opacity: 0; transform: scale(0.8);
+            transition: opacity 0.15s, transform 0.15s, color 0.15s, background 0.15s;
+        }
+        .ratio-grid .ratio-opt:hover .rg-del { opacity: 0.55; transform: scale(1); }
+        .ratio-grid .ratio-opt .rg-del:hover { opacity: 1; color: #fff; background: #ef4444; }
+        .ratio-grid .ratio-opt.checked .rg-del { color: rgba(255,255,255,0.85); }
+        .ratio-custom button {
+            padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+            background: var(--card); color: var(--text); border: 1.5px solid var(--border);
+        }
+        .ratio-custom button:hover { border-color: var(--accent2); }
+        .ratio-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+        /* problems tab */
+        .iss-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 14px; }
+        .iss-controls .cc-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
+        .iss-summary { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+        .iss-stat { padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; border: 2px solid var(--border); background: var(--card); color: var(--muted); }
+        .iss-stat.broken { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.12); }
+        .iss-stat.suspect { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.12); }
+        .iss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-top: 16px; }
+        .issue-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .issue-card.has-broken { border-color: rgba(239,68,68,0.6); }
+        .ic-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        .ic-sev { font-size: 12px; }
+        .ic-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text); }
+        .ic-scope { margin-left: auto; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
+                    background: rgba(99,102,241,0.15); color: var(--accent2); border: 1px solid rgba(99,102,241,0.5); }
+        .ic-scope.all { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.6); }
+        .ic-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+        .ic-msg { font-size: 12.5px; line-height: 1.5; color: var(--text); }
+        .ic-where { font-size: 11px; font-weight: 700; color: var(--muted); }
+        .ic-langs { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 10px; }
+        .ic-lchip { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; cursor: pointer;
+                    background: var(--input-bg); color: var(--muted); border: 1px solid var(--border); }
+        .ic-lchip:hover { color: var(--text); border-color: var(--accent2); }
+        .ic-lchip.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+        .ic-frame { position: relative; cursor: pointer; background: #000; line-height: 0; }
+        .ic-frame img { width: 100%; display: block; }
+        .ic-box { position: absolute; border: 2px solid #ef4444; box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(239,68,68,0.7); pointer-events: none; }
+        .ic-box.suspect { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(245,158,11,0.7); }
+        .ic-text { font-size: 12px; color: var(--muted); font-style: italic; line-height: 1.45; }
+        .ic-actions { padding: 0 12px 12px; }
+        .ic-actions button { width: 100%; padding: 9px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; background: var(--input-bg); color: var(--text); border: 1.5px solid var(--border); }
+        .ic-actions button:hover { border-color: var(--accent2); }
+        .iss-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7; }
 
         .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .gallery-item {
@@ -581,6 +706,34 @@
         </div>
         <input type="hidden" id="mode" value="landscape">
 
+        <div class="ratio-block" id="ratioBlock-landscape">
+            <div class="ratio-head">
+                <span class="rh-title"><span>🖥️</span>Landscape ratios</span>
+            </div>
+            <div class="ratio-grid" id="ratioGrid-landscape"></div>
+            <div class="ratio-custom">
+                <input type="text" class="rc-spec" id="customLandscape" placeholder="16:9 or 1366x768"
+                       oninput="previewSpec('landscape')" onkeydown="if(event.key==='Enter')addCustomRatio('landscape')">
+                <button type="button" onclick="addCustomRatio('landscape')">+ Add</button>
+                <span class="rc-preview" id="previewLandscape"></span>
+            </div>
+        </div>
+
+        <div class="ratio-block hidden" id="ratioBlock-portrait">
+            <div class="ratio-head">
+                <span class="rh-title"><span>📱</span>Portrait ratios</span>
+            </div>
+            <div class="ratio-grid" id="ratioGrid-portrait"></div>
+            <div class="ratio-custom">
+                <input type="text" class="rc-spec" id="customPortrait" placeholder="9:20 or 1080x1920"
+                       oninput="previewSpec('portrait')" onkeydown="if(event.key==='Enter')addCustomRatio('portrait')">
+                <button type="button" onclick="addCustomRatio('portrait')">+ Add</button>
+                <span class="rc-preview" id="previewPortrait"></span>
+            </div>
+        </div>
+
+        <div class="ratio-hint" id="ratioHint"></div>
+
         <hr class="divider" />
 
         <label class="title">Workers</label>
@@ -615,6 +768,28 @@
             <div class="switch"></div>
         </div>
         <input type="checkbox" id="screenshotStartScreen" style="display:none;">
+
+        <div style="height:12px"></div>
+
+        <div class="toggle-field" id="textChecksToggle" onclick="toggleField('textChecksToggle','textChecks')">
+            <div class="tf-text"><span class="tf-icon">🔤</span><div>Text checks<div class="tf-desc">Text that overflows the screen or gets cut off</div></div></div>
+            <div class="switch"></div>
+        </div>
+        <input type="checkbox" id="textChecks" style="display:none;">
+
+        <div class="sub-checks" id="subChecks">
+            <div class="toggle-field tf-sub" id="suspectsToggle" onclick="toggleField('suspectsToggle','suspects')">
+                <div class="tf-text"><span class="tf-icon">🕵️</span><div>Include suspicions<div class="tf-desc">Missing translations, raw keys, shrunken fonts — heuristics</div></div></div>
+                <div class="switch"></div>
+            </div>
+            <input type="checkbox" id="suspects" style="display:none;">
+
+            <div class="toggle-field tf-sub" id="overlapToggle" onclick="toggleField('overlapToggle','overlapCheck')">
+                <div class="tf-text"><span class="tf-icon">🔀</span><div>Overlapping text<div class="tf-desc">Rare in HTML — off by default</div></div></div>
+                <div class="switch"></div>
+            </div>
+            <input type="checkbox" id="overlapCheck" style="display:none;">
+        </div>
 
         <hr class="divider" />
 
@@ -820,6 +995,199 @@
         el.parentNode.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
         el.classList.add('active');
         document.getElementById('mode').value = el.dataset.mode;
+        syncRatioBlocks();
+    }
+
+    // ── aspect ratios ───────────────────────────────────────────────────────
+    // A ratio is stored as {w, h}. Pixel size is derived from a fixed base:
+    // landscape keeps its height, portrait keeps its width. With the defaults
+    // this reproduces the old hardcoded 1280x720 / 600x1000 exactly.
+
+    const RATIO_DEFAULTS = {
+        landscape: [
+            { w: 16, h: 9,  on: true },
+            { w: 4,  h: 3,  on: false },
+            { w: 16, h: 10, on: false },
+            { w: 21, h: 9,  on: false }
+        ],
+        portrait: [
+            { w: 9,  h: 20, on: false },
+            { w: 10, h: 20, on: false },
+            { w: 11, h: 20, on: false },
+            { w: 12, h: 20, on: true }
+        ]
+    };
+
+    let ratioState = {
+        landscape: RATIO_DEFAULTS.landscape.map(r => ({ ...r })),
+        portrait:  RATIO_DEFAULTS.portrait.map(r => ({ ...r }))
+    };
+
+    try {
+        const saved = JSON.parse(localStorage.getItem('qa-ratios') || 'null');
+        if (saved && saved.landscape && saved.portrait) ratioState = saved;
+    } catch (e) { /* keep defaults */ }
+
+    function saveRatios() {
+        try { localStorage.setItem('qa-ratios', JSON.stringify(ratioState)); } catch (e) {}
+    }
+
+    // landscape keeps its height, portrait keeps its width — these two constants
+    // are what make 16:9 → 1280x720 and 12:20 → 600x1000
+    const RATIO_BASE = { landscape: 720, portrait: 600 };
+
+    function getBase(orientation) { return RATIO_BASE[orientation]; }
+
+    // both sides >= 100 → the user typed an explicit resolution, not a ratio
+    function specKind(r) { return (r.w >= 100 && r.h >= 100) ? 'size' : 'ratio'; }
+
+    function ratioSize(orientation, r) {
+        if (specKind(r) === 'size') return { width: Math.round(r.w), height: Math.round(r.h) };
+        const base = getBase(orientation);
+        if (orientation === 'landscape') {
+            return { width: Math.round(base * (r.w / r.h)), height: base };
+        }
+        return { width: base, height: Math.round(base * (r.h / r.w)) };
+    }
+
+    function ratioId(r) { return `${r.w}x${r.h}`; }
+
+    function parseSpecInput(str) {
+        const m = String(str || '').trim().match(/^(\d+(?:\.\d+)?)\s*[x:×*\/\s]\s*(\d+(?:\.\d+)?)$/i);
+        if (!m) return null;
+        const w = parseFloat(m[1]), h = parseFloat(m[2]);
+        if (!(w > 0) || !(h > 0)) return null;
+        return { w, h };
+    }
+
+    function previewSpec(orientation) {
+        const cap = orientation === 'landscape' ? 'Landscape' : 'Portrait';
+        const out = document.getElementById(`preview${cap}`);
+        const r = parseSpecInput(document.getElementById(`custom${cap}`).value);
+        if (!r) { out.textContent = ''; return; }
+        const s = ratioSize(orientation, r);
+        out.textContent = specKind(r) === 'size'
+            ? `→ ${s.width}×${s.height} (exact)`
+            : `→ ${r.w}:${r.h} = ${s.width}×${s.height}`;
+    }
+
+    function renderRatioGrid(orientation) {
+        const grid = document.getElementById(`ratioGrid-${orientation}`);
+        if (!grid) return;
+
+        grid.innerHTML = ratioState[orientation].map((r, i) => {
+            const s = ratioSize(orientation, r);
+            const isSize = specKind(r) === 'size';
+            const del = r.custom
+                ? `<span class="rg-del" title="Remove this preset" onclick="event.stopPropagation();removeRatio('${orientation}',${i})">✕</span>`
+                : '';
+            return `<div class="ratio-opt ${r.on ? 'checked' : ''} ${r.custom ? 'is-custom' : ''}" data-idx="${i}" onclick="toggleRatio('${orientation}',${i})">
+                ${del}
+                <span>${isSize ? `${r.w}×${r.h}` : `${r.w}:${r.h}`}</span>
+                <span class="rg-dim">${isSize ? 'exact' : `${s.width}×${s.height}`}</span>
+            </div>`;
+        }).join('');
+    }
+
+    function removeRatio(orientation, index) {
+        const list = ratioState[orientation];
+        const entry = list[index];
+        if (!entry || !entry.custom) return;
+
+        if (entry.on && list.filter(r => r.on).length === 1) {
+            showToast('Keep at least one ratio for this orientation', 'error');
+            return;
+        }
+
+        list.splice(index, 1);
+        saveRatios();
+        renderRatioGrid(orientation);
+        updateRatioHint();
+        showToast('Preset removed', 'info');
+    }
+
+    function renderRatioDims() {
+        renderRatioGrid('landscape');
+        renderRatioGrid('portrait');
+        updateRatioHint();
+        saveRatios();
+    }
+
+    function toggleRatio(orientation, index) {
+        const list = ratioState[orientation];
+        const next = !list[index].on;
+
+        // never allow an orientation to end up with zero ratios selected
+        if (!next && list.filter(r => r.on).length === 1) {
+            showToast('Keep at least one ratio for this orientation', 'error');
+            return;
+        }
+
+        list[index].on = next;
+        saveRatios();
+        renderRatioGrid(orientation);
+        updateRatioHint();
+    }
+
+    function addCustomRatio(orientation) {
+        const cap = orientation === 'landscape' ? 'Landscape' : 'Portrait';
+        const field = document.getElementById(`custom${cap}`);
+        const r = parseSpecInput(field.value);
+
+        if (!r) { showToast('Enter 16:9 or 1366x768', 'error'); return; }
+
+        const exists = ratioState[orientation].find(x => x.w === r.w && x.h === r.h);
+        if (exists) {
+            exists.on = true;
+            showToast('Already in the list — enabled it', 'info');
+        } else {
+            ratioState[orientation].push({ w: r.w, h: r.h, on: true, custom: true });
+        }
+
+        field.value = '';
+        previewSpec(orientation);
+
+        saveRatios();
+        renderRatioGrid(orientation);
+        updateRatioHint();
+    }
+
+    function activeOrientations() {
+        const mode = document.getElementById('mode').value;
+        return mode === 'both' ? ['landscape', 'portrait'] : [mode];
+    }
+
+    function getSelectedRatios() {
+        const out = {};
+        activeOrientations().forEach(o => {
+            out[o] = ratioState[o].filter(r => r.on).map(r => ratioId(r));
+        });
+        return out;
+    }
+
+    function syncRatioBlocks() {
+        const active = activeOrientations();
+        ['landscape', 'portrait'].forEach(o => {
+            document.getElementById(`ratioBlock-${o}`).classList.toggle('hidden', !active.includes(o));
+        });
+        updateRatioHint();
+    }
+
+    function updateRatioHint() {
+        const hint = document.getElementById('ratioHint');
+        if (!hint) return;
+
+        const langs = document.querySelectorAll('input.lang:checked').length || 0;
+        const presets = activeOrientations()
+            .reduce((n, o) => n + ratioState[o].filter(r => r.on).length, 0);
+        const pagesCount = parseInt(document.getElementById('pagesCount').value || '10', 10);
+        const pagesRaw = document.getElementById('pagesInput').value;
+        const picked = parsePages(pagesRaw, pagesCount);
+        const pages = picked && picked.length ? picked.length : pagesCount;
+
+        const shots = langs * presets * pages;
+
+        hint.innerHTML = `<b>${presets}</b> preset${presets === 1 ? '' : 's'} × <b>${langs}</b> language${langs === 1 ? '' : 's'} × ~<b>${pages}</b> page${pages === 1 ? '' : 's'} ≈ <b>${shots}</b> screenshot${shots === 1 ? '' : 's'}`;
     }
 
     function toggleDD(e) {
@@ -842,6 +1210,14 @@
         const field = document.getElementById(fieldId);
         field.classList.toggle('on');
         document.getElementById(inputId).checked = field.classList.contains('on');
+        if (inputId === 'textChecks') syncSubChecks();
+    }
+
+    // Text checks does the collecting; the extra checks only say what else to
+    // look for in what was collected — so they are meaningless without it.
+    function syncSubChecks() {
+        const on = document.getElementById('textChecks').checked;
+        document.getElementById('subChecks').classList.toggle('show', on);
     }
 
     function syncLangLabels() {
@@ -906,22 +1282,31 @@
         const res = await fetch('/screenshots');
         const data = await res.json();
         galleryData = data;
+
+        try {
+            const ir = await fetch('/issues');
+            issuesData = await ir.json();
+        } catch (e) {
+            issuesData = { total: 0, broken: 0, suspect: 0, shots: 0, byType: {}, byLang: {}, issues: [] };
+        }
+        issueFilters = { group: 'all', lang: 'all', type: 'all' };
         galleryTs = Date.now();
         activeLangFilter = 'all';
         searchQuery = '';
         galleryView = 'grid';
         comparePage = 1;
+        compareRatio = '';
 
         // build flatScreens for modal navigation
         flatScreens = [];
-        function collect(items, lang = null, mode = null) {
+        // folder layout: <lang>/<mode>/<ratio>/file.png
+        // (older runs have no <ratio> level — both shapes are handled)
+        function collect(items, depth = 0, lang = null, mode = null, ratio = null) {
             items.forEach(i => {
-                if (i.type === 'file') { flatScreens.push({ ...i, lang, mode }); }
-                else {
-                    const isLang = !lang && !['landscape', 'portrait', 'startscreen'].includes(i.name);
-                    const isMode = ['landscape', 'portrait', 'startscreen'].includes(i.name);
-                    collect(i.children || [], isLang ? i.name : lang, isMode ? i.name : mode);
-                }
+                if (i.type === 'file') { flatScreens.push({ ...i, lang, mode, ratio }); return; }
+                if (depth === 0)      collect(i.children || [], 1, i.name, null, null);
+                else if (depth === 1) collect(i.children || [], 2, lang, i.name, null);
+                else                  collect(i.children || [], 3, lang, mode, i.name);
             });
         }
         collect(data);
@@ -933,7 +1318,7 @@
 
     function getLangs() {
         // top-level folders are languages
-        return galleryData.filter(i => i.type !== 'file').map(f => f.name);
+        return langFolders().map(f => f.name);
     }
 
     function countFilesInLang(langFolder) {
@@ -946,8 +1331,44 @@
 
     const modeIcon = { landscape: '🖥️', portrait: '📱', startscreen: '🎬' };
 
-    let galleryView = 'grid'; // 'grid' | 'compare'
+    // "16x9" → {orientation:null, w:16, h:9} · "landscape_16x9" → {orientation:'landscape', …}
+    function parseRatioFolder(name) {
+        const m = String(name).match(/^(?:(landscape|portrait)_)?(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)$/);
+        if (!m) return null;
+        return { orientation: m[1] || null, w: parseFloat(m[2]), h: parseFloat(m[3]) };
+    }
+
+    // "16x9" → "16:9" · "landscape_16x9" → "🖥️ 16:9"
+    function ratioLabelOf(name) {
+        const r = parseRatioFolder(name);
+        if (!r) return name;
+        const ic = r.orientation ? (modeIcon[r.orientation] + ' ') : '';
+        return `${ic}${r.w}:${r.h}`;
+    }
+
+    // pixel size the runner produced for this ratio folder, when we can tell
+    function ratioDimsOf(name, mode) {
+        const r = parseRatioFolder(name);
+        if (!r) return '';
+        const orientation = r.orientation || (mode === 'landscape' || mode === 'portrait' ? mode : null);
+        if (!orientation) return '';
+        const base = orientation === 'landscape' ? 720 : 600;
+        return orientation === 'landscape'
+            ? `${Math.round(base * (r.w / r.h))}×${base}`
+            : `${base}×${Math.round(base * (r.h / r.w))}`;
+    }
+
+    // top-level folders are languages; anything starting with "_" is tool output
+    function langFolders() {
+        return galleryData.filter(i => i.type !== 'file' && !i.name.startsWith('_'));
+    }
+
+    let galleryView = 'grid'; // 'grid' | 'compare' | 'issues'
+    let issuesData = { total: 0, broken: 0, suspect: 0, shots: 0, byType: {}, byLang: {}, issues: [] };
+    let issueFilters = { group: 'all', lang: 'all', type: 'all' };
+    let markedCards = {};   // cardKey → { url, name, boxes }
     let compareMode = 'landscape';
+    let compareRatio = '';
     let comparePage = 1;
 
     function setGalleryView(v) {
@@ -964,6 +1385,8 @@
         html += '<div class="gallery-view-tabs">';
         html += `<div class="view-tab ${galleryView==='grid'?'active':''}" onclick="setGalleryView('grid')">🖼️ Grid</div>`;
         html += `<div class="view-tab ${galleryView==='compare'?'active':''}" onclick="setGalleryView('compare')">⚖️ Compare Languages</div>`;
+        const issTotal = issuesData.total || 0;
+        html += `<div class="view-tab ${galleryView==='issues'?'active':''}" onclick="setGalleryView('issues')">⚠️ Problems${issTotal ? ` (${issTotal})` : ''}</div>`;
         html += '</div>';
 
         if (galleryView === 'grid') {
@@ -971,14 +1394,13 @@
             html += '<div class="lang-chips">';
             const totalFiles = flatScreens.length;
             html += `<div class="lang-chip ${activeLangFilter==='all'?'active':''}" onclick="filterLang('all')">All<span class="cnt">${totalFiles}</span></div>`;
-            galleryData.filter(i => i.type !== 'file').forEach(folder => {
+            langFolders().forEach(folder => {
                 const c = countFilesInLang(folder);
                 html += `<div class="lang-chip ${activeLangFilter===folder.name?'active':''}" onclick="filterLang('${folder.name}')">${folder.name.toUpperCase()}<span class="cnt">${c}</span></div>`;
             });
             html += '</div></div>';
 
-            const langFolders = galleryData.filter(i => i.type !== 'file');
-            const visible = langFolders.filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
+            const visible = langFolders().filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
             let bodyHtml = '';
             visible.forEach(langFolder => {
                 const langBlock = renderLangFolder(langFolder);
@@ -991,6 +1413,9 @@
             if (search) {
                 search.oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderGallery(); requestAnimationFrame(() => { const s = document.getElementById('gallerySearch'); if (s) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); } }); };
             }
+        } else if (galleryView === 'issues') {
+            html += '</div>';
+            g.innerHTML = html + renderIssues();
         } else {
             html += renderCompareControls();
             html += '</div>';
@@ -999,22 +1424,240 @@
         }
     }
 
+    // ── problems tab ────────────────────────────────────────────────────────
+    // One defect = one card. The same broken string in 27 languages is a single
+    // layout bug; the same key missing in 2 languages is a single locale bug.
+
+    const ISSUE_LABELS = {
+        'offscreen':         'out of screen',
+        'clipped':           'cut off',
+        'long-word':         'unbreakable word',
+        'raw-key':           'raw key',
+        'overlap':           'overlap',
+        'fallback':          'missing translation',
+        'page-untranslated': 'page untranslated',
+        'font-shrink':       'font shrunk',
+        'wrap-growth':       'extra line wraps'
+    };
+
+    const SEV_DOT = { error: '🔴', warn: '🟠', info: '🔵' };
+
+    let findingLang = {};   // finding key → language whose sample is on screen
+
+    function esc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function setIssueFilter(key, value) {
+        issueFilters[key] = value;
+        // switching language should show that language's sample, not an older pick
+        if (key === 'lang') findingLang = {};
+        renderGallery();
+    }
+
+    function allFindings() {
+        return issuesData.findings || [];
+    }
+
+    function filteredFindings() {
+        return allFindings().filter(f =>
+            (issueFilters.group === 'all' || f.group === issueFilters.group)
+            && (issueFilters.type === 'all' || f.type === issueFilters.type)
+            && (issueFilters.lang === 'all' || (f.langs || []).includes(issueFilters.lang))
+        );
+    }
+
+    function chipRow(label, key, values, counts) {
+        if (!values.length) return '';
+        let h = `<div class="cc-group"><span class="cc-label">${label}</span><div class="lang-chips">`;
+        h += `<div class="lang-chip ${issueFilters[key]==='all'?'active':''}" onclick="setIssueFilter('${key}','all')">All</div>`;
+        values.forEach(v => {
+            const cnt = counts ? `<span class="cnt">${counts[v]}</span>` : '';
+            const text = key === 'type' ? (ISSUE_LABELS[v] || v) : v.toUpperCase();
+            h += `<div class="lang-chip ${issueFilters[key]===v?'active':''}" onclick="setIssueFilter('${key}','${v}')">${text}${cnt}</div>`;
+        });
+        return h + '</div></div>';
+    }
+
+    function findingSampleLang(f) {
+        const chosen = findingLang[f.key];
+        if (chosen && f.samples[chosen]) return chosen;
+        // prefer the language the user is filtering by, otherwise the first one
+        if (issueFilters.lang !== 'all' && f.samples[issueFilters.lang]) return issueFilters.lang;
+        return f.langs[0];
+    }
+
+    function setFindingLang(key, lang) {
+        findingLang[key] = lang;
+        renderGallery();
+    }
+
+    function renderIssues() {
+        const all = allFindings();
+
+        if (!all.length) {
+            const ran = issuesData.shots > 0;
+            return `<div class="iss-empty">${ran
+                ? `✅ No text problems found across ${issuesData.shots} shot${issuesData.shots === 1 ? '' : 's'}.`
+                : '🔤 No text audit yet.<br>Turn on <b>Text checks</b> in Options and run a capture — problems will collect here.'}</div>`;
+        }
+
+        let html = '<div class="iss-summary">';
+        html += `<div class="iss-stat broken">🔴 Broken: ${issuesData.broken}</div>`;
+        html += `<div class="iss-stat suspect">🟠 Suspicions: ${issuesData.suspect}</div>`;
+        html += `<div class="iss-stat">${issuesData.total} finding${issuesData.total === 1 ? '' : 's'} · ${issuesData.shots} shots · ${(issuesData.languages || []).length} langs · <b>${issuesData.texts ?? '?'}</b> texts analysed</div>`;
+        const sk = issuesData.skipped;
+        if (sk && (sk.hidden || sk.offscreen)) {
+            html += `<div class="iss-stat" title="Text belonging to other paytable pages that sit in the DOM but are not on screen">🙈 ${sk.hidden} hidden · ${sk.offscreen} off-screen (text checked, layout not)</div>`;
+        }
+        html += '</div>';
+
+        html += '<div class="iss-controls">';
+        html += chipRow('Group', 'group', ['broken', 'suspect'].filter(g => (g === 'broken' ? issuesData.broken : issuesData.suspect) > 0),
+                        { broken: issuesData.broken, suspect: issuesData.suspect });
+        html += chipRow('Language', 'lang', Object.keys(issuesData.byLang || {}).sort(), issuesData.byLang);
+        html += chipRow('Type', 'type', Object.keys(issuesData.byType || {}), issuesData.byType);
+        html += '</div>';
+
+        const shown = filteredFindings();
+        if (!shown.length) return html + '<div class="iss-empty">🔍 Nothing matches these filters</div>';
+
+        markedCards = {};
+        let grid = '<div class="iss-grid">';
+
+        shown.forEach((f, n) => {
+            const lang = findingSampleLang(f);
+            const sample = f.samples[lang] || {};
+            const vp = sample.viewport || { w: 1, h: 1 };
+            const cardKey = 'f' + n;
+
+            markedCards[cardKey] = {
+                url: sample.url, name: sample.file,
+                boxes: sample.rect ? [{ ...sample.rect, group: f.group }] : [],
+                vw: vp.w, vh: vp.h
+            };
+
+            const overlay = sample.rect
+                ? `<div class="ic-box ${f.group === 'suspect' ? 'suspect' : ''}" style="left:${(sample.rect.x / vp.w) * 100}%;top:${(sample.rect.y / vp.h) * 100}%;width:${(sample.rect.w / vp.w) * 100}%;height:${(sample.rect.h / vp.h) * 100}%"></div>`
+                : '';
+
+            const scopeBadge = f.everywhere
+                ? `<span class="ic-scope all">all ${f.langCount} langs → layout</span>`
+                : `<span class="ic-scope">${f.langCount} lang${f.langCount === 1 ? '' : 's'}</span>`;
+
+            const chips = f.langs.map(l =>
+                `<div class="ic-lchip ${l === lang ? 'active' : ''}" onclick="setFindingLang('${esc(f.key)}','${l}')">${l.toUpperCase()}</div>`
+            ).join('');
+
+            grid += `<div class="issue-card ${f.group === 'broken' ? 'has-broken' : ''}">
+                <div class="ic-head">
+                    <span class="ic-sev">${SEV_DOT[f.severity] || ''}</span>
+                    <span class="ic-title">${ISSUE_LABELS[f.type] || f.type}</span>
+                    ${scopeBadge}
+                </div>
+                <div class="ic-body">
+                    <div class="ic-msg">${esc(sample.message || f.message)}</div>
+                    ${f.text ? `<div class="ic-text">“${esc(f.text.length > 120 ? f.text.slice(0, 120) + '…' : f.text)}”</div>` : ''}
+                    <div class="ic-where">${modeIcon[f.orientation] || ''} ${ratioLabelOf(f.ratio)} · ${f.kind === 'startscreen' ? 'start screen' : 'page ' + f.page}</div>
+                </div>
+                <div class="ic-langs">${chips}</div>
+                <div class="ic-frame" onclick="openImageByCard('${cardKey}')">
+                    <img src="${esc(sample.url || '')}?t=${galleryTs}" loading="lazy" />
+                    ${overlay}
+                </div>
+                <div class="ic-actions"><button onclick="downloadMarked('${cardKey}')">⬇ PNG with markup</button></div>
+            </div>`;
+        });
+
+        return html + grid + '</div>';
+    }
+
+    function openImageByCard(cardKey) {
+        const card = markedCards[cardKey];
+        if (card && card.url) openImage(card.url);
+    }
+
+    // draw the box into the real screenshot and hand it over as a PNG
+    async function downloadMarked(cardKey) {
+        const card = markedCards[cardKey];
+        if (!card || !card.url) return;
+        try {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = card.url + '?t=' + Date.now(); });
+
+            const cv = document.createElement('canvas');
+            cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            const kx = img.naturalWidth / (card.vw || img.naturalWidth);
+            const ky = img.naturalHeight / (card.vh || img.naturalHeight);
+
+            ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 400));
+            card.boxes.forEach(b => {
+                ctx.strokeStyle = b.group === 'suspect' ? '#f59e0b' : '#ef4444';
+                ctx.strokeRect(b.x * kx, b.y * ky, b.w * kx, b.h * ky);
+            });
+
+            const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (card.name || 'screenshot').replace(/\.png$/i, '') + '_marked.png';
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+            showToast('Saved with markup', 'success');
+        } catch (e) {
+            console.error(e);
+            showToast('Could not build the marked PNG', 'error');
+        }
+    }
+
+    // orientation folders present in the run: landscape / portrait / startscreen
     function getAvailableModes() {
         const modes = new Set();
-        galleryData.filter(i => i.type !== 'file').forEach(lang => {
+        langFolders().forEach(lang => {
             (lang.children || []).forEach(m => { if (m.type !== 'file') modes.add(m.name); });
         });
         return [...modes];
     }
 
-    function getMaxPagesForMode(mode) {
+    function getModeFolder(langFolder, mode) {
+        return (langFolder.children || []).find(m => m.name === mode && m.type !== 'file');
+    }
+
+    // '' means "files sit directly under the mode folder" (runs from before ratios)
+    function getAvailableRatios(mode) {
+        const set = new Set();
+        let hasLegacy = false;
+        langFolders().forEach(lang => {
+            const mf = getModeFolder(lang, mode);
+            if (!mf) return;
+            (mf.children || []).forEach(c => {
+                if (c.type === 'file') hasLegacy = true;
+                else set.add(c.name);
+            });
+        });
+        const list = [...set];
+        if (hasLegacy) list.unshift('');
+        return list;
+    }
+
+    function getFilesFor(langFolder, mode, ratio) {
+        const mf = getModeFolder(langFolder, mode);
+        if (!mf) return [];
+        if (!ratio) return (mf.children || []).filter(f => f.type === 'file');
+        const rf = (mf.children || []).find(c => c.name === ratio && c.type !== 'file');
+        return rf ? (rf.children || []).filter(f => f.type === 'file') : [];
+    }
+
+    function getMaxPages(mode, ratio) {
         let max = 0;
-        galleryData.filter(i => i.type !== 'file').forEach(lang => {
-            const mf = (lang.children || []).find(m => m.name === mode && m.type !== 'file');
-            if (mf) {
-                const cnt = (mf.children || []).filter(f => f.type === 'file').length;
-                if (cnt > max) max = cnt;
-            }
+        langFolders().forEach(lang => {
+            const n = getFilesFor(lang, mode, ratio).length;
+            if (n > max) max = n;
         });
         return max;
     }
@@ -1032,51 +1675,61 @@
         });
         html += '</div></div>';
 
-        const maxPages = getMaxPagesForMode(compareMode);
+        const ratios = getAvailableRatios(compareMode);
+        if (!ratios.includes(compareRatio)) compareRatio = ratios[0] ?? '';
+        if (ratios.length > 1) {
+            html += '<div class="cc-group"><span class="cc-label">Ratio</span><div class="compare-seg">';
+            ratios.forEach(r => {
+                const d = r ? ratioDimsOf(r, compareMode) : '';
+                const label = r ? (ratioLabelOf(r) + (d ? ` <span style="opacity:.7;font-weight:500">${d}</span>` : '')) : 'All';
+                html += `<div class="cs ${compareRatio===r?'active':''}" data-ratio="${r}" onclick="setCompareRatio('${r}')">${label}</div>`;
+            });
+            html += '</div></div>';
+        }
+
+        const maxPages = getMaxPages(compareMode, compareRatio);
         if (comparePage > maxPages) comparePage = 1;
         html += '<div class="cc-group"><span class="cc-label">Page</span><div class="page-picker">';
         for (let i = 1; i <= maxPages; i++) {
             html += `<div class="page-num ${comparePage===i?'active':''}" onclick="setComparePage(${i})">${i}</div>`;
         }
         html += '</div></div>';
+        html += '</div>';
         return html;
+    }
+
+    function refreshCompareControls() {
+        const wrap = document.querySelector('.compare-controls');
+        if (!wrap) return;
+        const fresh = document.createElement('div');
+        fresh.innerHTML = renderCompareControls();
+        const next = fresh.firstElementChild;
+        if (next) wrap.replaceWith(next);
     }
 
     function setCompareMode(m) {
         compareMode = m; comparePage = 1;
-        updateCompareControlsUI();
+        const ratios = getAvailableRatios(m);
+        compareRatio = ratios.includes(compareRatio) ? compareRatio : (ratios[0] ?? '');
+        refreshCompareControls();
+        updateCompareGrid();
+    }
+    function setCompareRatio(r) {
+        compareRatio = r; comparePage = 1;
+        refreshCompareControls();
         updateCompareGrid();
     }
     function setComparePage(p) {
         comparePage = p;
-        updateCompareControlsUI();
+        refreshCompareControls();
         updateCompareGrid();
     }
 
-    function updateCompareControlsUI() {
-        document.querySelectorAll('.compare-seg .cs').forEach(el => {
-            el.classList.toggle('active', el.dataset.mode === compareMode);
-        });
-        const picker = document.querySelector('.page-picker');
-        if (picker) {
-            const maxPages = getMaxPagesForMode(compareMode);
-            if (comparePage > maxPages) comparePage = 1;
-            let ph = '';
-            for (let i = 1; i <= maxPages; i++) {
-                ph += `<div class="page-num ${comparePage===i?'active':''}" onclick="setComparePage(${i})">${i}</div>`;
-            }
-            picker.innerHTML = ph;
-        }
-    }
-
     function getCompareItems() {
-        const langFolders = galleryData.filter(i => i.type !== 'file');
+        const langs = langFolders();
         const items = [];
-        langFolders.forEach(lang => {
-            const mf = (lang.children || []).find(m => m.name === compareMode && m.type !== 'file');
-            if (!mf) return;
-            const files = (mf.children || []).filter(f => f.type === 'file');
-            const file = files[comparePage - 1];
+        langs.forEach(lang => {
+            const file = getFilesFor(lang, compareMode, compareRatio)[comparePage - 1];
             if (!file) return;
             items.push({ lang: lang.name, url: file.url });
         });
@@ -1141,13 +1794,39 @@
         }
 
         modeFolders.forEach(modeFolder => {
-            const files = (modeFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name));
-            if (!files.length) return;
+            const kids = modeFolder.children || [];
+            const ownFiles = kids.filter(i => i.type === 'file' && matchesSearch(lang, i.name));
+            const ratioFolders = kids.filter(i => i.type !== 'file');
+
+            let modeInner = '';
+
+            // legacy runs: files sit directly under the mode folder
+            if (ownFiles.length) {
+                modeInner += '<div class="images-grid">';
+                ownFiles.forEach(file => { modeInner += galleryCard(file, ts); });
+                modeInner += '</div>';
+            }
+
+            ratioFolders.forEach(ratioFolder => {
+                const files = (ratioFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name));
+                if (!files.length) return;
+                const dims = ratioDimsOf(ratioFolder.name, modeFolder.name);
+                modeInner += `<div class="folder-ratio">
+                    <span class="fr-badge">${ratioLabelOf(ratioFolder.name)}${dims ? `<span class="fr-dim">${dims}</span>` : ''}</span>
+                    <span class="fr-count">${files.length} shot${files.length === 1 ? '' : 's'}</span>
+                    <span class="fr-line"></span>
+                </div>`;
+                modeInner += '<div class="images-grid">';
+                const tag = ratioLabelOf(ratioFolder.name);
+                files.forEach(file => { modeInner += galleryCard(file, ts, tag); });
+                modeInner += '</div>';
+            });
+
+            if (!modeInner) return;
+
             const mIc = modeIcon[modeFolder.name] || '📁';
             inner += `<div class="folder-mode"><span class="mode-ic">${mIc}</span>${modeFolder.name}</div>`;
-            inner += '<div class="images-grid">';
-            files.forEach(file => { inner += galleryCard(file, ts); });
-            inner += '</div>';
+            inner += modeInner;
         });
 
         if (!inner) return '';
@@ -1155,10 +1834,11 @@
         return `<div class="folder"><div class="folder-lang"><span class="lang-badge">${lang.toUpperCase()}</span><span class="lang-line"></span></div>${inner}</div>`;
     }
 
-    function galleryCard(file, ts) {
+    function galleryCard(file, ts, ratioTag) {
         const delay = (cardAnimIndex % 12) * 0.04; // wave effect, caps so it never drags
         cardAnimIndex++;
         return `<div class="gallery-item" style="animation-delay:${delay}s" onclick="openImage('${file.url}')">
+            ${ratioTag ? `<div class="ratio-tag">${ratioTag}</div>` : ''}
             <div class="img-frame">
                 <img src="${file.url}?t=${ts}" loading="lazy" />
                 <div class="img-overlay"><span class="view-btn">👁 View</span></div>
@@ -1176,6 +1856,7 @@
         const count = document.querySelectorAll('input.lang:checked').length;
         document.getElementById('langCount').innerText = `Selected languages: ${count}`;
         syncLangLabels();
+        updateRatioHint();
         validateForm();
     }
 
@@ -1203,6 +1884,13 @@
         const pages = parsePages(pagesRaw, pagesCount);
         const enSocExtra = document.getElementById('enSocExtra').checked;
         const screenshotStartScreen = document.getElementById('screenshotStartScreen').checked;
+        const textChecks = document.getElementById('textChecks').checked;
+        // extra checks only apply when the collector actually ran
+        const suspects = textChecks && document.getElementById('suspects').checked;
+        const overlapCheck = textChecks && document.getElementById('overlapCheck').checked;
+        const ratios = getSelectedRatios();
+        const base = { landscape: getBase('landscape'), portrait: getBase('portrait') };
+        const gameName = resolveGameName(url);
 
         startBtn.disabled = true;
 
@@ -1215,16 +1903,27 @@
             await fetch('/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, enSocExtra, screenshotStartScreen })
+                body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, enSocExtra, screenshotStartScreen, ratios, base, gameName, textChecks, suspects, overlapCheck })
             });
             jobRunning = true;
-            showToast(`Capture started · ${langs.length} lang${langs.length>1?'s':''}`, 'info');
+            const presetCount = Object.values(ratios).reduce((n, arr) => n + arr.length, 0);
+            showToast(`Capture started · ${langs.length} lang${langs.length>1?'s':''} · ${presetCount} preset${presetCount>1?'s':''}`, 'info');
         } catch (e) {
             setStatus('Error starting capture', 'err');
             startBtn.disabled = false;
             validateForm();
             console.error(e);
         }
+    }
+
+    // game name for the screenshot file prefix — picked game, else the url's ?game=
+    function resolveGameName(url) {
+        if (selectedGame) return selectedGame;
+        try {
+            const g = new URL(url).searchParams.get('game');
+            if (g) return g;
+        } catch (e) {}
+        return null;
     }
 
     function parsePages(input, maxPages) {
@@ -1327,14 +2026,11 @@
 
     function buildCompareScreens() {
         // same page across all languages for current compareMode
-        const langFolders = galleryData.filter(i => i.type !== 'file');
+        const langs = langFolders();
         const arr = [];
-        langFolders.forEach(lang => {
-            const mf = (lang.children || []).find(m => m.name === compareMode && m.type !== 'file');
-            if (!mf) return;
-            const files = (mf.children || []).filter(f => f.type === 'file');
-            const file = files[comparePage - 1];
-            if (file) arr.push({ ...file, lang: lang.name, mode: compareMode });
+        langs.forEach(lang => {
+            const file = getFilesFor(lang, compareMode, compareRatio)[comparePage - 1];
+            if (file) arr.push({ ...file, lang: lang.name, mode: compareMode, ratio: compareRatio });
         });
         return arr;
     }
@@ -1361,8 +2057,9 @@
     function updateModalInfo() {
         const item = modalScreens[currentIndex];
         if (!item) return;
+        const ratioPart = item.ratio ? ` · ${ratioLabelOf(item.ratio)}` : '';
         document.getElementById('modalInfo').innerText =
-            `${item.lang?.toUpperCase() || '—'} · ${item.mode?.toUpperCase() || '—'} · ${item.name}`;
+            `${item.lang?.toUpperCase() || '—'} · ${item.mode?.toUpperCase() || '—'}${ratioPart} · ${item.name}`;
         const counter = document.getElementById('modalCounter');
         if (counter) counter.innerText = `${currentIndex + 1} / ${modalScreens.length}`;
     }
@@ -1379,6 +2076,7 @@
                 if (!jobRunning) return;
                 jobRunning = false;
                 startBtn.disabled = false;
+
                 const cancelled = data.message.startsWith('🛑');
 
                 // count real captured files (server clears total on cancel)
@@ -1421,6 +2119,10 @@
     })();
 
     updateLangCount();
+    renderRatioDims();
+    syncRatioBlocks();
+    syncSubChecks();
+    document.getElementById('pagesInput').addEventListener('input', updateRatioHint);
     validateForm();
     setInterval(refreshStatus, 300);
 

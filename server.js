@@ -1,5 +1,6 @@
 const express = require('express');
 const { runJob } = require('./runner');
+const { analyze } = require('./textAudit');
 
 const app = express();
 const path = require('path');
@@ -19,8 +20,38 @@ let status = {
     // stage: '',
 
     workers: {},
+    presets: [],
+    issues: 0,
+    broken: 0,
+    suspect: 0,
     finished: false
 };
+
+// last text-audit report, kept in memory and mirrored to reports/latest.json
+let report = null;
+const REPORT_DIR = path.join(__dirname, 'reports');
+const REPORT_FILE = path.join(REPORT_DIR, 'latest.json');
+
+function saveReport(data) {
+    report = data;
+    try {
+        fs.mkdirSync(REPORT_DIR, { recursive: true });
+        fs.writeFileSync(REPORT_FILE, JSON.stringify(data));
+    } catch (e) {
+        console.error('report write failed', e);
+    }
+}
+
+const EMPTY_REPORT = {
+    total: 0, broken: 0, suspect: 0, rawIssues: 0, shots: 0,
+    languages: [], byType: {}, byLang: {}, findings: []
+};
+
+function loadReport() {
+    try {
+        if (fs.existsSync(REPORT_FILE)) report = JSON.parse(fs.readFileSync(REPORT_FILE, 'utf8'));
+    } catch (e) { report = null; }
+}
 
 // UI
 app.get('/', (req, res) => {
@@ -75,20 +106,48 @@ app.post('/run', async (req, res) => {
     status.progress = 0;
     status.total = 0;
     status.workers = {};
+    status.presets = [];
+    status.issues = 0;
+    status.broken = 0;
+    status.suspect = 0;
     status.finished = false;
     status.message = '⏳ Running screenshots...';
+    report = null;
 
     res.json({ ok: true });
 
     try {
-        await runJob(req.body, status, browsers);
+        const result = await runJob(req.body, status, browsers);
 
-        console.log('🔥 AFTER runJob RETURNED');
-        console.log('STATUS SNAPSHOT:', JSON.stringify(status, null, 2));
+        // text audit — never let a bad analysis fail a good screenshot run
+        if (req.body.textChecks === false) {
+            saveReport({ ...EMPTY_REPORT, generatedAt: new Date().toISOString(), skipped: true });
+        } else {
+            try {
+                const shots = (result && result.shots) || [];
+                const data = analyze(shots, {
+                    suspects: req.body.suspects !== false,
+                    overlap: req.body.overlapCheck === true
+                });
+                data.generatedAt = new Date().toISOString();
+                data.game = req.body.gameName || null;
+                saveReport(data);
+                status.issues = data.total;
+                status.broken = data.broken;
+                status.suspect = data.suspect;
+                console.log(`text audit: ${data.total} finding(s) from ${data.rawIssues} raw hit(s) — ${data.broken} broken, ${data.suspect} suspect, over ${data.shots} shot(s), ${data.texts} visible text(s)`);
+                console.log(`  filtered out: ${data.skipped.hidden} hidden (other paytable pages), ${data.skipped.offscreen} fully off-screen`);
+            } catch (e) {
+                console.error('text audit failed', e);
+            }
+        }
+
         status.progress = 100;
         status.running = false;
         status.finished = true;
-        status.message = '✅ Screenshots completed';
+        status.message = status.issues
+            ? `✅ Done · ⚠️ ${status.issues} finding${status.issues === 1 ? '' : 's'}`
+            : '✅ Screenshots completed';
 
     } catch (e) {
         status.finished = true;
@@ -135,6 +194,11 @@ app.post('/cancel', async (req, res) => {
     );
 
     res.json({ ok: true });
+});
+
+app.get('/issues', (req, res) => {
+    if (!report) loadReport();
+    res.json(report || EMPTY_REPORT);
 });
 
 app.get('/screenshots', (req, res) => {
