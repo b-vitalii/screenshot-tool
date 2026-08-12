@@ -219,6 +219,30 @@
         #gallery.dens-s .img-overlay .view-btn { padding: 4px 10px; font-size: 10px; }
         #gallery.dens-s .compare-card .cc-lang { padding: 6px 8px; font-size: 11px; }
         .dens-seg .cs { min-width: 30px; text-align: center; }
+
+        /* sticky heading: which language / orientation / ratio you are scrolling
+           through. A thousand thumbnails is a long scroll and the section headers
+           leave the screen almost immediately. */
+        #stickyHead {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 900; pointer-events: none;
+            background: rgba(22,22,31,0.86); border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px); box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            transform: translateY(-101%); opacity: 0; transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+        #stickyHead.on { transform: none; opacity: 1; }
+        #stickyHead .sh-inner {
+            max-width: 720px; margin: 0 auto; padding: 8px 20px;
+            display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700;
+        }
+        .sh-lang { padding: 3px 11px; border-radius: 8px; background: var(--accent-grad); color: #fff; letter-spacing: 0.6px; }
+        .sh-mode { color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; display: inline-flex; align-items: center; gap: 5px; }
+        .sh-ratio { color: #f59e0b; display: inline-flex; align-items: baseline; gap: 6px; }
+        .sh-ratio .sh-dim { font-size: 10px; font-weight: 600; opacity: 0.8; }
+        .sh-count { margin-left: auto; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+        body.light #stickyHead { background: rgba(255,255,255,0.9); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        body.cyber #stickyHead { background: rgba(3,8,18,0.9); border-bottom-color: #123a4d; }
+        body.cyber .sh-lang { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; font-family: var(--font); border-radius: 4px; }
+        body.cyber .sh-mode, body.cyber .sh-count { color: #0891b2; font-family: var(--font); }
         .view-tab { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; }
         .view-tab:hover { color: var(--text); }
         .view-tab.active { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
@@ -1326,6 +1350,7 @@
     function closeGallery() {
         const g = document.getElementById('gallery');
         g.style.display = 'none'; g.innerHTML = '';
+        queueStickyHead();
     }
 
     let galleryData = [];
@@ -1453,6 +1478,7 @@
         applyDensity();
         document.querySelectorAll('.dens-seg .cs').forEach(el =>
             el.classList.toggle('active', el.dataset.dens === d));
+        queueStickyHead();   // the grid re-flowed, so the headers moved
     }
 
     function densitySwitch() {
@@ -1463,6 +1489,63 @@
     }
 
     applyDensity();
+
+    // ── sticky heading ──────────────────────────────────────────────────────
+    // Every section header in the grid carries .sh-mark with its language, mode and
+    // ratio. The bar shows the last marker that has scrolled under it, so it always
+    // names the block you are actually looking at. Markers are in document order,
+    // which is why the loop can stop at the first one still below the line.
+    let stickyRaf = 0;
+
+    function updateStickyHead() {
+        stickyRaf = 0;
+        const bar = document.getElementById('stickyHead');
+        const g = document.getElementById('gallery');
+        if (!bar || !g) return;
+
+        const modalOpen = document.getElementById('imgModal').style.display === 'flex';
+        if (g.style.display === 'none' || galleryView !== 'grid' || modalOpen) {
+            bar.classList.remove('on');
+            return;
+        }
+
+        const LINE = 46;   // a header counts as passed once it is under the bar
+        let cur = null;
+        for (const m of g.querySelectorAll('.sh-mark')) {
+            if (m.getBoundingClientRect().top <= LINE) cur = m; else break;
+        }
+        if (!cur || g.getBoundingClientRect().bottom < LINE) {
+            bar.classList.remove('on');
+            return;
+        }
+
+        const d = cur.dataset;
+        const key = `${d.shLang}|${d.shMode || ''}|${d.shRatio || ''}|${d.shCount || ''}`;
+        if (bar.dataset.key !== key) {
+            bar.dataset.key = key;
+            const dims = d.shRatio ? (ratioDimsOf(d.shRatio, d.shMode) || '') : '';
+            const n = parseInt(d.shCount, 10);
+            bar.innerHTML = `<div class="sh-inner">
+                <span class="sh-lang">${(d.shLang || '').toUpperCase()}</span>
+                ${d.shMode ? `<span class="sh-mode">${modeIcon[d.shMode] || '📁'} ${d.shMode}</span>` : ''}
+                ${d.shRatio ? `<span class="sh-ratio">${ratioLabelOf(d.shRatio)}${dims ? `<span class="sh-dim">${dims}</span>` : ''}</span>` : ''}
+                ${n > 0 ? `<span class="sh-count">${n} shot${n === 1 ? '' : 's'}</span>` : ''}
+            </div>`;
+        }
+        bar.classList.add('on');
+    }
+
+    function queueStickyHead() {
+        if (!stickyRaf) stickyRaf = requestAnimationFrame(updateStickyHead);
+    }
+
+    window.addEventListener('scroll', queueStickyHead, { passive: true });
+    window.addEventListener('resize', queueStickyHead);
+    // thumbnails are lazy, so a header can move after an image below it arrives.
+    // #gallery itself is never replaced, only its contents, so one capturing
+    // listener on it survives every re-render.
+    const galleryEl = document.getElementById('gallery');
+    if (galleryEl) galleryEl.addEventListener('load', queueStickyHead, true);
 
     function renderGallery() {
         const g = document.getElementById('gallery');
@@ -1510,6 +1593,8 @@
             html += '<div id="compareGridWrap">' + renderCompareGrid() + '</div>';
             g.innerHTML = html;
         }
+
+        queueStickyHead();
     }
 
     // ── problems tab ────────────────────────────────────────────────────────
@@ -1908,7 +1993,7 @@
                 const files = (ratioFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name));
                 if (!files.length) return;
                 const dims = ratioDimsOf(ratioFolder.name, modeFolder.name);
-                modeInner += `<div class="folder-ratio">
+                modeInner += `<div class="folder-ratio sh-mark" data-sh-lang="${lang}" data-sh-mode="${modeFolder.name}" data-sh-ratio="${ratioFolder.name}" data-sh-count="${files.length}">
                     <span class="fr-badge">${ratioLabelOf(ratioFolder.name)}${dims ? `<span class="fr-dim">${dims}</span>` : ''}</span>
                     <span class="fr-count">${files.length} shot${files.length === 1 ? '' : 's'}</span>
                     <span class="fr-line"></span>
@@ -1922,13 +2007,13 @@
             if (!modeInner) return;
 
             const mIc = modeIcon[modeFolder.name] || '📁';
-            inner += `<div class="folder-mode"><span class="mode-ic">${mIc}</span>${modeFolder.name}</div>`;
+            inner += `<div class="folder-mode sh-mark" data-sh-lang="${lang}" data-sh-mode="${modeFolder.name}" data-sh-count="${ownFiles.length || ''}"><span class="mode-ic">${mIc}</span>${modeFolder.name}</div>`;
             inner += modeInner;
         });
 
         if (!inner) return '';
 
-        return `<div class="folder"><div class="folder-lang"><span class="lang-badge">${lang.toUpperCase()}</span><span class="lang-line"></span></div>${inner}</div>`;
+        return `<div class="folder"><div class="folder-lang sh-mark" data-sh-lang="${lang}"><span class="lang-badge">${lang.toUpperCase()}</span><span class="lang-line"></span></div>${inner}</div>`;
     }
 
     function galleryCard(file, ts, ratioTag) {
@@ -2299,6 +2384,7 @@
         if (currentIndex < 0) currentIndex = 0;
         document.getElementById('modalImg').src = src;
         document.getElementById('imgModal').style.display = 'flex';
+        queueStickyHead();   // out of the way while the viewer is open
 
         modalMarks = pendingMarks;      // only the shot we were asked to mark
         pendingMarks = null;
@@ -2325,6 +2411,7 @@
         modalMarks = null;
         renderModalMarks();
         document.getElementById('modalLangs').innerHTML = '';
+        queueStickyHead();
     }
 
     function updateModalInfo() {
@@ -2430,6 +2517,7 @@
     </div>
 </div>
 
+<div id="stickyHead"></div>
 <div id="toastWrap"></div>
 
 </body>
