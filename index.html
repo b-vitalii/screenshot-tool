@@ -386,39 +386,235 @@
         .ratio-custom button:hover { border-color: var(--accent2); }
         .ratio-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
 
-        /* problems tab */
-        .iss-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 14px; }
-        .iss-controls .cc-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
-        .iss-summary { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; }
-        .iss-stat { padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; border: 2px solid var(--border); background: var(--card); color: var(--muted); }
-        .iss-stat.broken { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.12); }
-        .iss-stat.suspect { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.12); }
-        .iss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-top: 16px; }
-        .issue-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-        .issue-card.has-broken { border-color: rgba(239,68,68,0.6); }
-        .ic-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-        .ic-sev { font-size: 12px; }
-        .ic-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text); }
+        /* ===== PROBLEMS TAB ===== */
+
+        /* section heading, same language as the ratio bars in the grid */
+        .iss-div { display: flex; align-items: center; gap: 11px; margin: 26px 0 16px; }
+        .iss-div .id-t {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text); background: var(--card); border: 1.5px solid var(--border);
+            padding: 7px 14px; border-radius: 11px;
+        }
+        .iss-div .id-n { font-size: 11px; font-weight: 700; color: var(--muted); }
+        .iss-div .id-l { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: 0.55; }
+
+        /* headline numbers as tiles */
+        .iss-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px; }
+        .iss-tile {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+            padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; position: relative; overflow: hidden;
+        }
+        .iss-tile::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
+        .iss-tile .it-n { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; color: var(--text); }
+        .iss-tile .it-l { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+        .iss-tile.broken::before { background: #ef4444; }
+        .iss-tile.broken .it-n { color: #ef4444; }
+        .iss-tile.suspect::before { background: #f59e0b; }
+        .iss-tile.suspect .it-n { color: #f59e0b; }
+        .iss-tile.accent::before { background: var(--accent); }
+        .iss-meta {
+            margin-top: 10px; padding: 9px 14px; border-radius: 11px;
+            background: var(--input-bg); border: 1px solid var(--border);
+            font-size: 11.5px; font-weight: 600; color: var(--muted); line-height: 1.5;
+        }
+        .iss-meta b { color: var(--text); font-weight: 800; }
+
+        /* filters get their own panel instead of floating loose */
+        .iss-filters { margin-top: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+        .if-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+        .if-head .if-t { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--lbl); }
+        .if-head .if-n { font-size: 11px; font-weight: 600; color: var(--muted); }
+        .if-reset {
+            margin-left: auto; padding: 6px 13px; border-radius: 9px; cursor: pointer;
+            font-size: 11px; font-weight: 700; font-family: var(--font);
+            background: var(--input-bg); color: var(--text); border: 1.5px solid var(--border);
+        }
+        .if-reset:hover { border-color: var(--accent2); color: var(--accent2); }
+        .iss-controls { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; margin-top: 12px; }
+        .iss-controls .cc-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
+
+        /* cards */
+        .iss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-top: 20px; }
+        .issue-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden;
+            transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+        }
+        .issue-card:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,0.32); border-color: var(--accent2); }
+        .issue-card.has-broken { border-color: rgba(239,68,68,0.45); }
+        .ic-head {
+            display: flex; align-items: center; gap: 9px; padding: 11px 13px 11px 16px;
+            border-bottom: 1px solid var(--border); position: relative;
+            background: linear-gradient(180deg, rgba(255,255,255,0.035), transparent);
+        }
+        .ic-head::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #f59e0b; }
+        .issue-card.has-broken .ic-head::before { background: #ef4444; }
+        .ic-sev { display: none; }
+        .ic-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
         .ic-scope { margin-left: auto; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 7px; white-space: nowrap;
                     background: rgba(99,102,241,0.15); color: var(--accent2); border: 1px solid rgba(99,102,241,0.5); }
         .ic-scope.all { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.6); }
-        .ic-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+        .ic-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; }
         .ic-msg { font-size: 12.5px; line-height: 1.5; color: var(--text); }
-        .ic-where { font-size: 11px; font-weight: 700; color: var(--muted); }
-        .ic-langs { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 10px; }
+        .ic-where {
+            font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px; color: var(--muted);
+            background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+            padding: 4px 9px; align-self: flex-start;
+        }
+        .ic-langs { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 14px 11px; }
         .ic-lchip { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; cursor: pointer;
                     background: var(--input-bg); color: var(--muted); border: 1px solid var(--border); }
         .ic-lchip:hover { color: var(--text); border-color: var(--accent2); }
         .ic-lchip.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
-        .ic-frame { position: relative; cursor: pointer; background: #000; line-height: 0; }
+        .ic-frame { position: relative; cursor: pointer; background: #000; line-height: 0; border-top: 1px solid var(--border); }
         .ic-frame img { width: 100%; display: block; }
         .ic-box { position: absolute; border: 2px solid #ef4444; box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(239,68,68,0.7); pointer-events: none; }
         .ic-box.suspect { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 0 12px rgba(245,158,11,0.7); }
         .ic-text { font-size: 12px; color: var(--muted); font-style: italic; line-height: 1.45; }
-        .ic-actions { padding: 0 12px 12px; }
-        .ic-actions button { width: 100%; padding: 9px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; background: var(--input-bg); color: var(--text); border: 1.5px solid var(--border); }
-        .ic-actions button:hover { border-color: var(--accent2); }
-        .iss-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7; }
+        .ic-actions { padding: 11px 14px 13px; }
+        .ic-actions button {
+            width: 100%; padding: 10px; border-radius: 11px; font-size: 12px; font-weight: 700; cursor: pointer;
+            font-family: var(--font); background: var(--input-bg); color: var(--text); border: 1.5px solid var(--border);
+            transition: all 0.15s;
+        }
+        .ic-actions button:hover { border-color: var(--accent2); color: var(--accent2); }
+
+        .iss-empty {
+            padding: 44px 24px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7;
+            background: var(--card2); border: 1.5px dashed var(--border); border-radius: 16px;
+        }
+
+        /* problems tab — light */
+        body.light .ic-head { background: linear-gradient(180deg, rgba(0,0,0,0.03), transparent); }
+        body.light .issue-card:hover { box-shadow: 0 14px 34px rgba(0,0,0,0.14); }
+
+        /* problems tab — cyberpunk */
+        body.cyber .iss-div .id-t { background: rgba(6,182,212,0.07); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+        body.cyber .iss-div .id-l { background: linear-gradient(90deg, #06b6d4, transparent); }
+        body.cyber .iss-tile { background: #060e1c; border: 1px solid #123a4d; border-radius: 8px; }
+        body.cyber .iss-tile .it-n { font-family: var(--font); color: #67e8f9; }
+        body.cyber .iss-tile.broken .it-n { color: #fb7185; }
+        body.cyber .iss-tile.suspect .it-n { color: #fbbf24; }
+        body.cyber .iss-tile.accent::before { background: #06b6d4; }
+        body.cyber .iss-meta, body.cyber .iss-filters { background: #060e1c; border: 1px solid #123a4d; border-radius: 8px; font-family: var(--font); }
+        body.cyber .if-head .if-t { color: #06b6d4; font-family: var(--font); }
+        body.cyber .if-reset { background: rgba(6,182,212,0.07); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+        body.cyber .issue-card { background: #060e1c; border: 1px solid #123a4d; border-radius: 8px; }
+        body.cyber .issue-card:hover { border-color: #06b6d4; box-shadow: 0 0 30px rgba(6,182,212,0.35); }
+        body.cyber .ic-head { background: rgba(6,182,212,0.06); border-bottom-color: #123a4d; }
+        body.cyber .ic-where, body.cyber .ic-lchip, body.cyber .ic-actions button { background: rgba(6,182,212,0.06); border-color: #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+        body.cyber .iss-empty { background: #060e1c; border-color: #123a4d; font-family: var(--font); }
+
+        /* ===== RUN MAP (head of the Problems tab) ===== */
+        .mapblock {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 16px;
+            overflow: hidden; margin-bottom: 4px;
+            --mc-clean: #262638; --mc-hatch: #343a5c; --mc-hatch2: #1b1b2a; --mc-void: #2f2f42;
+        }
+        body.light .mapblock { --mc-clean: #c8c4bd; --mc-hatch: #b6b2ab; --mc-hatch2: #d8d4cd; --mc-void: #b3afa9; }
+        body.cyber .mapblock { background: #060e1c; border: 1px solid #123a4d; border-radius: 8px; --mc-clean: #0e2b3d; --mc-hatch: #14455c; --mc-hatch2: #061621; --mc-void: #123a4d; }
+
+        /* head: obviously a button, because the old bare caret was invisible */
+        .map-head {
+            display: flex; align-items: center; gap: 11px; padding: 14px 16px; cursor: pointer; user-select: none;
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
+            border-bottom: 1px solid var(--border); transition: background 0.15s;
+        }
+        .map-head:hover { background: rgba(129,140,248,0.09); }
+        .mapblock.closed .map-head { border-bottom-color: transparent; }
+        body.light .map-head { background: linear-gradient(180deg, rgba(0,0,0,0.03), transparent); }
+        body.cyber .map-head { background: rgba(6,182,212,0.06); border-bottom-color: #123a4d; }
+
+        .map-head .mh-ic {
+            width: 30px; height: 30px; border-radius: 10px; flex: 0 0 auto;
+            display: flex; align-items: center; justify-content: center; font-size: 15px;
+            background: var(--accent-grad); box-shadow: 0 4px 14px rgba(99,102,241,0.45);
+        }
+        body.cyber .map-head .mh-ic { background: linear-gradient(90deg,#06b6d4,#10b981); border-radius: 6px; box-shadow: 0 0 14px rgba(6,182,212,0.5); }
+        .map-head .mh-t { font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text); }
+        body.cyber .map-head .mh-t { color: #7dd3fc; font-family: var(--font); }
+        .map-head .mh-sum { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .mh-pill {
+            font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 7px;
+            background: var(--input-bg); color: var(--muted); border: 1px solid var(--border); white-space: nowrap;
+        }
+        .mh-pill.b { color: #ef4444; border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.12); }
+        .mh-pill.s { color: #f59e0b; border-color: rgba(245,158,11,0.55); background: rgba(245,158,11,0.12); }
+        .mh-btn {
+            margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px;
+            font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+            padding: 7px 13px; border-radius: 10px; white-space: nowrap;
+            background: var(--input-bg); color: var(--text); border: 1.5px solid var(--border); transition: all 0.15s;
+        }
+        .map-head:hover .mh-btn { border-color: var(--accent2); color: var(--accent2); }
+        .mh-btn::before { content: 'Hide'; }
+        .mapblock.closed .mh-btn::before { content: 'Show'; }
+        .mh-btn::after { content: '▾'; font-size: 10px; transition: transform 0.18s; }
+        .mapblock.closed .mh-btn::after { transform: rotate(-90deg); }
+        body.cyber .mh-btn { background: rgba(6,182,212,0.07); border: 1px solid #123a4d; color: #7dd3fc; font-family: var(--font); border-radius: 6px; }
+
+        .mapblock.closed .map-body { display: none; }
+        .map-body { padding: 16px; }
+
+        /* the grid sits on its own inset panel, so it reads as a screen */
+        .map-panel {
+            background: var(--input-bg); border: 1px solid var(--border); border-radius: 13px;
+            padding: 14px 16px 0; box-shadow: inset 3px 3px 8px var(--shadow-dark), inset -3px -3px 8px var(--shadow-light);
+        }
+        body.cyber .map-panel { background: #030812; border: 1px solid #123a4d; border-radius: 6px; box-shadow: inset 0 0 20px rgba(6,182,212,0.08); }
+        .map-scroll { overflow-x: auto; padding-bottom: 6px; }
+        .map-grid { display: grid; gap: 3px; align-items: center; justify-content: start; }
+        .map-grid .mg-h { font-size: 9px; font-weight: 700; color: var(--muted); text-align: center; }
+        .map-grid .mg-l { font-size: 10px; font-weight: 800; color: var(--text); text-align: right; padding-right: 8px; white-space: nowrap; }
+        .mg-sum { font-size: 10.5px; font-weight: 800; padding-left: 9px; white-space: nowrap; display: flex; gap: 5px; }
+        .mg-sum i { font-style: normal; }
+        .mg-sum .ms-b { color: #ef4444; }
+        .mg-sum .ms-s { color: #f59e0b; }
+        .mg-sum .ms-m { color: var(--text); opacity: 0.6; }
+        .mg-sum .ms-u { color: var(--muted); opacity: 0.45; font-weight: 600; }
+
+        .mc { width: var(--mc, 20px); height: var(--mc, 20px); border-radius: 4px; position: relative; transition: transform 0.1s; }
+        .mc.clean     { background: var(--mc-clean); }
+        .mc.suspect   { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.5); cursor: pointer; }
+        .mc.broken    { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.55); cursor: pointer; }
+        /* no file at all, though other languages have this page */
+        .mc.missing   { background: repeating-linear-gradient(45deg, var(--mc-void) 0 3px, transparent 3px 6px); }
+        /* the file is there but it is not from the last analysed run */
+        .mc.unchecked { background: repeating-linear-gradient(45deg, var(--mc-hatch) 0 2px, var(--mc-hatch2) 2px 4px); }
+        .mc.multi::after {
+            content: ''; position: absolute; right: 1px; bottom: 1px;
+            border-left: 5px solid transparent; border-bottom: 5px solid rgba(255,255,255,0.9);
+        }
+        .mc.hl  { outline: 2px solid var(--accent2); outline-offset: 1px; z-index: 2; }
+        .mc.sel { outline: 2px solid #fff; outline-offset: 2px; z-index: 3; }
+        .mc.broken:hover, .mc.suspect:hover { transform: scale(1.35); z-index: 4; }
+        .mc.clean:hover, .mc.unchecked:hover, .mc.missing:hover { filter: brightness(1.5); }
+
+        .map-legend {
+            display: flex; gap: 16px; flex-wrap: wrap; margin: 0 -16px; padding: 11px 16px;
+            border-top: 1px solid var(--border); font-size: 10.5px; font-weight: 700; color: var(--muted);
+        }
+        .map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .map-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: 0 0 auto; }
+        .map-hint { margin-top: 12px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+        .map-note {
+            display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; padding: 10px 13px;
+            border-radius: 11px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.45);
+            font-size: 11.5px; line-height: 1.55; color: #fcd34d;
+        }
+        .map-note b { color: #fde68a; font-weight: 800; }
+        .map-empty { font-size: 12px; color: var(--muted); padding: 4px 0 12px; }
+
+        .map-tip {
+            position: fixed; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 950;
+            background: rgba(10,10,16,0.97); border: 1px solid var(--border); border-radius: 10px;
+            padding: 9px 12px; font-size: 11.5px; line-height: 1.55; max-width: 320px; color: #e2e8f0;
+            box-shadow: 0 12px 34px rgba(0,0,0,0.65);
+        }
+        .map-tip b { color: var(--accent2); }
+        .map-tip .tp-b { color: #fca5a5; }
+        .map-tip .tp-s { color: #fcd34d; }
+        .map-tip .tp-n { color: #94a3b8; }
 
         .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--thumb, 220px), 1fr)); gap: var(--thumb-gap, 16px); }
         .gallery-item {
@@ -1370,7 +1566,7 @@
         } catch (e) {
             issuesData = { total: 0, broken: 0, suspect: 0, shots: 0, byType: {}, byLang: {}, issues: [] };
         }
-        issueFilters = { group: 'all', lang: 'all', type: 'all' };
+        issueFilters = { group: 'all', lang: 'all', type: 'all', shot: 'all' };
         galleryTs = Date.now();
         activeLangFilter = 'all';
         searchQuery = '';
@@ -1447,7 +1643,7 @@
 
     let galleryView = 'grid'; // 'grid' | 'compare' | 'issues'
     let issuesData = { total: 0, broken: 0, suspect: 0, shots: 0, byType: {}, byLang: {}, issues: [] };
-    let issueFilters = { group: 'all', lang: 'all', type: 'all' };
+    let issueFilters = { group: 'all', lang: 'all', type: 'all', shot: 'all' };
     let markedCards = {};   // cardKey → { url, name, boxes }
     let compareMode = 'landscape';
     let compareRatio = '';
@@ -1547,6 +1743,67 @@
     const galleryEl = document.getElementById('gallery');
     if (galleryEl) galleryEl.addEventListener('load', queueStickyHead, true);
 
+    // ── run map: hover behaviour ────────────────────────────────────────────
+    // Both listeners are delegated and attached once — #gallery survives every
+    // re-render, its contents do not.
+    if (galleryEl) {
+        galleryEl.addEventListener('mouseover', e => {
+            const card = e.target.closest && e.target.closest('.issue-card');
+            if (card) { highlightMapCells(card.dataset.fkey); return; }
+            if (e.target.closest && e.target.closest('.mapblock')) return;
+            highlightMapCells(null);
+        });
+        galleryEl.addEventListener('mouseleave', () => { highlightMapCells(null); mapTip(null); });
+        galleryEl.addEventListener('mousemove', e => {
+            const cell = e.target.closest && e.target.closest('.mc');
+            mapTip(cell, e);
+        });
+    }
+
+    // hovering a finding lights up every cell it covers, so "one card" and
+    // "27 red cells on page 7" visibly become the same fact
+    function highlightMapCells(fkey) {
+        document.querySelectorAll('.mc.hl').forEach(c => c.classList.remove('hl'));
+        if (!fkey) return;
+        const f = allFindings().find(x => String(x.key) === String(fkey));
+        if (!f || (f.kind || 'page') !== 'page') return;
+        if (f.orientation !== mapMode || (mapRatio && String(f.ratio || '') !== mapRatio)) return;
+        (f.langs || []).forEach(l => {
+            const c = document.querySelector(`.mc[data-l="${l}"][data-p="${f.page}"]`);
+            if (c) c.classList.add('hl');
+        });
+    }
+
+    function mapTip(cell, e) {
+        let tip = document.getElementById('mapTip');
+        if (!cell) { if (tip) tip.style.opacity = 0; return; }
+        if (!tip) {
+            tip = document.createElement('div');
+            tip.id = 'mapTip'; tip.className = 'map-tip';
+            document.body.appendChild(tip);
+        }
+
+        const lang = cell.dataset.l, page = cell.dataset.p, st = cell.dataset.st;
+        let body;
+        if (st === 'missing')        body = '<span class="tp-b">▨ no shot — this page was not captured for this language</span>';
+        else if (st === 'unchecked') body = '<span class="tp-n">left over from an earlier run — not analysed</span>';
+        else {
+            const list = (lastMapData ? lastMapData.cells.get(mapCellKey(lang, +page)) : null) || [];
+            if (!list.length) body = '<span class="tp-n">no findings</span>';
+            else body = list.slice(0, 5).map(f => {
+                const s = (f.samples && f.samples[lang]) || {};
+                const cls = f.group === 'broken' ? 'tp-b' : 'tp-s';
+                const ic = f.group === 'broken' ? '✕' : '⚠';
+                return `<span class="${cls}">${ic} ${esc(ISSUE_LABELS[f.type] || f.type)}</span> — ${esc(s.message || f.message || '')}`;
+            }).join('<br>') + (list.length > 5 ? `<br><span class="tp-n">+${list.length - 5} more</span>` : '');
+        }
+
+        tip.innerHTML = `<b>${esc(lang).toUpperCase()}</b> · page ${esc(page)}<br>${body}`;
+        tip.style.opacity = 1;
+        tip.style.left = Math.min(e.clientX + 14, innerWidth - 315) + 'px';
+        tip.style.top = Math.min(e.clientY + 16, innerHeight - 120) + 'px';
+    }
+
     function renderGallery() {
         const g = document.getElementById('gallery');
         cardAnimIndex = 0; // restart stagger wave
@@ -1629,6 +1886,18 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function sectionHead(icon, title, note) {
+        return `<div class="iss-div"><span class="id-t">${icon} ${title}</span>`
+            + (note ? `<span class="id-n">${note}</span>` : '')
+            + '<span class="id-l"></span></div>';
+    }
+
+    function resetIssueFilters() {
+        issueFilters = { group: 'all', lang: 'all', type: 'all', shot: 'all' };
+        findingLang = {};
+        renderGallery();
+    }
+
     function setIssueFilter(key, value) {
         issueFilters[key] = value;
         // switching language should show that language's sample, not an older pick
@@ -1645,6 +1914,7 @@
             (issueFilters.group === 'all' || f.group === issueFilters.group)
             && (issueFilters.type === 'all' || f.type === issueFilters.type)
             && (issueFilters.lang === 'all' || (f.langs || []).includes(issueFilters.lang))
+            && (!issueFilters.shot || issueFilters.shot === 'all' || shotMatches(f, issueFilters.shot))
         );
     }
 
@@ -1658,6 +1928,245 @@
             h += `<div class="lang-chip ${issueFilters[key]===v?'active':''}" onclick="setIssueFilter('${key}','${v}')">${text}${cnt}</div>`;
         });
         return h + '</div></div>';
+    }
+
+    // ── run map ─────────────────────────────────────────────────────────────
+    //
+    //  A grid of every paytable shot of one orientation+ratio: row = language,
+    //  column = page. It is built from two independent sources and their
+    //  disagreement is the interesting part:
+    //
+    //    /screenshots  — which files exist on disk right now
+    //    /issues       — the last analysis, including which languages it covered
+    //
+    //  Those two drift apart on purpose. runForLang() wipes screenshots/<lang>
+    //  before shooting it, so a language present in the run is entirely fresh —
+    //  but a language that was NOT in the run keeps its files from a previous
+    //  one. Painting those cells "clean" would be a lie: nobody checked them.
+    //  They get their own state instead. Same for a run with text checks off:
+    //  the report then covers no languages at all, so the whole map is honest
+    //  about knowing nothing.
+    //
+    let mapMode = '';
+    let mapRatio = '';
+    let mapOpen = true;
+    let lastMapData = null;   // built by renderRunMap(), reused by the tooltip
+    try { mapOpen = localStorage.getItem('qa-map-open') !== '0'; } catch (e) {}
+
+    const PAGE_RE = /_page-(\d+)\.png$/i;
+
+    // every orientation+ratio that has paytable pages on disk
+    function mapCombos() {
+        const out = new Map();
+        flatScreens.forEach(f => {
+            if (!f.mode || f.mode === 'startscreen') return;
+            if (!PAGE_RE.test(String(f.name || ''))) return;
+            const ratio = f.ratio || '';
+            out.set(`${f.mode}|${ratio}`, { mode: f.mode, ratio });
+        });
+        return [...out.values()].sort((a, b) =>
+            a.mode.localeCompare(b.mode) || a.ratio.localeCompare(b.ratio));
+    }
+
+    function mapCellKey(lang, page) { return `${lang}|${page}`; }
+
+    function buildMapData(mode, ratio) {
+        const pages = new Set();
+        const langs = new Set();
+        const url = new Map();      // cell → screenshot url, for the click
+
+        flatScreens.forEach(f => {
+            if (f.mode !== mode || (f.ratio || '') !== ratio) return;
+            const m = String(f.name || '').match(PAGE_RE);
+            if (!m) return;
+            const p = parseInt(m[1], 10);
+            pages.add(p);
+            langs.add(f.lang);
+            url.set(mapCellKey(f.lang, p), f.url);
+        });
+
+        // findings that belong to this orientation+ratio, spread over their cells
+        const cells = new Map();    // cell → [finding, …]
+        allFindings().forEach(f => {
+            if ((f.kind || 'page') !== 'page') return;
+            if (f.orientation !== mode) return;
+            // legacy runs have no ratio level on disk; then match on page only
+            if (ratio && String(f.ratio || '') !== ratio) return;
+            (f.langs || []).forEach(l => {
+                const k = mapCellKey(l, f.page);
+                if (!cells.has(k)) cells.set(k, []);
+                cells.get(k).push(f);
+            });
+        });
+
+        // languages the last analysis actually covered
+        const checked = new Set(issuesData.languages || []);
+
+        return {
+            pages: [...pages].sort((a, b) => a - b),
+            langs: [...langs].sort(),
+            url, cells, checked,
+            checksOff: issuesData.skipped === true || !(issuesData.languages || []).length
+        };
+    }
+
+    function mapCellState(d, lang, page) {
+        if (!d.url.has(mapCellKey(lang, page))) return 'missing';
+        if (!d.checked.has(lang)) return 'unchecked';
+        const list = d.cells.get(mapCellKey(lang, page));
+        if (!list || !list.length) return 'clean';
+        return list.some(f => f.group === 'broken') ? 'broken' : 'suspect';
+    }
+
+    function toggleRunMap() {
+        mapOpen = !mapOpen;
+        try { localStorage.setItem('qa-map-open', mapOpen ? '1' : '0'); } catch (e) {}
+        const b = document.querySelector('.mapblock');
+        if (b) b.classList.toggle('closed', !mapOpen);
+    }
+
+    function setMapCombo(mode, ratio) {
+        mapMode = mode; mapRatio = ratio;
+        renderGallery();
+    }
+
+    // clicking a cell narrows the findings below to that one shot, and shows each
+    // of them in the language you clicked rather than in some other one
+    function selectMapCell(lang, page) {
+        const key = `${lang}|${mapMode}|${mapRatio}|${page}`;
+        issueFilters.shot = (issueFilters.shot === key) ? 'all' : key;
+        findingLang = {};
+        if (issueFilters.shot !== 'all') {
+            allFindings().forEach(f => { if (f.samples && f.samples[lang]) findingLang[f.key] = lang; });
+        }
+        renderGallery();
+        requestAnimationFrame(() => {
+            const el = document.querySelector('.iss-div');
+            if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        });
+    }
+
+    function shotMatches(f, spec) {
+        const [lang, mode, ratio, page] = String(spec).split('|');
+        return (f.kind || 'page') === 'page'
+            && f.orientation === mode
+            && (!ratio || String(f.ratio || '') === ratio)
+            && String(f.page) === page
+            && (f.langs || []).includes(lang);
+    }
+
+    function renderRunMap() {
+        const combos = mapCombos();
+        if (!combos.length) return '';
+
+        if (!combos.some(c => c.mode === mapMode && c.ratio === mapRatio)) {
+            // open on the set with the most findings — that is the one worth seeing
+            let best = combos[0], bestN = -1;
+            combos.forEach(c => {
+                const n = allFindings().filter(f => (f.kind || 'page') === 'page'
+                    && f.orientation === c.mode
+                    && (!c.ratio || String(f.ratio || '') === c.ratio)).length;
+                if (n > bestN) { bestN = n; best = c; }
+            });
+            mapMode = best.mode; mapRatio = best.ratio;
+        }
+
+        const d = buildMapData(mapMode, mapRatio);
+        lastMapData = d;          // the tooltip reads this instead of rebuilding
+        const n = d.pages.length;
+
+        // headline numbers, so the block is still useful while collapsed
+        let broken = 0, suspect = 0, missing = 0, unchecked = 0;
+        d.langs.forEach(l => d.pages.forEach(p => {
+            const st = mapCellState(d, l, p);
+            if (st === 'broken') broken++; else if (st === 'suspect') suspect++;
+            else if (st === 'missing') missing++; else if (st === 'unchecked') unchecked++;
+        }));
+
+        const pills = [`<span class="mh-pill">${d.langs.length} langs × ${n} pages</span>`];
+        if (broken) pills.push(`<span class="mh-pill b">${broken} broken</span>`);
+        if (suspect) pills.push(`<span class="mh-pill s">${suspect} suspicions</span>`);
+        if (missing) pills.push(`<span class="mh-pill">${missing} no shot</span>`);
+        if (unchecked) pills.push(`<span class="mh-pill">${unchecked} not checked</span>`);
+
+        let html = `<div class="mapblock ${mapOpen ? '' : 'closed'}">
+            <div class="map-head" onclick="toggleRunMap()">
+                <span class="mh-ic">🗺️</span>
+                <span class="mh-t">Run map</span>
+                <span class="mh-sum">${pills.join('')}</span>
+                <span class="mh-btn"></span>
+            </div>
+            <div class="map-body">`;
+
+        if (combos.length > 1) {
+            html += '<div class="compare-controls" style="margin-bottom:14px"><div class="cc-group"><span class="cc-label">Shots</span><div class="compare-seg">';
+            combos.forEach(c => {
+                const on = c.mode === mapMode && c.ratio === mapRatio;
+                const label = `${modeIcon[c.mode] || ''} ${c.mode}${c.ratio ? ' · ' + ratioLabelOf(c.ratio) : ''}`;
+                html += `<div class="cs ${on ? 'active' : ''}" onclick="setMapCombo('${c.mode}','${c.ratio}')">${label}</div>`;
+            });
+            html += '</div></div></div>';
+        }
+
+        if (!n) {
+            html += '<div class="map-empty">No paytable pages in this set.</div></div></div>';
+            return html;
+        }
+
+        // shrink the cells rather than overflow, until they get too small to see
+        const cell = Math.max(11, Math.min(20, Math.floor(546 / n) - 3));
+
+        html += `<div class="map-panel"><div class="map-scroll"><div class="map-grid" style="--mc:${cell}px;grid-template-columns:56px repeat(${n}, ${cell}px) 78px">`;
+        html += '<div></div>';
+        d.pages.forEach(p => { html += `<div class="mg-h">${p}</div>`; });
+        html += '<div></div>';
+
+        const selected = issueFilters.shot !== 'all' ? issueFilters.shot : null;
+
+        d.langs.forEach(lang => {
+            html += `<div class="mg-l">${lang.toUpperCase()}</div>`;
+            let b = 0, s = 0, m = 0, u = 0;
+            d.pages.forEach(p => {
+                const st = mapCellState(d, lang, p);
+                if (st === 'broken') b++; else if (st === 'suspect') s++;
+                else if (st === 'missing') m++; else if (st === 'unchecked') u++;
+                const list = d.cells.get(mapCellKey(lang, p)) || [];
+                const multi = (st === 'broken' || st === 'suspect') && list.length > 1 ? ' multi' : '';
+                const sel = selected === `${lang}|${mapMode}|${mapRatio}|${p}` ? ' sel' : '';
+                const click = (st === 'broken' || st === 'suspect')
+                    ? ` onclick="selectMapCell('${lang}',${p})"` : '';
+                html += `<div class="mc ${st}${multi}${sel}" data-l="${lang}" data-p="${p}" data-st="${st}"${click}></div>`;
+            });
+            // counts as bare coloured numbers — the legend already says what the
+            // colours mean, and 27 rows of symbols would fight with the grid
+            const parts = [];
+            if (b) parts.push(`<i class="ms-b">${b}</i>`);
+            if (s) parts.push(`<i class="ms-s">${s}</i>`);
+            if (m) parts.push(`<i class="ms-m">${m}</i>`);
+            if (u && !b && !s) parts.push('<i class="ms-u">·</i>');
+            html += `<div class="mg-sum">${parts.join(' ') || '<i class="ms-u">—</i>'}</div>`;
+        });
+
+        html += '</div></div>';   // grid, scroll
+
+        html += `<div class="map-legend">
+            <span><i style="background:var(--mc-clean)"></i> clean</span>
+            <span><i style="background:#f59e0b"></i> suspicion</span>
+            <span><i style="background:#ef4444"></i> broken</span>
+            <span><i style="background:repeating-linear-gradient(45deg,var(--mc-hatch) 0 2px,var(--mc-hatch2) 2px 4px)"></i> not checked in the last run</span>
+            <span><i style="background:repeating-linear-gradient(45deg,var(--mc-void) 0 3px,transparent 3px 6px)"></i> no shot</span>
+        </div></div>`;   // legend, panel
+
+        html += '<div class="map-hint">Row = language, column = page. A vertical stripe is a layout bug, a horizontal one is a locale or a font. Click a red or amber cell to filter the findings below; hover a finding to light up its cells.</div>';
+
+        if (d.checksOff) {
+            html += '<div class="map-note"><span>⚠️</span><span><b>Text checks were off in the last run</b> — the map shows what was captured, but nothing was analysed.</span></div>';
+        } else if (unchecked) {
+            html += `<div class="map-note"><span>⚠️</span><span><b>${unchecked} shot(s) are left over from an earlier run</b> — their language was not in the last one, so they were never analysed. Re-run those languages to fill the gaps.</span></div>`;
+        }
+
+        html += '</div></div>';
+        return html;
     }
 
     function findingSampleLang(f) {
@@ -1675,33 +2184,59 @@
 
     function renderIssues() {
         const all = allFindings();
+        const map = renderRunMap();
 
         if (!all.length) {
             const ran = issuesData.shots > 0;
-            return `<div class="iss-empty">${ran
+            return map + `<div class="iss-empty">${ran
                 ? `✅ No text problems found across ${issuesData.shots} shot${issuesData.shots === 1 ? '' : 's'}.`
                 : '🔤 No text audit yet.<br>Turn on <b>Text checks</b> in Options and run a capture — problems will collect here.'}</div>`;
         }
 
-        let html = '<div class="iss-summary">';
-        html += `<div class="iss-stat broken">🔴 Broken: ${issuesData.broken}</div>`;
-        html += `<div class="iss-stat suspect">🟠 Suspicions: ${issuesData.suspect}</div>`;
-        html += `<div class="iss-stat">${issuesData.total} finding${issuesData.total === 1 ? '' : 's'} · ${issuesData.shots} shots · ${(issuesData.languages || []).length} langs · <b>${issuesData.texts ?? '?'}</b> texts · <b>${issuesData.images ?? '?'}</b> images analysed</div>`;
-        const sk = issuesData.skipped;
-        if (sk && (sk.hidden || sk.offscreen)) {
-            html += `<div class="iss-stat" title="Text belonging to other paytable pages that sit in the DOM but are not on screen">🙈 ${sk.hidden} hidden · ${sk.offscreen} off-screen (text checked, layout not)</div>`;
-        }
+        let html = map;
+
+        html += sectionHead('📊', 'Summary');
+        html += '<div class="iss-stats">';
+        html += `<div class="iss-tile broken"><span class="it-n">${issuesData.broken}</span><span class="it-l">broken</span></div>`;
+        html += `<div class="iss-tile suspect"><span class="it-n">${issuesData.suspect}</span><span class="it-l">suspicions</span></div>`;
+        html += `<div class="iss-tile accent"><span class="it-n">${issuesData.total}</span><span class="it-l">findings</span></div>`;
+        html += `<div class="iss-tile"><span class="it-n">${issuesData.shots ?? '?'}</span><span class="it-l">shots</span></div>`;
+        html += `<div class="iss-tile"><span class="it-n">${(issuesData.languages || []).length}</span><span class="it-l">languages</span></div>`;
         html += '</div>';
 
+        const meta = [`<b>${issuesData.texts ?? '?'}</b> texts and <b>${issuesData.images ?? '?'}</b> images analysed`];
+        const sk = issuesData.skipped;
+        if (sk && (sk.hidden || sk.offscreen)) {
+            meta.push(`🙈 ${sk.hidden} hidden · ${sk.offscreen} off-screen (text checked, layout not)`);
+        }
+        if (issuesData.generatedAt) {
+            const t = new Date(issuesData.generatedAt);
+            if (!isNaN(t)) meta.push(`run finished ${t.toLocaleString()}`);
+        }
+        html += `<div class="iss-meta">${meta.join(' · ')}</div>`;
+
+        const activeFilters = ['group', 'lang', 'type', 'shot'].filter(k => issueFilters[k] && issueFilters[k] !== 'all').length;
+
+        html += '<div class="iss-filters">';
+        html += `<div class="if-head"><span class="if-t">🔎 Filters</span>
+            <span class="if-n">${activeFilters ? `${activeFilters} active` : 'showing everything'}</span>
+            ${activeFilters ? '<button class="if-reset" onclick="resetIssueFilters()">✕ Reset</button>' : ''}</div>`;
         html += '<div class="iss-controls">';
         html += chipRow('Group', 'group', ['broken', 'suspect'].filter(g => (g === 'broken' ? issuesData.broken : issuesData.suspect) > 0),
                         { broken: issuesData.broken, suspect: issuesData.suspect });
         html += chipRow('Language', 'lang', Object.keys(issuesData.byLang || {}).sort(), issuesData.byLang);
         html += chipRow('Type', 'type', Object.keys(issuesData.byType || {}), issuesData.byType);
-        html += '</div>';
+        if (issueFilters.shot && issueFilters.shot !== 'all') {
+            const parts = issueFilters.shot.split('|');
+            html += `<div class="cc-group"><span class="cc-label">Shot</span><div class="lang-chips">
+                <div class="lang-chip active" onclick="setIssueFilter('shot','all')">${esc(parts[0]).toUpperCase()} · page ${esc(parts[3])} ✕</div>
+            </div></div>`;
+        }
+        html += '</div></div>';
 
         const shown = filteredFindings();
-        if (!shown.length) return html + '<div class="iss-empty">🔍 Nothing matches these filters</div>';
+        html += sectionHead('⚠️', 'Findings', `${shown.length} of ${issuesData.total} shown`);
+        if (!shown.length) return html + '<div class="iss-empty">🔍 Nothing matches these filters.<br>Drop a filter above to get them back.</div>';
 
         markedCards = {};
         let grid = '<div class="iss-grid">';
@@ -1730,7 +2265,7 @@
                 `<div class="ic-lchip ${l === lang ? 'active' : ''}" onclick="setFindingLang('${esc(f.key)}','${l}')">${l.toUpperCase()}</div>`
             ).join('');
 
-            grid += `<div class="issue-card ${f.group === 'broken' ? 'has-broken' : ''}">
+            grid += `<div class="issue-card ${f.group === 'broken' ? 'has-broken' : ''}" data-fkey="${esc(f.key)}">
                 <div class="ic-head">
                     <span class="ic-sev">${SEV_DOT[f.severity] || ''}</span>
                     <span class="ic-title">${ISSUE_LABELS[f.type] || f.type}</span>
@@ -2453,6 +2988,11 @@
                     setStatus('Done! You can download ZIP', 'done');
                     showToast(`Done! ${realCount} screenshot${realCount>1?'s':''} captured`, 'success', 4000);
                 }
+
+                // an open gallery was showing the previous run — reload the tree and
+                // the report so nothing on screen (the run map least of all) is stale
+                const g = document.getElementById('gallery');
+                if (g && g.style.display !== 'none') loadGallery();
                 return;
             }
             const cleanMsg = data.message.replace(/^[^\w]+\s*/, '');
