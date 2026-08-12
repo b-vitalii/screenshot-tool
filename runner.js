@@ -264,6 +264,7 @@ async function runForLang(browser, {
                         url: `/file/${lang}/startscreen/${preset.orientation}_${preset.id}/${name}`,
                         viewport: snap.viewport || { w: preset.width, h: preset.height },
                         items: snap.items,
+                        images: snap.images,
                         skipped: snap.skipped
                     });
                 }
@@ -331,6 +332,7 @@ async function runForLang(browser, {
                         url: `/file/${lang}/${preset.orientation}/${preset.id}/${name}`,
                         viewport: snap.viewport || { w: preset.width, h: preset.height },
                         items: snap.items,
+                        images: snap.images,
                         skipped: snap.skipped
                     });
                 }

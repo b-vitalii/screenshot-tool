@@ -772,7 +772,7 @@
         <div style="height:12px"></div>
 
         <div class="toggle-field" id="textChecksToggle" onclick="toggleField('textChecksToggle','textChecks')">
-            <div class="tf-text"><span class="tf-icon">🔤</span><div>Text checks<div class="tf-desc">Text that overflows the screen or gets cut off</div></div></div>
+            <div class="tf-text"><span class="tf-icon">🔤</span><div>Text &amp; image checks<div class="tf-desc">Text and pictures that overflow, get cut off or fail to load</div></div></div>
             <div class="switch"></div>
         </div>
         <input type="checkbox" id="textChecks" style="display:none;">
@@ -785,7 +785,7 @@
             <input type="checkbox" id="suspects" style="display:none;">
 
             <div class="toggle-field tf-sub" id="overlapToggle" onclick="toggleField('overlapToggle','overlapCheck')">
-                <div class="tf-text"><span class="tf-icon">🔀</span><div>Overlapping text<div class="tf-desc">Rare in HTML — off by default</div></div></div>
+                <div class="tf-text"><span class="tf-icon">🔀</span><div>Overlapping elements<div class="tf-desc">Text on text, images on text — off by default</div></div></div>
                 <div class="switch"></div>
             </div>
             <input type="checkbox" id="overlapCheck" style="display:none;">
@@ -1437,7 +1437,13 @@
         'fallback':          'missing translation',
         'page-untranslated': 'page untranslated',
         'font-shrink':       'font shrunk',
-        'wrap-growth':       'extra line wraps'
+        'wrap-growth':       'extra line wraps',
+        'image-broken':      'broken image',
+        'image-offscreen':   'image out of screen',
+        'image-clipped':     'image cut off',
+        'image-stretched':   'image stretched',
+        'image-over-text':   'image over text',
+        'image-over-image':  'image over image'
     };
 
     const SEV_DOT = { error: '🔴', warn: '🟠', info: '🔵' };
@@ -1507,7 +1513,7 @@
         let html = '<div class="iss-summary">';
         html += `<div class="iss-stat broken">🔴 Broken: ${issuesData.broken}</div>`;
         html += `<div class="iss-stat suspect">🟠 Suspicions: ${issuesData.suspect}</div>`;
-        html += `<div class="iss-stat">${issuesData.total} finding${issuesData.total === 1 ? '' : 's'} · ${issuesData.shots} shots · ${(issuesData.languages || []).length} langs · <b>${issuesData.texts ?? '?'}</b> texts analysed</div>`;
+        html += `<div class="iss-stat">${issuesData.total} finding${issuesData.total === 1 ? '' : 's'} · ${issuesData.shots} shots · ${(issuesData.languages || []).length} langs · <b>${issuesData.texts ?? '?'}</b> texts · <b>${issuesData.images ?? '?'}</b> images analysed</div>`;
         const sk = issuesData.skipped;
         if (sk && (sk.hidden || sk.offscreen)) {
             html += `<div class="iss-stat" title="Text belonging to other paytable pages that sit in the DOM but are not on screen">🙈 ${sk.hidden} hidden · ${sk.offscreen} off-screen (text checked, layout not)</div>`;

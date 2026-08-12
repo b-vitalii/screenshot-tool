@@ -1,3 +1,29 @@
+// ────────────────────────────────────────────────────────────────────────────
+//  textAudit.js
+//
+//  Two halves:
+//    1. collectTexts(page)  — runs inside the browser, snapshots every visible
+//       piece of text with its geometry. Knows nothing about what is "wrong".
+//    2. analyze(shots)      — pure Node, turns those snapshots into findings.
+//
+//  The paytable is HTML (slotscore renders it with mustache and hands it to the
+//  platform via GR.setData('paytable', …)), so everything here is DOM-based.
+//
+//  There is deliberately NO "is something drawn over this text" hit test. One
+//  existed and was removed: elementsFromPoint-based occlusion threw away 59% of
+//  the real paytable text on live games (8.2 dropped vs 5.7 kept per shot),
+//  because sampling a few points on a line is not a reliable proxy for "the
+//  player cannot see this". The effective-visibility walk is what actually
+//  matters, and on a stacked carousel it is sufficient on its own — verified
+//  against a carousel whose inactive pages are hidden with opacity:0.
+//
+//  IMPORTANT: geometry comes from Range.getClientRects() over the element's own
+//  text nodes, NOT from element.getBoundingClientRect(). An element's box
+//  includes all of its children, so box-based checks fire on text that is
+//  nowhere near anything — that was the source of the overlap false positives.
+//  Range rects are the actual rendered glyph boxes.
+// ────────────────────────────────────────────────────────────────────────────
+
 const ENGLISH_VARIANTS = ['en', 'en-soc'];
 
 // ── 1. in-page collector ────────────────────────────────────────────────────
@@ -128,6 +154,123 @@ function pageCollector() {
         return true;
     }
 
+    // Paytable images are handed over as base64 data URLs (Paytable.getImage
+    // returns renderer.extract.base64), so the src must never be stored — it
+    // would be megabytes per shot. A short human label is enough.
+    function imageLabel(el) {
+        const src = el.getAttribute('src') || '';
+        if (!src) return 'image without src';
+        if (/^data:/i.test(src)) return el.alt ? `${el.alt} (embedded)` : 'embedded image';
+        const clean = src.split('?')[0].split('#')[0];
+        const base = clean.substring(clean.lastIndexOf('/') + 1);
+        return (base || 'image').slice(0, 48);
+    }
+
+    // ── opaque bounds ───────────────────────────────────────────────────────
+    // A symbol PNG carries transparent padding, so its element box is much
+    // bigger than the visible artwork. Checking that box reports overlaps and
+    // overflows that nobody can see. So: draw the image into a tiny offscreen
+    // canvas, read the alpha channel, and find the box of the pixels that are
+    // actually painted. Paytable images are base64 data URLs — same-origin —
+    // so the canvas is readable. A cross-origin image taints it, getImageData
+    // throws, and we simply fall back to the element box.
+    const INK_SCAN = 48;
+    const ALPHA_MIN = 16;
+    const inkCache = new Map();
+
+    function opaqueFraction(el) {
+        const src = el.currentSrc || el.src || '';
+        const key = src.length + '|' + src.slice(-64);
+        if (inkCache.has(key)) return inkCache.get(key);
+
+        let res = null;
+        try {
+            const nw = el.naturalWidth, nh = el.naturalHeight;
+            if (nw && nh) {
+                const sw = Math.max(1, Math.min(INK_SCAN, nw));
+                const sh = Math.max(1, Math.min(INK_SCAN, nh));
+                const c = document.createElement('canvas');
+                c.width = sw; c.height = sh;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(el, 0, 0, sw, sh);
+                const d = ctx.getImageData(0, 0, sw, sh).data;
+
+                let x1 = sw, y1 = sh, x2 = -1, y2 = -1;
+                for (let y = 0; y < sh; y++) {
+                    for (let x = 0; x < sw; x++) {
+                        if (d[(y * sw + x) * 4 + 3] > ALPHA_MIN) {
+                            if (x < x1) x1 = x;
+                            if (x > x2) x2 = x;
+                            if (y < y1) y1 = y;
+                            if (y > y2) y2 = y;
+                        }
+                    }
+                }
+
+                res = (x2 >= x1 && y2 >= y1)
+                    ? { x: x1 / sw, y: y1 / sh, w: (x2 - x1 + 1) / sw, h: (y2 - y1 + 1) / sh }
+                    : { blank: true };
+            }
+        } catch (e) {
+            res = null;   // tainted canvas → fall back to the element box
+        }
+
+        inkCache.set(key, res);
+        return res;
+    }
+
+    const images = [];
+    const MAX_IMAGES = 200;
+
+    for (const el of (document.body ? document.body.querySelectorAll('img') : [])) {
+        if (images.length >= MAX_IMAGES) break;
+        if (!effectivelyVisible(el)) continue;
+
+        const r = el.getBoundingClientRect();
+
+        // still downloading when the shot was taken — not a defect
+        if (!el.complete) continue;
+
+        let cs;
+        try { cs = getComputedStyle(el); } catch (e) { continue; }
+
+        const box = { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) };
+
+        // where the painted pixels actually are. Only meaningful for the default
+        // object-fit: contain/cover letterbox the picture inside the box, so the
+        // mapping would not be a simple scale.
+        let ink = null, blank = false;
+        const frac = (cs.objectFit || 'fill') === 'fill' ? opaqueFraction(el) : null;
+        if (frac && frac.blank) blank = true;
+        else if (frac) {
+            ink = {
+                x: Math.round(r.left + frac.x * r.width),
+                y: Math.round(r.top + frac.y * r.height),
+                w: Math.round(frac.w * r.width),
+                h: Math.round(frac.h * r.height)
+            };
+        }
+
+        const hit = ink || box;
+        const visW = Math.min(hit.x + hit.w, vw) - Math.max(hit.x, 0);
+        const visH = Math.min(hit.y + hit.h, vh) - Math.max(hit.y, 0);
+
+        images.push({
+            path: domPath(el),
+            label: imageLabel(el),
+            hasSrc: !!el.getAttribute('src'),
+            rect: box,
+            ink,                       // null when unknown → checks use the box
+            inkKnown: !!ink,
+            blank,
+            natW: el.naturalWidth,
+            natH: el.naturalHeight,
+            objectFit: cs.objectFit || 'fill',
+            clips: clippingAncestors(el),
+            offscreen: visW <= 0 || visH <= 0
+        });
+    }
+
     const items = [];
     const skipped = { hidden: 0, offscreen: 0 };
     const all = document.body ? document.body.querySelectorAll('*') : [];
@@ -196,7 +339,7 @@ function pageCollector() {
         });
     }
 
-    return { viewport: { w: vw, h: vh }, items, skipped };
+    return { viewport: { w: vw, h: vh }, items, images, skipped };
 }
 
 async function collectTexts(page) {
@@ -209,7 +352,14 @@ async function collectTexts(page) {
 
 // ── 2. analysis ─────────────────────────────────────────────────────────────
 
-const BROKEN = new Set(['offscreen', 'clipped', 'long-word', 'overlap', 'raw-key']);
+const BROKEN = new Set([
+    'offscreen', 'clipped', 'long-word', 'overlap', 'raw-key',
+    'image-broken', 'image-offscreen', 'image-clipped', 'image-stretched',
+    'image-over-text', 'image-over-image'
+]);
+
+// an image whose displayed aspect is this far off its natural one is squashed
+const ASPECT_TOLERANCE = 0.1;
 
 const KEY_RE = /^[A-Za-z][A-Za-z0-9]*(?:[._][A-Za-z0-9]+)+$/;
 
@@ -361,6 +511,107 @@ function analyzeShot(shot, opts) {
                         `Overlaps another text (“${b.text.slice(0, 40)}”) by ${Math.round((ov.area / smaller) * 100)}%`,
                         a, { withText: b.text, withRect: b.rect }
                     ));
+                }
+            }
+        }
+    }
+
+    // ── images ──────────────────────────────────────────────────────────────
+    //
+    // Geometry uses the OPAQUE box (im.ink) whenever we could read it, not the
+    // element box. A symbol PNG is mostly transparent padding, and judging by the
+    // element box reports overlaps and overflows that are invisible on screen.
+    for (const im of (shot.images || [])) {
+        const box = im.rect;
+        const hit = im.ink || box;          // what the player actually sees
+        const as = { rect: hit, text: im.label, path: im.path, offscreen: im.offscreen };
+
+        // 1 · did not load, collapsed, or nothing but transparency
+        if (!im.hasSrc || im.natW === 0) {
+            found.push(issue(shot, 'image-broken', 'error',
+                !im.hasSrc ? 'Image has no src' : 'Image failed to load (renders as nothing)', as));
+            continue;
+        }
+        if (im.natW >= 8 && (box.w < 3 || box.h < 3)) {
+            found.push(issue(shot, 'image-broken', 'error',
+                `Image renders at ${box.w}×${box.h} although the file is ${im.natW}×${im.natH}`, as));
+            continue;
+        }
+        if (im.blank) {
+            found.push(issue(shot, 'image-broken', 'error',
+                'Image is fully transparent — nothing is painted', as));
+            continue;
+        }
+
+        if (im.offscreen) continue;
+
+        // 2 · painted pixels leaving the screen
+        const out = Math.max(
+            Math.max(0, -hit.x), Math.max(0, -hit.y),
+            Math.max(0, (hit.x + hit.w) - vp.w), Math.max(0, (hit.y + hit.h) - vp.h)
+        );
+        if (out > SLACK) {
+            const visW = Math.max(0, Math.min(hit.x + hit.w, vp.w) - Math.max(hit.x, 0));
+            const visH = Math.max(0, Math.min(hit.y + hit.h, vp.h) - Math.max(hit.y, 0));
+            const hidden = Math.round((1 - (visW * visH) / Math.max(1, hit.w * hit.h)) * 100);
+            found.push(issue(shot, 'image-offscreen', hidden > 20 ? 'error' : 'warn',
+                `Image sticks out of the screen by ${Math.round(out)}px (${hidden}% of the picture hidden)`, as));
+        }
+
+        // 3 · cut off by a clipping container
+        for (const c of im.clips) {
+            const overX = /hidden|clip/.test(c.overflowX) && (hit.x < c.x - SLACK || hit.x + hit.w > c.x + c.w + SLACK);
+            const overY = /hidden|clip/.test(c.overflowY) && (hit.y < c.y - SLACK || hit.y + hit.h > c.y + c.h + SLACK);
+            if (overX || overY) {
+                found.push(issue(shot, 'image-clipped', 'error', `Image is cut off by <${c.tag}>`, as));
+                break;
+            }
+        }
+
+        // 4 · squashed — compares the file to the box, transparency irrelevant
+        if (im.objectFit === 'fill' && im.natH > 0 && box.w >= 20 && box.h >= 20) {
+            const k = (box.w / box.h) / (im.natW / im.natH);
+            if (k < 1 - ASPECT_TOLERANCE || k > 1 + ASPECT_TOLERANCE) {
+                const pct = Math.round(Math.abs(k - 1) * 100);
+                found.push(issue(shot, 'image-stretched', 'warn',
+                    `Image is ${k > 1 ? 'stretched' : 'squeezed'} by ${pct}% — shown ${box.w}×${box.h}, file is ${im.natW}×${im.natH}`, as));
+            }
+        }
+
+        if (!opts.overlap) continue;
+
+        // 5 · painted pixels sitting on text
+        for (const it of shot.items) {
+            if (it.offscreen) continue;
+            const ov = overlapBox(hit, it.rect);
+            if (ov.w < OVERLAP_MIN_W || ov.h < OVERLAP_MIN_H) continue;
+            const smaller = Math.min(hit.w * hit.h, it.rect.w * it.rect.h);
+            if (smaller > 0 && ov.area / smaller >= OVERLAP_MIN_SHARE) {
+                found.push(issue(shot, 'image-over-text', 'warn',
+                    `Image overlaps the text (“${it.text.slice(0, 40)}”) by ${Math.round((ov.area / smaller) * 100)}%`,
+                    as, { withText: it.text, withRect: it.rect }));
+                break;
+            }
+        }
+    }
+
+    // 6 · picture on picture. Often deliberate (overlapping symbol icons), so it
+    //     is opt-in and, being identical in every language, collapses into a
+    //     single "all N langs → layout" card rather than a flood.
+    if (opts.overlap) {
+        const imgs = (shot.images || []).filter(im => !im.offscreen && im.natW > 0 && !im.blank);
+        for (let i = 0; i < imgs.length; i++) {
+            for (let j = i + 1; j < imgs.length; j++) {
+                const a = imgs[i].ink || imgs[i].rect;
+                const b = imgs[j].ink || imgs[j].rect;
+                const ov = overlapBox(a, b);
+                if (ov.w < OVERLAP_MIN_W || ov.h < OVERLAP_MIN_H) continue;
+                const smaller = Math.min(a.w * a.h, b.w * b.h);
+                if (smaller > 0 && ov.area / smaller >= OVERLAP_MIN_SHARE) {
+                    found.push(issue(shot, 'image-over-image', 'warn',
+                        `Image overlaps another image (“${imgs[j].label}”) by ${Math.round((ov.area / smaller) * 100)}%`,
+                        { rect: a, text: imgs[i].label, path: imgs[i].path },
+                        { withImage: imgs[j].label, withRect: b }));
                 }
             }
         }
@@ -592,6 +843,7 @@ function analyze(shots, opts = {}) {
         rawIssues: issues.length,
         shots: shots.length,
         texts: shots.reduce((n, sh) => n + (sh.items ? sh.items.length : 0), 0),
+        images: shots.reduce((n, sh) => n + (sh.images ? sh.images.length : 0), 0),
         skipped,
         languages: [...langsSeen].sort(),
         byType,
