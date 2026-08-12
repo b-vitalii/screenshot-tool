@@ -197,6 +197,28 @@
         /* gallery header: search + filter chips */
         .gallery-controls { margin-bottom: 24px; }
         .gallery-view-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .gallery-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+        .gallery-row .gallery-search-wrap { flex: 1; margin-bottom: 0; }
+        /* the size picker is borrowed from the compare controls, so it needs that
+           row's layout here too — .cc-group is scoped to .compare-controls */
+        .gallery-row .cc-group { display: flex; align-items: center; gap: 8px; }
+        .gallery-row .cc-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--lbl); }
+        body.cyber .gallery-row .cc-label { color: #06b6d4; font-family: var(--font); }
+
+        /* thumbnail density — one variable, and both grids follow it. Switching is
+           pure CSS on purpose: re-rendering would re-request every thumbnail, and a
+           full run is 500 of them. */
+        #gallery { --thumb: 220px; --thumb-gap: 16px; --thumb-name: 12px; }
+        #gallery.dens-s { --thumb: 128px; --thumb-gap: 9px; --thumb-name: 10px; }
+        #gallery.dens-l { --thumb: 340px; --thumb-gap: 18px; --thumb-name: 13px; }
+        #gallery.dens-s .gallery-item { border-radius: 10px; }
+        #gallery.dens-s .gallery-item:hover { transform: translateY(-3px); }
+        #gallery.dens-s .gallery-item .file-name { display: none; }   /* hover shows the name */
+        #gallery.dens-s .gallery-item .ratio-tag { font-size: 9px; padding: 2px 6px; border-radius: 5px; top: 5px; left: 5px; }
+        #gallery.dens-s .img-overlay { padding-bottom: 8px; }
+        #gallery.dens-s .img-overlay .view-btn { padding: 4px 10px; font-size: 10px; }
+        #gallery.dens-s .compare-card .cc-lang { padding: 6px 8px; font-size: 11px; }
+        .dens-seg .cs { min-width: 30px; text-align: center; }
         .view-tab { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; }
         .view-tab:hover { color: var(--text); }
         .view-tab.active { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
@@ -210,7 +232,7 @@
         .page-num { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--card); color: var(--muted); border: 1.5px solid var(--border); transition: all 0.15s; }
         .page-num:hover { color: var(--text); border-color: var(--accent2); }
         .page-num.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
-        .compare-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .compare-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--thumb, 240px), 1fr)); gap: var(--thumb-gap, 16px); }
         .compare-card { background: var(--card); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); transition: all 0.2s; cursor: pointer; }
         .compare-card:hover { transform: translateY(-4px); border-color: var(--accent2); box-shadow: 0 12px 30px rgba(99,102,241,0.3); }
         .compare-card .cc-lang { padding: 10px 12px; font-size: 13px; font-weight: 800; letter-spacing: 0.5px; background: var(--accent-grad); color: #fff; text-align: center; }
@@ -374,7 +396,7 @@
         .ic-actions button:hover { border-color: var(--accent2); }
         .iss-empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7; }
 
-        .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--thumb, 220px), 1fr)); gap: var(--thumb-gap, 16px); }
         .gallery-item {
             position: relative; background: var(--card); border-radius: 16px; overflow: hidden;
             border: 1px solid var(--border); cursor: pointer; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
@@ -394,7 +416,7 @@
             padding: 8px 18px; border-radius: 20px; background: var(--accent-grad); color: #fff;
             font-size: 12px; font-weight: 700; box-shadow: 0 4px 14px rgba(99,102,241,0.5);
         }
-        .gallery-item .file-name { padding: 10px 12px; font-size: 12px; text-align: center; color: var(--muted); word-break: break-word; font-weight: 500; }
+        .gallery-item .file-name { padding: 10px 12px; font-size: var(--thumb-name, 12px); text-align: center; color: var(--muted); word-break: break-word; font-weight: 500; }
         .gallery-empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 15px; }
 
         /* light theme gallery */
@@ -1411,6 +1433,37 @@
         renderGallery();
     }
 
+    // ── thumbnail density ───────────────────────────────────────────────────
+    // S/M/L only flips a class on #gallery, so the browser re-flows the grid and
+    // keeps every image it already has. Nothing is re-fetched, nothing re-renders.
+    let galleryDensity = 'm';
+    try { galleryDensity = localStorage.getItem('qa-density') || 'm'; } catch (e) {}
+    if (!['s', 'm', 'l'].includes(galleryDensity)) galleryDensity = 'm';
+
+    function applyDensity() {
+        const g = document.getElementById('gallery');
+        if (!g) return;
+        g.classList.remove('dens-s', 'dens-m', 'dens-l');
+        g.classList.add('dens-' + galleryDensity);
+    }
+
+    function setDensity(d) {
+        galleryDensity = d;
+        try { localStorage.setItem('qa-density', d); } catch (e) {}
+        applyDensity();
+        document.querySelectorAll('.dens-seg .cs').forEach(el =>
+            el.classList.toggle('active', el.dataset.dens === d));
+    }
+
+    function densitySwitch() {
+        const opts = [['s', 'S'], ['m', 'M'], ['l', 'L']];
+        return '<div class="cc-group"><span class="cc-label">Size</span><div class="compare-seg dens-seg">'
+            + opts.map(([k, l]) => `<div class="cs ${galleryDensity === k ? 'active' : ''}" data-dens="${k}" onclick="setDensity('${k}')" title="thumbnail size">${l}</div>`).join('')
+            + '</div></div>';
+    }
+
+    applyDensity();
+
     function renderGallery() {
         const g = document.getElementById('gallery');
         cardAnimIndex = 0; // restart stagger wave
@@ -1425,7 +1478,7 @@
         html += '</div>';
 
         if (galleryView === 'grid') {
-            html += `<div class="gallery-search-wrap"><span class="gallery-search-ic">🔍</span><input class="gallery-search" id="gallerySearch" placeholder="Search by language or file..." value="${searchQuery}"></div>`;
+            html += `<div class="gallery-row"><div class="gallery-search-wrap"><span class="gallery-search-ic">🔍</span><input class="gallery-search" id="gallerySearch" placeholder="Search by language or file..." value="${searchQuery}"></div>${densitySwitch()}</div>`;
             html += '<div class="lang-chips">';
             const totalFiles = flatScreens.length;
             html += `<div class="lang-chip ${activeLangFilter==='all'?'active':''}" onclick="filterLang('all')">All<span class="cnt">${totalFiles}</span></div>`;
@@ -1737,6 +1790,7 @@
             html += `<div class="page-num ${comparePage===i?'active':''}" onclick="setComparePage(${i})">${i}</div>`;
         }
         html += '</div></div>';
+        html += densitySwitch();
         html += '</div>';
         return html;
     }
@@ -1880,7 +1934,7 @@
     function galleryCard(file, ts, ratioTag) {
         const delay = (cardAnimIndex % 12) * 0.04; // wave effect, caps so it never drags
         cardAnimIndex++;
-        return `<div class="gallery-item" style="animation-delay:${delay}s" onclick="openImage('${file.url}')">
+        return `<div class="gallery-item" style="animation-delay:${delay}s" title="${file.name}" onclick="openImage('${file.url}')">
             ${ratioTag ? `<div class="ratio-tag">${ratioTag}</div>` : ''}
             <div class="img-frame">
                 <img src="${file.url}?t=${ts}" loading="lazy" />
