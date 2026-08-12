@@ -1,3 +1,4 @@
+const { EventEmitter } = require('events');
 const express = require('express');
 const { runJob } = require('./runner');
 const { analyze } = require('./textAudit');
@@ -7,6 +8,11 @@ const path = require('path');
 const fs = require('fs');
 const archiver = require('archiver');
 const browsers = [];
+
+// server.js is required from main.js, i.e. it lives in the very same process as
+// Electron's `app`. So the "run finished" signal needs no IPC and no preload —
+// main.js just listens here and puts a badge on the dock.
+const events = new EventEmitter();
 
 app.use(express.json());
 
@@ -149,6 +155,8 @@ app.post('/run', async (req, res) => {
             ? `✅ Done · ⚠️ ${status.issues} finding${status.issues === 1 ? '' : 's'}`
             : '✅ Screenshots completed';
 
+        events.emit('run-finished', { ok: true, findings: status.issues || 0, cancelled: false });
+
     } catch (e) {
         status.finished = true;
         status.running = false;
@@ -159,6 +167,12 @@ app.post('/run', async (req, res) => {
         } else {
             status.message = `❌ ${e.message}`;
         }
+
+        events.emit('run-finished', {
+            ok: false,
+            findings: status.issues || 0,
+            cancelled: e.message === 'CANCELLED'
+        });
     } finally {
         browsers.length = 0;
         console.log('🧨 FINALLY BLOCK ENTERED');
@@ -301,4 +315,6 @@ app.get('/download-zip', (req, res) => {
 app.listen(3000, () => {
     console.log('UI running on http://localhost:3000');
 });
+
+module.exports = { events };
 

@@ -545,7 +545,11 @@
         body.cyber .toast.info .toast-ic, body.cyber .toast.success .toast-ic { background: rgba(0,0,0,0.15); }
 
         /* ===== MODAL ===== */
-        #imgModal { display: none; position: fixed; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(30,30,45,0.85), rgba(8,8,14,0.95)); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; }
+        #imgModal { display: none; position: fixed; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(30,30,45,0.85), rgba(8,8,14,0.95)); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; --langs-h: 0px; }
+        /* image and language strip in one column, so the strip takes real space
+           instead of lying on top of the screenshot — a portrait shot is tall
+           enough to reach it. 196px is the room the top bar and the buttons need. */
+        .modal-stage { display: flex; flex-direction: column; align-items: center; max-width: 86vw; }
         .modal-topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 20px 24px; z-index: 5; }
         .modal-info { color: #fff; font-size: 15px; font-weight: 700; background: var(--accent-grad); padding: 11px 20px; border-radius: 12px; box-shadow: 0 6px 24px rgba(99,102,241,0.6); font-family: var(--font); letter-spacing: 0.3px; }
         .modal-counter { color: #fff; font-size: 13px; font-weight: 600; background: rgba(40,40,55,0.85); padding: 9px 15px; border-radius: 10px; font-family: var(--font); }
@@ -554,11 +558,19 @@
 
         /* image with soft glow aura behind - no border */
         .modal-img-wrap {
-            position: relative; max-width: 86vw; max-height: 80vh;
+            position: relative; max-width: 86vw; max-height: calc(100vh - 196px - var(--langs-h)); flex: 0 1 auto;
             border-radius: 14px; overflow: hidden;
             box-shadow: 0 0 80px 10px rgba(129,140,248,0.35), 0 0 140px 30px rgba(99,102,241,0.2), 0 30px 80px rgba(0,0,0,0.5);
         }
-        .modal-img-wrap img { max-width: 86vw; max-height: 80vh; object-fit: contain; display: block; }
+        .modal-img-wrap img { max-width: 86vw; max-height: calc(100vh - 196px - var(--langs-h)); object-fit: contain; display: block; }
+        /* the wrap shrinks to the image, so percentages here map onto it exactly */
+        .modal-boxes { position: absolute; inset: 0; pointer-events: none; }
+        .modal-boxes .mb {
+            position: absolute; border: 2px solid #ef4444;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.65), 0 0 14px rgba(239,68,68,0.75);
+        }
+        .modal-boxes .mb.suspect { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(0,0,0,0.65), 0 0 14px rgba(245,158,11,0.75); }
+        .modal-btn.mark-on { background: linear-gradient(145deg, #ef4444, #b91c1c); box-shadow: 0 10px 30px rgba(239,68,68,0.5); }
 
         /* chevron nav - no heavy circle */
         .modal-nav {
@@ -571,6 +583,23 @@
         .modal-nav:active { transform: translateY(-50%) scale(0.95); }
         .modal-prev { left: 20px; }
         .modal-next { right: 20px; }
+
+        .modal-langs {
+            display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+            max-width: 86vw; z-index: 5; margin-top: 10px; flex: 0 0 auto;
+        }
+        .modal-langs:empty { display: none; margin: 0; }
+        .ml-chip {
+            font-size: 11px; font-weight: 800; letter-spacing: 0.4px; padding: 5px 10px;
+            border-radius: 8px; cursor: pointer; color: #cbd5e1;
+            background: rgba(30,30,45,0.9); border: 1px solid rgba(255,255,255,0.12);
+            transition: all 0.15s;
+        }
+        .ml-chip:hover { color: #fff; border-color: var(--accent2); transform: translateY(-2px); }
+        .ml-chip.active { background: var(--accent-grad); color: #fff; border-color: transparent; }
+        .ml-hint { font-size: 11px; color: #94a3b8; padding: 5px 4px; white-space: nowrap; }
+        .ml-hint b { color: #fff; background: rgba(255,255,255,0.14); padding: 1px 5px; border-radius: 4px; }
+        .modal-info.blinking { background: linear-gradient(145deg, #22c55e, #16a34a); box-shadow: 0 6px 24px rgba(34,197,94,0.6); }
 
         .modal-actions {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -829,6 +858,11 @@
     let isCancelling = false;
 
     /* ===== TOAST ===== */
+    // The finish sound is played by the main process, not here: this page is the
+    // one thing that is asleep exactly when the signal matters (window minimised),
+    // so a chime from the renderer arrived only after the window came back.
+    // See signalRunFinished() in main.js.
+
     function showToast(message, type = 'info', duration = 3000) {
         const wrap = document.getElementById('toastWrap');
         if (!wrap) return;
@@ -1310,6 +1344,7 @@
             });
         }
         collect(data);
+        buildShotIndex();
 
         const g = document.getElementById('gallery');
         g.style.display = 'block';
@@ -1582,7 +1617,9 @@
 
     function openImageByCard(cardKey) {
         const card = markedCards[cardKey];
-        if (card && card.url) openImage(card.url);
+        if (!card || !card.url) return;
+        pendingMarks = { vw: card.vw, vh: card.vh, boxes: card.boxes || [] };
+        openImage(card.url);
     }
 
     // draw the box into the real screenshot and hand it over as a PNG
@@ -1975,12 +2012,28 @@
         }, 800);
     }
 
+    // Shortcuts go by e.code, not e.key. e.key is what the keyboard layout
+    // produces, so on a Ukrainian layout the E key reports 'у' and the B key 'и' —
+    // which is why holding E did nothing. e.code is the physical key.
+    const isKey = (e, code, letter) =>
+        e.code === code || String(e.key).toLowerCase() === letter;
+
     document.addEventListener('keydown', (e) => {
         if (document.getElementById('imgModal').style.display !== 'flex') return;
         if (e.key === 'ArrowRight') showImage(currentIndex + 1);
         if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
         if (e.key === 'Escape') closeModal();
+        if (isKey(e, 'KeyB', 'b')) toggleModalMarks();
+        if (isKey(e, 'KeyE', 'e') && !e.repeat) blinkEnglish(true);
     });
+
+    document.addEventListener('keyup', (e) => {
+        if (isKey(e, 'KeyE', 'e')) blinkEnglish(false);
+    });
+
+    // cmd-tab away while holding E and the keyup never arrives — do not leave the
+    // viewer stuck on the English shot
+    window.addEventListener('blur', () => blinkEnglish(false));
 
     function downloadCurrent() {
         const item = modalScreens[currentIndex];
@@ -2041,6 +2094,150 @@
         return arr;
     }
 
+    // ── markup inside the viewer ────────────────────────────────────────────
+    // The boxes belong to one specific shot, so they are handed over just before
+    // the modal opens and dropped the moment you navigate to another screenshot.
+
+    // ── the same shot in other languages ────────────────────────────────────
+    // Every screenshot is identified by orientation + ratio + page, and that
+    // triple is already encoded in its path and file name. So one pass over
+    // flatScreens gives "this exact shot, in every language" for free.
+
+    let shotIndex = new Map();   // "mode|ratio|slot" → { lang: url }
+
+    function shotKeyOf(f) {
+        if (!f || !f.lang || !f.mode) return null;
+        const name = String(f.name || '');
+        const page = name.match(/_page-(\d+)\.png$/i);
+        const start = name.match(/_startscreen_(\d+)\.png$/i);
+        const slot = page ? 'p' + page[1] : (start ? 's' + start[1] : null);
+        if (!slot) return null;
+        return `${f.mode}|${f.ratio || '-'}|${slot}`;
+    }
+
+    function buildShotIndex() {
+        shotIndex = new Map();
+        flatScreens.forEach(f => {
+            const k = shotKeyOf(f);
+            if (!k) return;
+            if (!shotIndex.has(k)) shotIndex.set(k, {});
+            shotIndex.get(k)[f.lang] = f.url;
+        });
+    }
+
+    function currentShotLangs() {
+        const k = shotKeyOf(modalScreens[currentIndex]);
+        return k ? (shotIndex.get(k) || null) : null;
+    }
+
+    // the reference shot: plain `en` if it was captured, otherwise any English
+    // variant the run happens to contain (en_social, en-soc, …)
+    function englishOf(entry) {
+        if (!entry) return null;
+        if (entry.en) return { lang: 'en', url: entry.en };
+        const alt = Object.keys(entry).find(l => /^en[-_]/i.test(l));
+        return alt ? { lang: alt, url: entry[alt] } : null;
+    }
+
+    function renderModalLangs() {
+        const wrap = document.getElementById('modalLangs');
+        if (!wrap) return;
+
+        const item = modalScreens[currentIndex];
+        const entry = currentShotLangs();
+
+        if (!entry || Object.keys(entry).length < 2) { wrap.innerHTML = ''; measureModalLangs(); return; }
+
+        const langs = Object.keys(entry).sort();
+        let html = langs.map(l =>
+            `<div class="ml-chip ${item && l === item.lang ? 'active' : ''}" onclick="switchModalLang('${l}')">${l.toUpperCase()}</div>`
+        ).join('');
+
+        const ref = englishOf(entry);
+        if (ref && item && item.lang !== ref.lang) {
+            html += `<div class="ml-hint">hold <b>E</b> for ${ref.lang.toUpperCase()}</div>`;
+            const pre = new Image();   // so the flip is instant
+            pre.src = ref.url;
+        }
+
+        wrap.innerHTML = html;
+        measureModalLangs();
+    }
+
+    // The strip sits under the screenshot instead of on top of it, so the image has
+    // to know how tall it is — with 27 languages it wraps onto two rows. Told to CSS
+    // as a variable, because that is the only number the stylesheet cannot work out.
+    function measureModalLangs() {
+        const modal = document.getElementById('imgModal');
+        const wrap = document.getElementById('modalLangs');
+        if (!modal || !wrap) return;
+        const h = wrap.children.length ? wrap.offsetHeight : 0;
+        modal.style.setProperty('--langs-h', h ? (h + 10) + 'px' : '0px');
+    }
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('imgModal').style.display === 'flex') measureModalLangs();
+    });
+
+    function switchModalLang(lang) {
+        const entry = currentShotLangs();
+        if (!entry || !entry[lang]) return;
+        openImage(entry[lang]);
+    }
+
+    // hold E: show the English shot of the very same page and ratio. Both images
+    // are the same size and in the same place, so a difference literally blinks.
+    let blinkSaved = null;
+
+    function blinkEnglish(on) {
+        const img = document.getElementById('modalImg');
+        const info = document.getElementById('modalInfo');
+        if (!img) return;
+
+        if (on) {
+            if (blinkSaved) return;
+            const ref = englishOf(currentShotLangs());
+            if (!ref || ref.url === img.getAttribute('src')) return;
+            blinkSaved = img.getAttribute('src');
+            img.src = ref.url;
+            document.getElementById('modalBoxes').innerHTML = '';
+            info.textContent = `${ref.lang.toUpperCase()} · reference`;
+            info.classList.add('blinking');
+        } else if (blinkSaved) {
+            img.src = blinkSaved;
+            blinkSaved = null;
+            info.classList.remove('blinking');
+            updateModalInfo();
+            renderModalMarks();
+        }
+    }
+
+    let modalMarks = null;      // { vw, vh, boxes: [{x,y,w,h,group}] }
+    let pendingMarks = null;    // set by the caller, consumed by openImage()
+    let modalMarksOn = true;
+
+    function toggleModalMarks() {
+        modalMarksOn = !modalMarksOn;
+        renderModalMarks();
+    }
+
+    function renderModalMarks() {
+        const layer = document.getElementById('modalBoxes');
+        const btn = document.getElementById('markBtn');
+        if (!layer || !btn) return;
+
+        const has = !!(modalMarks && modalMarks.boxes && modalMarks.boxes.length);
+        btn.style.display = has ? '' : 'none';
+        btn.classList.toggle('mark-on', modalMarksOn);
+
+        if (!has || !modalMarksOn) { layer.innerHTML = ''; return; }
+
+        const vw = modalMarks.vw || 1, vh = modalMarks.vh || 1;
+        layer.innerHTML = modalMarks.boxes.map(b =>
+            `<div class="mb ${b.group === 'suspect' ? 'suspect' : ''}" style="left:${(b.x / vw) * 100}%;top:${(b.y / vh) * 100}%;width:${(b.w / vw) * 100}%;height:${(b.h / vh) * 100}%"></div>`
+        ).join('');
+    }
+
     function openImage(src) {
         // choose navigation set based on current gallery view
         modalScreens = (galleryView === 'compare') ? buildCompareScreens() : flatScreens;
@@ -2048,17 +2245,33 @@
         if (currentIndex < 0) currentIndex = 0;
         document.getElementById('modalImg').src = src;
         document.getElementById('imgModal').style.display = 'flex';
+
+        modalMarks = pendingMarks;      // only the shot we were asked to mark
+        pendingMarks = null;
+        modalMarksOn = true;            // you opened it to look at the problem
+        renderModalMarks();
+
         updateModalInfo();
+        renderModalLangs();
     }
 
     function showImage(index) {
         if (index < 0 || index >= modalScreens.length) return;
         currentIndex = index;
         document.getElementById('modalImg').src = modalScreens[index].url;
+        modalMarks = null;              // boxes belong to the shot we just left
+        renderModalMarks();
         updateModalInfo();
+        renderModalLangs();
     }
 
-    function closeModal() { document.getElementById('imgModal').style.display = 'none'; }
+    function closeModal() {
+        document.getElementById('imgModal').style.display = 'none';
+        blinkEnglish(false);
+        modalMarks = null;
+        renderModalMarks();
+        document.getElementById('modalLangs').innerHTML = '';
+    }
 
     function updateModalInfo() {
         const item = modalScreens[currentIndex];
@@ -2148,11 +2361,16 @@
         <button class="modal-close" onclick="event.stopPropagation(); closeModal()">✕</button>
     </div>
     <button class="modal-nav modal-prev" onclick="event.stopPropagation(); showImage(currentIndex - 1)">‹</button>
-    <div class="modal-img-wrap" onclick="event.stopPropagation()">
-        <img id="modalImg">
+    <div class="modal-stage" onclick="event.stopPropagation()">
+        <div class="modal-img-wrap">
+            <img id="modalImg">
+            <div class="modal-boxes" id="modalBoxes"></div>
+        </div>
+        <div class="modal-langs" id="modalLangs"></div>
     </div>
     <button class="modal-nav modal-next" onclick="event.stopPropagation(); showImage(currentIndex + 1)">›</button>
     <div class="modal-actions" onclick="event.stopPropagation()">
+        <button class="modal-btn mark-on" id="markBtn" style="display:none;" onclick="toggleModalMarks()"><span>🔺</span> Markup</button>
         <button class="modal-btn copy-btn" id="copyBtn" onclick="copyCurrent()"><span>📋</span> Copy</button>
         <button class="modal-btn" onclick="downloadCurrent()"><span>⬇</span> Download</button>
     </div>
