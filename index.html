@@ -30,6 +30,14 @@
         .theme-switch button:hover { color: var(--text); }
         .theme-switch button.active { background: var(--accent); border-color: var(--accent2); color: #fff; }
 
+        html.theme-reveal::view-transition-old(root),
+        html.theme-reveal::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+        html.theme-reveal::view-transition-old(root) { z-index: 0; }
+        html.theme-reveal::view-transition-new(root) { z-index: 1; }
+
+        @keyframes rvPress { 0% { transform: scale(1); } 35% { transform: scale(0.93); } 100% { transform: scale(1); } }
+        .theme-switch button.pressed { animation: rvPress 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
         .cyber-strip { display: none; }
         body.cyber .cyber-strip {
             display: flex; align-items: center; gap: 14px; padding: 12px 18px; margin-bottom: 18px;
@@ -1332,17 +1340,79 @@
     }
     let currentIndex = 0;
 
-    function setTheme(t) {
+    function applyTheme(t) {
         document.body.className = t;
         ['light','dark','cyber'].forEach(x => document.getElementById('th-'+x).classList.toggle('active', x === t));
         try { localStorage.setItem('qa-theme', t); } catch(e) {}
         const label = document.querySelector('#startBtn .btn-label');
         if (label) label.textContent = (t === 'cyber') ? '▶ Initiate Capture' : '📸 Start Screenshots';
     }
+
+    function setTheme(t) {
+        if (document.body.className === t) return;
+
+        const root = document.documentElement;
+        const btn = document.getElementById('th-' + t);
+
+        if (btn) {
+            btn.classList.remove('pressed');
+            void btn.offsetWidth;              // restart the animation on a re-click
+            btn.classList.add('pressed');
+        }
+
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (!document.startViewTransition || reduced || !btn) {
+            applyTheme(t);
+            return;
+        }
+
+        const r = btn.getBoundingClientRect();
+        const x = r.left + r.width / 2;
+        const y = r.top + r.height / 2;
+        const end = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        root.classList.add('theme-reveal');
+
+        const transition = document.startViewTransition(() => applyTheme(t));
+
+        const DUR = 620;
+        const EASE = 'cubic-bezier(0.33, 1, 0.68, 1)';   // out-cubic: quick, then settles
+
+        transition.ready.then(() => {
+            root.animate(
+                { clipPath: [
+                    `circle(0px at ${x}px ${y}px)`,
+                    `circle(${end}px at ${x}px ${y}px)`
+                ] },
+                { duration: DUR, easing: EASE, pseudoElement: '::view-transition-new(root)' }
+            );
+
+            root.animate(
+                { filter: ['brightness(1.32) saturate(1.25)', 'brightness(1) saturate(1)'] },
+                { duration: 420, easing: 'ease-out', pseudoElement: '::view-transition-new(root)' }
+            );
+
+            root.animate(
+                {
+                    transform: ['scale(1)', 'scale(1.06)'],
+                    filter: ['blur(0px)', 'blur(4px)'],
+                    opacity: [1, 0.85]
+                },
+                { duration: DUR, easing: EASE, pseudoElement: '::view-transition-old(root)' }
+            );
+        }).catch(() => {});
+
+        transition.finished.finally(() => root.classList.remove('theme-reveal'));
+    }
+
     (function initTheme() {
         let t = 'dark';
         try { t = localStorage.getItem('qa-theme') || 'dark'; } catch(e) {}
-        setTheme(t);
+        applyTheme(t);   // first paint: no wipe, there is nothing to wipe from
     })();
 
     function pickOrientation(el) {
