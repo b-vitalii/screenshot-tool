@@ -62,6 +62,10 @@
         .card-head .ch-ic { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-grad); display: flex; align-items: center; justify-content: center; font-size: 17px; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
         .card-head .ch-title { font-size: 16px; font-weight: 700; }
         .sub-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; display: block; }
+
+        .game-row { --game-ctl-h: 50px; display: flex; align-items: stretch; gap: 10px; margin-bottom: 6px; }
+        .game-row .game-dd { flex: 1; min-width: 0; margin-bottom: 0; }
+        .game-row .game-trigger { min-height: var(--game-ctl-h); }
         .game-dd { position: relative; user-select: none; margin-bottom: 6px; }
         .game-trigger { width: 100%; padding: 15px 44px 15px 16px; border-radius: 14px; background: var(--input-bg); color: var(--text); font-size: 14px; font-weight: 600; box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .game-trigger .gt-ic { font-size: 16px; opacity: 0.8; }
@@ -81,6 +85,16 @@
         .game-opt .tag.dev { background: rgba(251,146,60,0.25); color: #fdba74; }
         .game-opt.sel .tag { background: rgba(255,255,255,0.25); color: #fff; }
         .game-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }
+
+        .btn-games { flex: 0 0 var(--game-ctl-h); width: var(--game-ctl-h); height: var(--game-ctl-h); padding: 0; border-radius: 14px; border: 1.5px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--card); color: var(--muted); font-family: var(--font); box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); transition: all 0.15s; }
+        .btn-games:hover:not(:disabled) { color: var(--text); border-color: var(--accent2); box-shadow: 0 4px 14px rgba(99,102,241,0.3), 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); }
+        .btn-games:active:not(:disabled) { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
+        .btn-games:disabled { opacity: 0.6; cursor: default; }
+        .btn-games .bg-ic { display: block; font-size: 17px; line-height: 1; }
+        .btn-games.loading .bg-ic { animation: bgSpin 0.9s linear infinite; }
+        @keyframes bgSpin { to { transform: rotate(360deg); } }
+        body.cyber .btn-games { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #22d3ee; box-shadow: none; border-radius: 6px; }
+        body.cyber .btn-games:hover:not(:disabled) { border-color: #06b6d4; box-shadow: 0 0 10px rgba(6,182,212,0.25); }
         .or-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
         .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
         .email-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
@@ -904,6 +918,7 @@
         </div>
 
         <span class="sub-label">Choose from list</span>
+        <div class="game-row">
         <div class="game-dd" id="gameDD">
             <div class="game-trigger" onclick="toggleGameDD(event)">
                 <span class="gt-ic">🎰</span>
@@ -913,6 +928,10 @@
                 <input class="game-search" id="gameSearch" placeholder="🔍 Search game..." onclick="event.stopPropagation()" oninput="filterGames()">
                 <div class="game-list" id="gameList"></div>
             </div>
+        </div>
+            <button type="button" class="btn-games" id="gamesRefreshBtn" onclick="refreshGames()" title="Update games list — reads it out of a live game" aria-label="Update games list">
+                <span class="bg-ic">🔄</span>
+            </button>
         </div>
 
         <div class="or-divider">OR</div>
@@ -1142,7 +1161,11 @@
     }
 
     /* ===== GAMES + URL BUILDER ===== */
-    const GAMES = [
+    // The real list comes from the server (GET /games), which in turn read it out
+    // of a live game — see gamesList.js. This hardcoded copy is only the floor:
+    // it is what the dropdown shows if the server has never managed a fetch, so
+    // the tool is usable on a fresh install and on a bad day.
+    const FALLBACK_GAMES = [
         "3_african_drums","3_hot_teapots","3_hot_teapots_dev","3_super_hot_teapots",
         "3_super_hot_teapots_dev","3_super_hot_teapots_dev_main","4_african_drums","4_african_drums_dev",
         "4_fortune_clovers","4_fortune_clovers_dev","4_wolf_drums","4_wolf_drums_dev",
@@ -1150,6 +1173,7 @@
         "grand_light","grand_light_dev","lucky_apple_x1000","lucky_apple_x1000_dev",
         "lucky_apple_x2500","lucky_apple_x2500_dev","super_hot_teapots","super_hot_teapots_dev"
     ];
+    let GAMES = FALLBACK_GAMES.slice();
     const DEFAULT_EMAIL = "v.boiko@hraymo.com";
     let selectedGame = null;
 
@@ -1203,6 +1227,60 @@
 
     function filterGames() {
         renderGameList(document.getElementById('gameSearch').value);
+    }
+
+    /* ===== GAMES LIST (from the server) ===== */
+
+    function setGames(list) {
+        GAMES = (Array.isArray(list) && list.length) ? list.slice() : FALLBACK_GAMES.slice();
+        renderGameList(document.getElementById('gameSearch').value);
+    }
+
+    async function loadGames() {
+        try {
+            const res = await fetch('/games');
+            const data = await res.json();
+            if (data && Array.isArray(data.games) && data.games.length) setGames(data.games);
+        } catch (e) {
+            console.error('games load failed', e);
+        }
+    }
+
+    let gamesRefreshing = false;
+
+    async function refreshGames() {
+        if (gamesRefreshing) return;
+
+        const btn = document.getElementById('gamesRefreshBtn');
+
+        gamesRefreshing = true;
+        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+
+        showToast('Updating games list...', 'info');
+
+        try {
+            const res = await fetch('/games/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('userEmail').value.trim() })
+            });
+
+            const data = await res.json();
+
+            if (data && data.ok && Array.isArray(data.games) && data.games.length) {
+                setGames(data.games);
+                showToast(data.message || `Got ${data.games.length} games`, 'success', 4000);
+            } else {
+                // the list on screen stays exactly as it was
+                showToast((data && data.message) || 'Could not update the games list', 'error', 6000);
+            }
+        } catch (e) {
+            console.error('games refresh failed', e);
+            showToast(`Could not update the games list: ${e.message}`, 'error', 6000);
+        } finally {
+            gamesRefreshing = false;
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+        }
     }
 
     function pickGame(game) {
@@ -3010,7 +3088,8 @@
     document.querySelectorAll('input.lang').forEach(cb => cb.addEventListener('change', updateLangCount));
 
     // init game list + saved email
-    renderGameList();
+    renderGameList();      // fallback first, so the dropdown is never empty
+    loadGames();           // then swap in the stored list if there is one
     (function initEmail() {
         try {
             const saved = localStorage.getItem('qa-email');

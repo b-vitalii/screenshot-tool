@@ -2,6 +2,7 @@ const { EventEmitter } = require('events');
 const express = require('express');
 const { runJob } = require('./runner');
 const { analyze } = require('./textAudit');
+const { fetchGamesList, getCachedGames } = require('./gamesList');
 
 const app = express();
 const path = require('path');
@@ -68,6 +69,46 @@ app.get('/', (req, res) => {
 app.get('/version', (req, res) => {
     const pkg = require('./package.json');
     res.json({ version: pkg.version });
+});
+
+// ── games list ──────────────────────────────────────────────────────────────
+//
+// The catalogue is not ours: it lives on GR.Options.available_games inside any
+// running game. /games hands over the copy we last stored (instant, no browser),
+// /games/refresh opens a game to fetch a fresh one. See gamesList.js.
+
+let gamesRefreshing = false;
+
+app.get('/games', (req, res) => {
+    const games = getCachedGames();
+    res.json({ games: games || [] });
+});
+
+app.post('/games/refresh', async (req, res) => {
+    if (gamesRefreshing) {
+        return res.status(409).json({
+            ok: false,
+            games: getCachedGames(),
+            message: 'Games list is already being updated'
+        });
+    }
+
+    gamesRefreshing = true;
+
+    try {
+        const email = (req.body && req.body.email) || '';
+        const result = await fetchGamesList(email);
+        res.json(result);
+    } catch (e) {
+        console.error('games refresh failed', e);
+        res.status(500).json({
+            ok: false,
+            games: getCachedGames(),
+            message: e.message || 'Games refresh failed'
+        });
+    } finally {
+        gamesRefreshing = false;
+    }
 });
 
 // статус
