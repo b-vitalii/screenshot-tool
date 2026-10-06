@@ -157,4 +157,96 @@ async function fetchGamesList(email) {
     };
 }
 
-module.exports = { fetchGamesList, getCachedGames, getCacheInfo, CANDIDATES };
+const LANGS_TIMEOUT = 40000;
+
+async function readLanguagesFromPage(browser, game, email) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    try {
+        await page.goto(buildGameUrl(game, email), {
+            waitUntil: 'domcontentloaded',
+            timeout: NAV_TIMEOUT
+        });
+
+        await page.waitForFunction(() => {
+            const i18n = window.GR?.Options?.current_game_manifest?.i18n
+                || window.GR?.Options?.options?.i18n;
+            return !!(i18n && Object.keys(i18n).length);
+        }, { timeout: LANGS_TIMEOUT });
+
+        const langs = await page.evaluate(() => Object.keys(
+            window.GR.Options.current_game_manifest?.i18n
+            || window.GR.Options.options.i18n
+        ));
+
+        return sortGames(langs);   // same dedupe + natural sort
+    } finally {
+        await context.close().catch(() => {});
+    }
+}
+
+/** Cached language list for one game, or [] if it has never been fetched. */
+function getCachedLanguages(game) {
+    const cached = readCache();
+    return (cached && cached.languages && cached.languages[game]) || [];
+}
+
+/** Every game we know languages for. */
+function getCachedLanguageMap() {
+    const cached = readCache();
+    return (cached && cached.languages) || {};
+}
+
+/**
+ * Open one game and read the languages it supports, then remember them.
+ * Never rejects: a game that will not open returns ok:false and whatever was
+ * cached before, so the UI can fall back to showing everything.
+ */
+async function fetchGameLanguages(game, email) {
+    if (!game) return { ok: false, game, languages: [], message: 'No game given' };
+
+    let browser = null;
+
+    try {
+        browser = await launchBrowser();
+
+        const languages = await readLanguagesFromPage(browser, game, email);
+
+        if (!languages.length) throw new Error('game exposed an empty language list');
+
+        const payload = readCache() || { games: [] };
+        payload.languages = payload.languages || {};
+        payload.languages[game] = languages;
+        payload.languagesFetchedAt = payload.languagesFetchedAt || {};
+        payload.languagesFetchedAt[game] = new Date().toISOString();
+        writeCache(payload);
+
+        console.log(`languages: ${game} supports ${languages.length} — ${languages.join(', ')}`);
+
+        return { ok: true, game, languages, cached: false, message: `${languages.length} languages` };
+    } catch (e) {
+        console.error(`languages: ${game} failed — ${e.message}`);
+
+        const fallback = getCachedLanguages(game);
+        return {
+            ok: false,
+            game,
+            languages: fallback,
+            cached: true,
+            message: e.message
+        };
+    } finally {
+        if (browser) {
+            await Promise.race([
+                browser.close(),
+                new Promise(res => setTimeout(res, 3000))
+            ]).catch(() => {});
+        }
+    }
+}
+
+module.exports = {
+    fetchGamesList, getCachedGames, getCacheInfo, CANDIDATES,
+    fetchGameLanguages, getCachedLanguages, getCachedLanguageMap
+};

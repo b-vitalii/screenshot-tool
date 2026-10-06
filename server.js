@@ -2,7 +2,7 @@ const { EventEmitter } = require('events');
 const express = require('express');
 const { runJob } = require('./runner');
 const { analyze } = require('./textAudit');
-const { fetchGamesList, getCachedGames } = require('./gamesList');
+const { fetchGamesList, getCachedGames, fetchGameLanguages, getCachedLanguages } = require('./gamesList');
 
 const app = express();
 const path = require('path');
@@ -28,6 +28,7 @@ let status = {
 
     workers: {},
     presets: [],
+    failed: [],
     issues: 0,
     broken: 0,
     suspect: 0,
@@ -82,6 +83,43 @@ let gamesRefreshing = false;
 app.get('/games', (req, res) => {
     const games = getCachedGames();
     res.json({ games: games || [] });
+});
+
+// ── per-game languages ──────────────────────────────────────────────────────
+//
+let languagesRefreshing = null;   // the game currently being probed, if any
+
+app.get('/languages', (req, res) => {
+    const game = String(req.query.game || '');
+    res.json({ game, languages: getCachedLanguages(game) });
+});
+
+app.post('/languages/refresh', async (req, res) => {
+    const game = (req.body && req.body.game) || '';
+
+    if (languagesRefreshing === game) {
+        return res.status(409).json({
+            ok: false, game,
+            languages: getCachedLanguages(game),
+            message: `Already checking ${game}`
+        });
+    }
+
+    languagesRefreshing = game;
+
+    try {
+        const email = (req.body && req.body.email) || '';
+        res.json(await fetchGameLanguages(game, email));
+    } catch (e) {
+        console.error('languages refresh failed', e);
+        res.status(500).json({
+            ok: false, game,
+            languages: getCachedLanguages(game),
+            message: e.message || 'Languages refresh failed'
+        });
+    } finally {
+        languagesRefreshing = null;
+    }
 });
 
 app.post('/games/refresh', async (req, res) => {
@@ -154,6 +192,7 @@ app.post('/run', async (req, res) => {
     status.total = 0;
     status.workers = {};
     status.presets = [];
+    status.failed = [];
     status.issues = 0;
     status.broken = 0;
     status.suspect = 0;
@@ -192,9 +231,22 @@ app.post('/run', async (req, res) => {
         status.progress = 100;
         status.running = false;
         status.finished = true;
-        status.message = status.issues
-            ? `✅ Done · ⚠️ ${status.issues} finding${status.issues === 1 ? '' : 's'}`
-            : '✅ Screenshots completed';
+
+        const failed = (result && result.failures) || [];
+        status.failed = failed.map(f => f.lang);
+
+        const findingsPart = status.issues
+            ? `⚠️ ${status.issues} finding${status.issues === 1 ? '' : 's'}`
+            : '';
+        const failedPart = failed.length
+            ? `❌ ${failed.length} lang${failed.length === 1 ? '' : 's'} failed: ${status.failed.join(', ')}`
+            : '';
+
+        status.message = [
+            failed.length ? '⚠️ Done with errors' : '✅ Done',
+            findingsPart,
+            failedPart
+        ].filter(Boolean).join(' · ');
 
         events.emit('run-finished', { ok: true, findings: status.issues || 0, cancelled: false });
 

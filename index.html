@@ -117,6 +117,20 @@
         .lang-grid label:hover { color: var(--text); border-color: var(--accent2); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(129,140,248,0.4), 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); }
         .lang-grid label.checked { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: inset 4px 4px 8px rgba(55,48,163,0.8), inset -4px -4px 8px rgba(129,140,248,0.6); }
         .lang-grid label input { display: none; }
+        /* `.lang-grid label` sets display:flex, and an author rule beats the
+           browser's own display:none for [hidden] — so the attribute alone did
+           nothing and unsupported languages stayed on screen. */
+        .lang-grid label[hidden] { display: none !important; }
+        .lang-note { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; padding: 9px 13px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.35); color: #fdba74; }
+        .lang-note::before { content: '🚫'; font-size: 13px; }
+        .lang-note[hidden] { display: none !important; }
+        .lang-note.checking { background: rgba(99,102,241,0.12); border-color: rgba(129,140,248,0.4); color: var(--accent2); }
+        .lang-note.checking::before { content: '⏳'; }
+        .lang-note.ok { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); color: #6ee7b7; }
+        .lang-note.ok::before { content: '✓'; }
+        body.light .lang-note.ok { background: rgba(5,150,105,0.12); border-color: rgba(5,150,105,0.35); color: #047857; }
+        body.light .lang-note { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.35); color: #b45309; }
+        body.cyber .lang-note { background: rgba(6,182,212,0.07); border: 1px solid #123a4d; color: #22d3ee; border-radius: 4px; font-family: var(--font); }
 
         .actions { margin-bottom: 16px; display: flex; gap: 10px; }
         .actions button { padding: 10px 18px; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer; font-weight: 600; font-family: var(--font); font-size: 13px; background: var(--card); color: var(--muted); box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); transition: all 0.15s; }
@@ -964,6 +978,7 @@
             <button type="button" onclick="clearAll()">Clear All</button>
         </div>
         <div id="langCount">Selected languages: 0</div>
+        <div id="langFilterNote" class="lang-note" hidden></div>
         <div class="lang-grid">
             <label><input type="checkbox" class="lang" value="bg">BG</label>
             <label><input type="checkbox" class="lang" value="de">DE</label>
@@ -1058,6 +1073,12 @@
             <div class="switch"></div>
         </div>
         <input type="checkbox" id="headless" checked style="display:none;">
+
+        <div class="toggle-field on" id="sepSessionsToggle" onclick="toggleField('sepSessionsToggle','separateSessions')">
+            <div class="tf-text"><span class="tf-icon">🎫</span><div>Separate session per worker<div class="tf-desc">Tags the token so workers don't evict each other. Turn OFF for games that reject tagged tokens (bell_bang) — the run then uses 1 worker.</div></div></div>
+            <div class="switch"></div>
+        </div>
+        <input type="checkbox" id="separateSessions" checked style="display:none;">
 
         <div style="height:12px"></div>
 
@@ -1169,10 +1190,6 @@
     }
 
     /* ===== GAMES + URL BUILDER ===== */
-    // The real list comes from the server (GET /games), which in turn read it out
-    // of a live game — see gamesList.js. This hardcoded copy is only the floor:
-    // it is what the dropdown shows if the server has never managed a fetch, so
-    // the tool is usable on a fresh install and on a bad day.
     const FALLBACK_GAMES = [
         "3_african_drums","3_hot_teapots","3_hot_teapots_dev","3_super_hot_teapots",
         "3_super_hot_teapots_dev","3_super_hot_teapots_dev_main","4_african_drums","4_african_drums_dev",
@@ -1291,6 +1308,93 @@
         }
     }
 
+    /* ===== SUPPORTED LANGUAGES (per game) ===== */
+    //
+
+    let supportedLangs = null;      // null = unknown → show everything
+
+    let langNoteTimer = null;
+
+    // kind: 'checking' | 'ok' | 'error'. 'ok' fades itself out — once the chips
+    // are right the message has nothing left to say.
+    function setLangNote(text, kind = 'ok') {
+        const note = document.getElementById('langFilterNote');
+        if (!note) return;
+
+        clearTimeout(langNoteTimer);
+        note.textContent = text || '';
+        note.classList.toggle('checking', kind === 'checking');
+        note.classList.toggle('ok', kind === 'ok');
+        note.hidden = !text;
+
+        if (text && kind === 'ok') {
+            langNoteTimer = setTimeout(() => { note.hidden = true; }, 4000);
+        }
+    }
+
+
+    function applyLangFilter() {
+        const boxes = [...document.querySelectorAll('input.lang')];
+        let hidden = 0;
+
+        boxes.forEach(box => {
+            const label = box.closest('label');
+            if (!label) return;
+
+            const ok = !supportedLangs || supportedLangs.includes(box.value);
+            label.hidden = !ok;
+
+            if (!ok && box.checked) box.checked = false;
+            if (!ok) hidden++;
+        });
+
+        updateLangCount();
+    }
+
+    function setSupportedLangs(list) {
+        supportedLangs = (Array.isArray(list) && list.length) ? list : null;
+        applyLangFilter();
+    }
+
+    async function loadLangsForGame(game) {
+        if (!game) { setSupportedLangs(null); return; }
+
+        // cached? apply at once
+        try {
+            const res = await fetch('/languages?game=' + encodeURIComponent(game));
+            const data = await res.json();
+            if (data && Array.isArray(data.languages) && data.languages.length) {
+                setSupportedLangs(data.languages);
+                setLangNote(`${data.languages.length} languages available for this game`, 'ok');
+                return;
+            }
+        } catch (e) { console.error('languages load failed', e); }
+
+        // not cached — go and look, without blocking the user
+        setLangNote('Checking which languages this game supports...', 'checking');
+
+        try {
+            const res = await fetch('/languages/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ game, email: document.getElementById('userEmail').value.trim() })
+            });
+            const data = await res.json();
+
+            if (data && data.ok && Array.isArray(data.languages) && data.languages.length) {
+                setSupportedLangs(data.languages);
+                setLangNote(`Languages updated — ${data.languages.length} available for this game`, 'ok');
+            } else {
+                setSupportedLangs(null);     // unknown → show everything, hide nothing
+                setLangNote('Could not read this game\u2019s languages — showing all', 'error');
+            }
+        } catch (e) {
+            console.error('languages refresh failed', e);
+            setSupportedLangs(null);
+            setLangNote('Could not read this game\u2019s languages — showing all', 'error');
+        }
+    }
+
     function pickGame(game) {
         selectedGame = game;
         const v = document.getElementById('gameVal');
@@ -1300,6 +1404,7 @@
         // clear manual URL since we now use dropdown
         document.getElementById('url').value = '';
         validateForm();
+        loadLangsForGame(game);
     }
 
     function onUrlInput() {
@@ -2731,7 +2836,13 @@
         document.getElementById('startBtn').disabled = !hasUrl || count === 0;
     }
 
-    function selectAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = true); updateLangCount(); }
+    // only languages this game actually supports — a hidden one must never end up
+    // selected, or the counter claims 27 while 24 are on screen
+    function pickableLangs() {
+        return [...document.querySelectorAll('input.lang')]
+            .filter(cb => !(cb.closest('label') || {}).hidden);
+    }
+    function selectAll() { pickableLangs().forEach(cb => cb.checked = true); updateLangCount(); }
     function clearAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = false); updateLangCount(); }
 
     async function start() {
@@ -2740,6 +2851,7 @@
         closeGallery();
         const startBtn = document.getElementById('startBtn');
         const headless = document.getElementById('headless').checked;
+        const separateSessions = document.getElementById('separateSessions').checked;
         const url = resolveGameUrl();
         const workers = parseInt(document.getElementById('workers').value, 10);
         const langs = Array.from(document.querySelectorAll('input.lang:checked')).map(el => el.value);
@@ -2768,7 +2880,7 @@
             await fetch('/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, enSocExtra, screenshotStartScreen, ratios, base, gameName, textChecks, suspects, overlapCheck })
+                body: JSON.stringify({ url, langs, mode, pagesCount, pages, headless, workers, separateSessions, enSocExtra, screenshotStartScreen, ratios, base, gameName, textChecks, suspects, overlapCheck })
             });
             jobRunning = true;
             const presetCount = Object.values(ratios).reduce((n, arr) => n + arr.length, 0);

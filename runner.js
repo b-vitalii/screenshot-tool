@@ -14,6 +14,32 @@ const { collectTexts } = require('./textAudit');
 //  exactly:  16x9 landscape → 1280x720,  12x20 portrait → 600x1000.
 // ────────────────────────────────────────────────────────────────────────────
 
+const CLIENT_ID_FILE = path.join(__dirname, 'client-id.json');
+
+function getClientId() {
+    try {
+        if (fs.existsSync(CLIENT_ID_FILE)) {
+            const saved = JSON.parse(fs.readFileSync(CLIENT_ID_FILE, 'utf8'));
+            if (saved && /^[a-z0-9]{4,8}$/.test(saved.clientId)) return saved.clientId;
+        }
+    } catch (e) {
+        console.error('client id read failed:', e.message);
+    }
+
+    const id = Math.random().toString(36).slice(2, 6).replace(/[^a-z0-9]/g, '0');
+
+    try {
+        fs.writeFileSync(CLIENT_ID_FILE, JSON.stringify({ clientId: id, createdAt: new Date().toISOString() }, null, 2));
+        console.log(`client id generated: ${id}`);
+    } catch (e) {
+        console.error('client id write failed:', e.message);
+    }
+
+    return id;
+}
+
+const ATTEMPTS_PER_LANG = 2;
+
 const DEFAULT_BASE = {
     landscape: 720,  // fixed height
     portrait:  600   // fixed width
@@ -188,32 +214,95 @@ function filePrefix(gameName) {
     return gameName ? `${gameName}_` : '';
 }
 
-async function runForLang(browser, {
+const PLATFORM_ERROR_RE = /SERVER_ERROR|INVALID_TOKEN|TOKEN_EXPIRED|SESSION_EXPIRED/i;
+
+function watchPlatformErrors(page) {
+    const seen = { message: null };
+
+    page.on('pageerror', err => {
+        const text = String((err && err.message) || err);
+        if (!seen.message && PLATFORM_ERROR_RE.test(text)) seen.message = text.split('\n')[0];
+    });
+
+    return seen;
+}
+
+async function waitForGameReady(page, platformError, timeoutMs) {
+    const started = Date.now();
+
+    while (Date.now() - started < timeoutMs) {
+        if (platformError.message) {
+            throw new Error(`the platform refused the session — ${platformError.message}`);
+        }
+
+        const ready = await page
+            .evaluate(() => !!(window.TestFuncs && window.TestFuncs.canCloseStartScreen
+                && window.TestFuncs.canCloseStartScreen()))
+            .catch(() => false);
+
+        if (ready) return Date.now() - started;
+
+        await page.waitForTimeout(250);
+    }
+
+    if (platformError.message) {
+        throw new Error(`the platform refused the session — ${platformError.message}`);
+    }
+
+    throw new Error(
+        `game never became ready in ${Math.round(timeoutMs / 1000)}s `
+        + `(canCloseStartScreen stayed false)`
+    );
+}
+
+async function saveFailureShot(page, lang, gameName) {
+    const dir = path.join(__dirname, 'screenshots', '_failures');
+    fs.mkdirSync(dir, { recursive: true });
+    const name = `${filePrefix(gameName)}${lang}_failed.png`;
+    await page.screenshot({ path: path.join(dir, name) });
+    console.log(`   ↳ saved screenshots/_failures/${name}`);
+}
+
+async function runForLang(context, opts) {
+    const page = await context.newPage();
+
+    try {
+        await runLangOnPage(page, opts);
+    } catch (e) {
+        if (e.message !== 'CANCELLED') {
+            await saveFailureShot(page, opts.lang, opts.gameName).catch(() => {});
+        }
+        throw e;
+    } finally {
+        await page.close().catch(() => {});
+    }
+}
+
+async function runLangOnPage(page, {
     url, lang, workerId, presets, pagesCount, selectedPages, status,
     onScreenshot, enSocExtra, screenshotStartScreen, gameName, settleMs,
-    textChecks, shots, startClick
+    textChecks, shots, startClick, loadTimeoutMs, separateSessions, clientId
 }) {
-    const context = await browser.newContext();
-    const page = await context.newPage();
 
     const isEnSoc = lang === 'en-soc' && enSocExtra;
     let pagesCounts = Number.isFinite(pagesCount) ? pagesCount : 10;
     if (isEnSoc) pagesCounts += 1;
 
-    const finalUrl = buildFinalUrl(url, lang, workerId);
+    const finalUrl = buildFinalUrl(url, lang, workerId, separateSessions, clientId);
     const prefix = filePrefix(gameName);
 
     // load straight into the first preset's size so the game never lays out
     // against a viewport we are not going to screenshot
     await page.setViewportSize({ width: presets[0].width, height: presets[0].height });
 
+    const platformError = watchPlatformErrors(page);
+
     await page.goto(finalUrl);
 
     await page.waitForLoadState('domcontentloaded');
 
-    await page.waitForFunction(() => {
-        return window.TestFuncs && window.TestFuncs.canCloseStartScreen?.();
-    }, { timeout: 30000 });
+    const loadedInMs = await waitForGameReady(page, platformError, loadTimeoutMs);
+    console.log(`${lang} ready in ${(loadedInMs / 1000).toFixed(1)}s`);
 
     await page.waitForFunction(() => {
         const c = document.querySelector('canvas');
@@ -363,7 +452,6 @@ async function runForLang(browser, {
         }
     }
 
-    await context.close();
     console.log(`${lang} finished`);
 }
 
@@ -383,18 +471,15 @@ function chunkArray(arr, chunks) {
     return result;
 }
 
-function buildFinalUrl(url, lang, workerId) {
+function buildFinalUrl(url, lang, workerId, separateSessions, clientId) {
     const u = new URL(url);
 
     u.searchParams.set('lang', lang);
 
     const token = u.searchParams.get('token');
 
-    if (token) {
-        u.searchParams.set(
-            'token',
-            `${token}_w${workerId}_${lang}`
-        );
+    if (separateSessions && token && token.includes('@')) {
+        u.searchParams.set('token', token.replace('@', `${clientId}w${workerId}@`));
     }
 
     return u.toString();
@@ -402,11 +487,13 @@ function buildFinalUrl(url, lang, workerId) {
 
 async function runJob(config, status, browsers) {
 
-    const workersCount = Math.min(
-        config.workers || 1,
-        4,
-        config.langs.length
-    );
+    const workersCount = (config.separateSessions === false)
+        ? 1
+        : Math.min(
+            config.workers || 1,
+            4,
+            config.langs.length
+        );
 
     const langs = config.langs || ['en'];
 
@@ -414,6 +501,12 @@ async function runJob(config, status, browsers) {
     const settleMs = Number.isFinite(config.settleMs) ? config.settleMs : 250;
     const textChecks = config.textChecks !== false;
     const shots = [];
+    const failures = [];
+
+    const separateSessions = config.separateSessions !== false;
+    const clientId = getClientId();
+
+    const loadTimeoutMs = Number.isFinite(config.loadTimeoutMs) ? config.loadTimeoutMs : 90000;
 
     // no pre-shot click unless a run explicitly asks for one
     const startClick = (Number.isFinite(config.startClickX) && Number.isFinite(config.startClickY))
@@ -470,6 +563,8 @@ async function runJob(config, status, browsers) {
             });
             browsers.push(browser);
 
+            const context = await browser.newContext();
+
             try {
                 for (const lang of chunk) {
                     status.workers[workerId] = {
@@ -477,7 +572,7 @@ async function runJob(config, status, browsers) {
                         mode: ''
                     };
 
-                    await runForLang(browser, {
+                    const langOpts = {
                         url: config.url,
                         lang,
                         workerId,
@@ -492,6 +587,9 @@ async function runJob(config, status, browsers) {
                         textChecks,
                         shots,
                         startClick,
+                        loadTimeoutMs,
+                        separateSessions,
+                        clientId,
                         onScreenshot: () => {
                             completedTasks++;
                             if (completedTasks > totalTasks) {
@@ -502,12 +600,35 @@ async function runJob(config, status, browsers) {
                                 Math.round((completedTasks / totalTasks) * 100)
                             );
                         }
-                    });
+                    };
 
+                    let lastError = null;
+
+                    for (let attempt = 1; attempt <= ATTEMPTS_PER_LANG; attempt++) {
+                        try {
+                            await runForLang(context, langOpts);
+                            lastError = null;
+                            break;
+                        } catch (e) {
+                            if (e.message === 'CANCELLED') throw e;
+
+                            lastError = e;
+                            console.error(
+                                `✖ ${lang}: attempt ${attempt}/${ATTEMPTS_PER_LANG} failed — ${e.message}`
+                            );
+                        }
+                    }
+
+                    if (lastError) {
+                        failures.push({ lang, message: lastError.message });
+                        status.failed = failures.map(f => f.lang);
+                        console.error(`✖ ${lang}: giving up, moving on`);
+                    }
                 }
 
             } finally {
                 delete status.workers[workerId];
+                await context.close().catch(() => {});
                 await Promise.race([
                     browser.close(),
                     new Promise(res => setTimeout(res, 3000))
@@ -516,7 +637,14 @@ async function runJob(config, status, browsers) {
         })
     );
 
-    return { shots };
+    if (failures.length) {
+        console.error(
+            `\n⚠️  ${failures.length} language(s) did not complete:\n`
+            + failures.map(f => `   · ${f.lang} — ${f.message}`).join('\n')
+        );
+    }
+
+    return { shots, failures };
 }
 
 module.exports = { runJob, buildPresets };
