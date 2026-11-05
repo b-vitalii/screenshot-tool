@@ -117,10 +117,6 @@
         .lang-grid label:hover { color: var(--text); border-color: var(--accent2); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(129,140,248,0.4), 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); }
         .lang-grid label.checked { background: var(--accent-grad); color: #fff; border-color: transparent; box-shadow: inset 4px 4px 8px rgba(55,48,163,0.8), inset -4px -4px 8px rgba(129,140,248,0.6); }
         .lang-grid label input { display: none; }
-        /* `.lang-grid label` sets display:flex, and an author rule beats the
-           browser's own display:none for [hidden] — so the attribute alone did
-           nothing and unsupported languages stayed on screen. */
-        .lang-grid label[hidden] { display: none !important; }
         .lang-note { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; padding: 9px 13px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.35); color: #fdba74; }
         .lang-note::before { content: '🚫'; font-size: 13px; }
         .lang-note[hidden] { display: none !important; }
@@ -976,10 +972,11 @@
         <div class="actions">
             <button type="button" onclick="selectAll()">Select All</button>
             <button type="button" onclick="clearAll()">Clear All</button>
+            <button type="button" id="langRefreshBtn" onclick="refreshLangs()" title="Re-read the languages this game supports">↻ Refresh</button>
         </div>
         <div id="langCount">Selected languages: 0</div>
         <div id="langFilterNote" class="lang-note" hidden></div>
-        <div class="lang-grid">
+        <div class="lang-grid" id="langGrid">
             <label><input type="checkbox" class="lang" value="bg">BG</label>
             <label><input type="checkbox" class="lang" value="de">DE</label>
             <label><input type="checkbox" class="lang" value="el">EL</label>
@@ -1311,7 +1308,8 @@
     /* ===== SUPPORTED LANGUAGES (per game) ===== */
     //
 
-    let supportedLangs = null;      // null = unknown → show everything
+    const FALLBACK_LANGS = ["bg", "de", "el", "en", "en-soc", "es", "fi", "fr", "hr", "hu", "id", "it", "ja", "ko", "nl", "no", "pt", "pt-br", "ro", "ru", "sv", "th", "tr", "uk", "vi", "zh", "zh-hant"];
+    let supportedLangs = null;   // null = game not checked yet
 
     let langNoteTimer = null;
 
@@ -1333,34 +1331,47 @@
     }
 
 
-    function applyLangFilter() {
-        const boxes = [...document.querySelectorAll('input.lang')];
-        let hidden = 0;
+    function renderLangGrid(list) {
+        const grid = document.getElementById('langGrid');
+        if (!grid) return;
 
-        boxes.forEach(box => {
-            const label = box.closest('label');
-            if (!label) return;
+        const checked = new Set(
+            [...grid.querySelectorAll('input.lang:checked')].map(cb => cb.value)
+        );
+        const firstRender = !grid.dataset.rendered;
 
-            const ok = !supportedLangs || supportedLangs.includes(box.value);
-            label.hidden = !ok;
+        grid.innerHTML = list.map(code => {
+            const on = firstRender ? code === 'en' : checked.has(code);
+            return `<label${on ? ' class="checked"' : ''}>`
+                 + `<input type="checkbox" class="lang" value="${code}"${on ? ' checked' : ''}>`
+                 + `${code.toUpperCase()}</label>`;
+        }).join('');
 
-            if (!ok && box.checked) box.checked = false;
-            if (!ok) hidden++;
-        });
-
-        updateLangCount();
+        grid.dataset.rendered = '1';
     }
 
     function setSupportedLangs(list) {
         supportedLangs = (Array.isArray(list) && list.length) ? list : null;
-        applyLangFilter();
+        renderLangGrid(supportedLangs || FALLBACK_LANGS);
+        updateLangCount();
     }
 
-    async function loadLangsForGame(game) {
+    let currentGameForLangs = null;
+
+    async function refreshLangs() {
+        if (!currentGameForLangs) {
+            showToast('Pick a game first', 'info');
+            return;
+        }
+        loadLangsForGame(currentGameForLangs, true);
+    }
+
+    async function loadLangsForGame(game, force = false) {
+        currentGameForLangs = game || null;
         if (!game) { setSupportedLangs(null); return; }
 
-        // cached? apply at once
-        try {
+        // cached? apply at once, unless we were told to go and look again
+        if (!force) try {
             const res = await fetch('/languages?game=' + encodeURIComponent(game));
             const data = await res.json();
             if (data && Array.isArray(data.languages) && data.languages.length) {
@@ -1371,6 +1382,8 @@
         } catch (e) { console.error('languages load failed', e); }
 
         // not cached — go and look, without blocking the user
+        const rbtn = document.getElementById('langRefreshBtn');
+        if (rbtn) rbtn.disabled = true;
         setLangNote('Checking which languages this game supports...', 'checking');
 
         try {
@@ -1392,6 +1405,8 @@
             console.error('languages refresh failed', e);
             setSupportedLangs(null);
             setLangNote('Could not read this game\u2019s languages — showing all', 'error');
+        } finally {
+            if (rbtn) rbtn.disabled = false;
         }
     }
 
@@ -2836,13 +2851,7 @@
         document.getElementById('startBtn').disabled = !hasUrl || count === 0;
     }
 
-    // only languages this game actually supports — a hidden one must never end up
-    // selected, or the counter claims 27 while 24 are on screen
-    function pickableLangs() {
-        return [...document.querySelectorAll('input.lang')]
-            .filter(cb => !(cb.closest('label') || {}).hidden);
-    }
-    function selectAll() { pickableLangs().forEach(cb => cb.checked = true); updateLangCount(); }
+    function selectAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = true); updateLangCount(); }
     function clearAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = false); updateLangCount(); }
 
     async function start() {
@@ -3267,7 +3276,11 @@
         } catch (e) { console.error(e); }
     }
 
-    document.querySelectorAll('input.lang').forEach(cb => cb.addEventListener('change', updateLangCount));
+    // delegated: the grid is re-rendered whenever a game's language list arrives,
+    // so listeners bound to individual boxes would not survive
+    document.getElementById('langGrid').addEventListener('change', e => {
+        if (e.target.classList.contains('lang')) updateLangCount();
+    });
 
     // init game list + saved email
     renderGameList();      // fallback first, so the dropdown is never empty
