@@ -1,6 +1,6 @@
 {
   "name": "qa-tool",
-  "version": "2.5.4",
+  "version": "2.6.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -35,7 +35,14 @@
     "files": [
       "**/*",
       "!dist/**/*",
-      "!node_modules/.cache/**/*"
+      "!node_modules/.cache/**/*",
+      "!cf-access.json",
+      "!cf-session.json",
+      "!client-id.json",
+      "!games-cache.json",
+      "!screenshots/**/*",
+      "!reports/**/*",
+      "!.idea/**/*"
     ],
     "directories": {
       "output": "dist"

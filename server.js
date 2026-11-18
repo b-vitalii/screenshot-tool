@@ -2,7 +2,9 @@ const { EventEmitter } = require('events');
 const express = require('express');
 const { runJob } = require('./runner');
 const { analyze } = require('./textAudit');
-const { fetchGamesList, getCachedGames, fetchGameLanguages, getCachedLanguages } = require('./gamesList');
+const { fetchGamesList, getCachedGames, fetchGameLanguages, getCachedLanguages, buildGameUrl, CANDIDATES } = require('./gamesList');
+const cfSession = require('./cfSession');
+const { hasToken } = require('./cfAccess');
 
 const app = express();
 const path = require('path');
@@ -83,6 +85,46 @@ let gamesRefreshing = false;
 app.get('/games', (req, res) => {
     const games = getCachedGames();
     res.json({ games: games || [] });
+});
+
+// ── platform session ────────────────────────────────────────────────────────
+
+let signingIn = false;
+
+app.get('/session', (req, res) => {
+    // a service token makes the whole sign-in dance unnecessary
+    if (hasToken()) {
+        return res.json({ mode: 'token', signedIn: true, needsLogin: false });
+    }
+    const s = cfSession.status();
+    res.json({ mode: 'session', needsLogin: !s.signedIn, signingIn, ...s });
+});
+
+app.post('/session/login', async (req, res) => {
+    if (hasToken()) {
+        return res.json({ ok: true, mode: 'token', message: 'A service token is configured — no sign-in needed' });
+    }
+    if (signingIn) {
+        return res.status(409).json({ ok: false, message: 'A sign-in window is already open' });
+    }
+
+    signingIn = true;
+
+    try {
+        const game = (req.body && req.body.game) || CANDIDATES[0];
+        const email = (req.body && req.body.email) || '';
+        const result = await cfSession.signIn(buildGameUrl(game, email), m => console.log('sign-in:', m));
+        res.json({ ok: true, mode: 'session', ...result });
+    } catch (e) {
+        console.error('sign-in failed', e);
+        res.status(500).json({ ok: false, message: e.message || 'Sign-in failed' });
+    } finally {
+        signingIn = false;
+    }
+});
+
+app.post('/session/logout', (req, res) => {
+    res.json({ ok: cfSession.clearSession() });
 });
 
 // ── per-game languages ──────────────────────────────────────────────────────

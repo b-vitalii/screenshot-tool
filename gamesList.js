@@ -1,6 +1,8 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { accessHeaders, isAccessLogin, accessError } = require('./cfAccess');
+const { sessionOption } = require('./cfSession');
 
 // tried in order — the first one that loads wins
 const CANDIDATES = ['bell_bang', 'lucky_apple_x2500', '4_fortune_clovers'];
@@ -73,7 +75,7 @@ async function launchBrowser() {
 }
 
 async function readGamesFromCandidate(browser, game, email) {
-    const context = await browser.newContext();
+    const context = await browser.newContext({ extraHTTPHeaders: accessHeaders(), ...sessionOption() });
     const page = await context.newPage();
 
     try {
@@ -81,6 +83,8 @@ async function readGamesFromCandidate(browser, game, email) {
             waitUntil: 'domcontentloaded',
             timeout: NAV_TIMEOUT
         });
+
+        if (isAccessLogin(page.url())) throw new Error(accessError(page.url()));
 
         await page.waitForFunction(() => {
             const g = window.GR;
@@ -160,7 +164,7 @@ async function fetchGamesList(email) {
 const LANGS_TIMEOUT = 40000;
 
 async function readLanguagesFromPage(browser, game, email) {
-    const context = await browser.newContext();
+    const context = await browser.newContext({ extraHTTPHeaders: accessHeaders(), ...sessionOption() });
     const page = await context.newPage();
 
     try {
@@ -168,6 +172,8 @@ async function readLanguagesFromPage(browser, game, email) {
             waitUntil: 'domcontentloaded',
             timeout: NAV_TIMEOUT
         });
+
+        if (isAccessLogin(page.url())) throw new Error(accessError(page.url()));
 
         await page.waitForFunction(() => {
             const i18n = window.GR?.Options?.current_game_manifest?.i18n
@@ -247,6 +253,7 @@ async function fetchGameLanguages(game, email) {
 }
 
 module.exports = {
+    buildGameUrl,
     fetchGamesList, getCachedGames, getCacheInfo, CANDIDATES,
     fetchGameLanguages, getCachedLanguages, getCachedLanguageMap
 };

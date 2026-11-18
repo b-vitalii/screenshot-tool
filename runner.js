@@ -2,6 +2,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { collectTexts } = require('./textAudit');
+const { accessHeaders, isAccessLogin, accessError } = require('./cfAccess');
+const { sessionOption } = require('./cfSession');
 
 // ────────────────────────────────────────────────────────────────────────────
 //  Aspect-ratio presets
@@ -301,6 +303,8 @@ async function runLangOnPage(page, {
 
     await page.waitForLoadState('domcontentloaded');
 
+    if (isAccessLogin(page.url())) throw new Error(accessError(page.url()));
+
     const loadedInMs = await waitForGameReady(page, platformError, loadTimeoutMs);
     console.log(`${lang} ready in ${(loadedInMs / 1000).toFixed(1)}s`);
 
@@ -563,7 +567,7 @@ async function runJob(config, status, browsers) {
             });
             browsers.push(browser);
 
-            const context = await browser.newContext();
+            const context = await browser.newContext({ extraHTTPHeaders: accessHeaders(), ...sessionOption() });
 
             try {
                 for (const lang of chunk) {

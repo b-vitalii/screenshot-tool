@@ -120,6 +120,18 @@
         .lang-note { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; padding: 9px 13px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.35); color: #fdba74; }
         .lang-note::before { content: '🚫'; font-size: 13px; }
         .lang-note[hidden] { display: none !important; }
+        .sess-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; padding: 11px 15px; border-radius: 12px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--card); color: var(--muted); }
+        .sess-bar .sess-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+        .sess-bar.ok { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+        .sess-bar.ok .sess-dot { background: #10b981; }
+        .sess-bar.warn { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.35); color: #fdba74; }
+        .sess-bar.warn .sess-dot { background: #fb923c; animation: stPulse 1.6s infinite; }
+        .sess-bar .sess-spacer { flex: 1; }
+        .sess-bar button { padding: 7px 14px; border-radius: 9px; border: 1.5px solid transparent; cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; background: var(--accent); color: #fff; }
+        .sess-bar button:disabled { opacity: 0.6; cursor: default; }
+        body.light .sess-bar.ok { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.3); color: #047857; }
+        body.light .sess-bar.warn { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.35); color: #b45309; }
+        body.cyber .sess-bar { border-radius: 4px; font-family: var(--font); }
         .lang-note.checking { background: rgba(99,102,241,0.12); border-color: rgba(129,140,248,0.4); color: var(--accent2); }
         .lang-note.checking::before { content: '⏳'; }
         .lang-note.ok { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); color: #6ee7b7; }
@@ -929,6 +941,13 @@
     </div>
     <div class="app-sub">Automated multi-language game screenshots</div>
 
+    <div class="sess-bar" id="sessBar" hidden>
+        <span class="sess-dot"></span>
+        <span id="sessText">Checking platform session...</span>
+        <span class="sess-spacer"></span>
+        <button type="button" id="sessBtn" onclick="signInToPlatform()" hidden>Sign in</button>
+    </div>
+
     <div class="card">
         <div class="card-head">
             <span class="ch-ic">🎮</span>
@@ -1303,6 +1322,100 @@
             gamesRefreshing = false;
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
         }
+    }
+
+    /* ===== PLATFORM SESSION ===== */
+    // The platform sits behind Cloudflare Access. With a service token nothing is
+    // needed; without one the person signs in once a day and the cookies are kept.
+
+    let sessionState = null;
+
+    function renderSession() {
+        const bar = document.getElementById('sessBar');
+        const txt = document.getElementById('sessText');
+        const btn = document.getElementById('sessBtn');
+        if (!bar || !sessionState) return;
+
+        if (sessionState.mode === 'token') { bar.hidden = true; return; }
+
+        bar.hidden = false;
+
+        if (sessionState.signingIn) {
+            bar.className = 'sess-bar warn';
+            txt.textContent = 'Finish signing in in the browser window that opened...';
+            btn.hidden = true;
+            return;
+        }
+
+        if (sessionState.signedIn) {
+            bar.className = 'sess-bar ok';
+            const h = sessionState.minutesLeft != null ? Math.floor(sessionState.minutesLeft / 60) : null;
+            const m = sessionState.minutesLeft != null ? sessionState.minutesLeft % 60 : null;
+            txt.textContent = h != null
+                ? `Platform session active — ${h}h ${m}m left`
+                : 'Platform session active';
+            btn.hidden = false;
+            btn.textContent = 'Sign in again';
+            btn.disabled = false;
+        } else {
+            bar.className = 'sess-bar warn';
+            txt.textContent = 'Not signed in to the platform — screenshots cannot run';
+            btn.hidden = false;
+            btn.textContent = 'Sign in';
+            btn.disabled = false;
+        }
+    }
+
+    async function refreshSession() {
+        try {
+            const res = await fetch('/session');
+            sessionState = await res.json();
+        } catch (e) {
+            sessionState = { mode: 'session', signedIn: false, reason: 'server unreachable' };
+        }
+        renderSession();
+        return sessionState;
+    }
+
+    async function signInToPlatform() {
+        const btn = document.getElementById('sessBtn');
+        if (btn) btn.disabled = true;
+
+        sessionState = { ...(sessionState || {}), signingIn: true };
+        renderSession();
+        showToast('A browser window will open — sign in there', 'info', 6000);
+
+        try {
+            const res = await fetch('/session/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    game: selectedGame || '',
+                    email: document.getElementById('userEmail').value.trim()
+                })
+            });
+            const data = await res.json();
+
+            if (data && data.ok) {
+                showToast('Signed in — the session is saved', 'success', 4000);
+            } else {
+                showToast((data && data.message) || 'Sign-in failed', 'error', 7000);
+            }
+        } catch (e) {
+            showToast(`Sign-in failed: ${e.message}`, 'error', 7000);
+        } finally {
+            await refreshSession();
+        }
+        return sessionState && sessionState.signedIn;
+    }
+
+    // Checked BEFORE a run, not during: a session that dies on language 14 of 27
+    // throws away twenty minutes of work.
+    async function ensureSession() {
+        const s = await refreshSession();
+        if (s.mode === 'token' || s.signedIn) return true;
+        showToast('Sign in to the platform first', 'error', 5000);
+        return await signInToPlatform();
     }
 
     /* ===== SUPPORTED LANGUAGES (per game) ===== */
@@ -2855,6 +2968,8 @@
     function clearAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = false); updateLangCount(); }
 
     async function start() {
+        if (!await ensureSession()) return;
+
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressLabel').innerText = 'Starting... 0%';
         closeGallery();
@@ -3293,6 +3408,8 @@
     })();
 
     updateLangCount();
+    refreshSession();
+    setInterval(refreshSession, 60000);
     renderRatioDims();
     syncRatioBlocks();
     syncSubChecks();
