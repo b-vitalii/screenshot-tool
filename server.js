@@ -17,6 +17,26 @@ const browsers = [];
 // main.js just listens here and puts a badge on the dock.
 const events = new EventEmitter();
 
+// ── run log ─────────────────────────────────────────────────────────────────
+// Console output goes to the Electron main process, where nobody can read it.
+// Mirror it into a file beside the app so a failed run can be inspected after
+// the fact — without it, a failure is only ever a language name in the UI.
+const LOG_FILE = path.join(__dirname, 'last-run.log');
+
+function appendLog(level, args) {
+    try {
+        const line = args
+            .map(a => (typeof a === 'string' ? a : require('util').inspect(a, { depth: 3 })))
+            .join(' ');
+        fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${level} ${line}\n`);
+    } catch (e) { /* logging must never break a run */ }
+}
+
+['log', 'warn', 'error'].forEach(level => {
+    const original = console[level].bind(console);
+    console[level] = (...args) => { original(...args); appendLog(level.toUpperCase(), args); };
+});
+
 app.use(express.json());
 
 let status = {
@@ -81,6 +101,16 @@ app.get('/version', (req, res) => {
 // /games/refresh opens a game to fetch a fresh one. See gamesList.js.
 
 let gamesRefreshing = false;
+
+// The UI used to build this URL itself, with its own copy of the query string.
+// The two copies drifted: gamesList got the full launch-parameter block and the
+// UI kept sending the short one, so picking a game from the list opened a
+// different URL than pasting one. One builder now, server-side.
+app.get('/game-url', (req, res) => {
+    const game = String(req.query.game || '').trim();
+    if (!game) return res.status(400).json({ ok: false, message: 'No game given' });
+    res.json({ ok: true, game, url: buildGameUrl(game, String(req.query.email || '').trim()) });
+});
 
 app.get('/games', (req, res) => {
     const games = getCachedGames();
@@ -235,6 +265,8 @@ app.post('/run', async (req, res) => {
     status.workers = {};
     status.presets = [];
     status.failed = [];
+    status.failedDetail = [];
+    try { fs.writeFileSync(LOG_FILE, ''); } catch (e) {}
     status.issues = 0;
     status.broken = 0;
     status.suspect = 0;
@@ -276,12 +308,16 @@ app.post('/run', async (req, res) => {
 
         const failed = (result && result.failures) || [];
         status.failed = failed.map(f => f.lang);
+        status.failedDetail = failed.map(f => ({ lang: f.lang, message: f.message }));
 
         const findingsPart = status.issues
             ? `⚠️ ${status.issues} finding${status.issues === 1 ? '' : 's'}`
             : '';
+        // the reason matters more than the count: without it the UI only ever
+        // said which languages failed, never why
         const failedPart = failed.length
-            ? `❌ ${failed.length} lang${failed.length === 1 ? '' : 's'} failed: ${status.failed.join(', ')}`
+            ? `❌ ${failed.length} lang${failed.length === 1 ? '' : 's'} failed: `
+              + `${status.failed.join(', ')} — ${failed[0].message}`
             : '';
 
         status.message = [

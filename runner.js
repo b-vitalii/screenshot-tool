@@ -219,20 +219,39 @@ function filePrefix(gameName) {
 const PLATFORM_ERROR_RE = /SERVER_ERROR|INVALID_TOKEN|TOKEN_EXPIRED|SESSION_EXPIRED/i;
 
 function watchPlatformErrors(page) {
-    const seen = { message: null };
+    // `message` is the one error we act on; `all` is everything the page said,
+    // kept because the matched line alone never explains WHY a game was refused
+    const seen = { message: null, all: [] };
 
-    page.on('pageerror', err => {
-        const text = String((err && err.message) || err);
-        if (!seen.message && PLATFORM_ERROR_RE.test(text)) seen.message = text.split('\n')[0];
+    const note = (where, text) => {
+        const line = String(text || '').split('\n')[0].slice(0, 300);
+        if (!line) return;
+        if (seen.all.length < 25) seen.all.push(`${where}: ${line}`);
+        if (!seen.message && PLATFORM_ERROR_RE.test(line)) seen.message = line;
+    };
+
+    page.on('pageerror', err => note('pageerror', (err && err.message) || err));
+    page.on('console', msg => { if (msg.type() === 'error') note('console', msg.text()); });
+    page.on('requestfailed', req => {
+        const f = req.failure();
+        note('requestfailed', `${req.url().slice(0, 160)} — ${(f && f.errorText) || 'failed'}`);
+    });
+    page.on('response', res => {
+        if (res.status() >= 400) note('http', `${res.status()} ${res.url().slice(0, 160)}`);
     });
 
     return seen;
 }
 
-async function waitForGameReady(page, platformError, timeoutMs) {
+// This is the longest wait in a run — up to loadTimeoutMs, twice per language.
+// It used to ignore Cancel and report nothing, so a game that never loads looked
+// exactly like a frozen app: 0%, no error, nothing moving for minutes.
+async function waitForGameReady(page, platformError, timeoutMs, status, onWaiting) {
     const started = Date.now();
 
     while (Date.now() - started < timeoutMs) {
+        checkCancel(status);
+
         if (platformError.message) {
             throw new Error(`the platform refused the session — ${platformError.message}`);
         }
@@ -243,6 +262,8 @@ async function waitForGameReady(page, platformError, timeoutMs) {
             .catch(() => false);
 
         if (ready) return Date.now() - started;
+
+        onWaiting?.(Math.round((Date.now() - started) / 1000));
 
         await page.waitForTimeout(250);
     }
@@ -273,6 +294,10 @@ async function runForLang(context, opts) {
     } catch (e) {
         if (e.message !== 'CANCELLED') {
             await saveFailureShot(page, opts.lang, opts.gameName).catch(() => {});
+            const said = page.__pageErrors && page.__pageErrors.all;
+            if (said && said.length) {
+                console.error(`   ↳ ${opts.lang} page said:\n      ` + said.join('\n      '));
+            }
         }
         throw e;
     } finally {
@@ -298,6 +323,7 @@ async function runLangOnPage(page, {
     await page.setViewportSize({ width: presets[0].width, height: presets[0].height });
 
     const platformError = watchPlatformErrors(page);
+    page.__pageErrors = platformError;      // so the failure handler can print it
 
     await page.goto(finalUrl);
 
@@ -305,7 +331,14 @@ async function runLangOnPage(page, {
 
     if (isAccessLogin(page.url())) throw new Error(accessError(page.url()));
 
-    const loadedInMs = await waitForGameReady(page, platformError, loadTimeoutMs);
+    const loadedInMs = await waitForGameReady(
+        page, platformError, loadTimeoutMs, status,
+        secs => {
+            const w = status.workers[workerId];
+            // /cancel empties status.workers, so this can legitimately be gone
+            if (w) w.mode = `loading ${secs}s / ${Math.round(loadTimeoutMs / 1000)}s`;
+        }
+    );
     console.log(`${lang} ready in ${(loadedInMs / 1000).toFixed(1)}s`);
 
     await page.waitForFunction(() => {
@@ -608,9 +641,36 @@ async function runJob(config, status, browsers) {
 
                     let lastError = null;
 
+                    // A refusal with a tagged token leaves one question open that
+                    // only the platform can answer: would it have taken the plain
+                    // one? So the second attempt asks, instead of failing the same
+                    // way twice and leaving a human to toggle a checkbox.
+                    let droppedTag = false;
+
                     for (let attempt = 1; attempt <= ATTEMPTS_PER_LANG; attempt++) {
+                        const retryUntagged =
+                            attempt > 1
+                            && separateSessions
+                            && lastError
+                            && /platform refused the session/.test(lastError.message);
+
+                        if (retryUntagged) {
+                            droppedTag = true;
+                            console.error(`   ↳ ${lang}: retrying with an untagged token`);
+                        }
+
                         try {
-                            await runForLang(context, langOpts);
+                            await runForLang(context, {
+                                ...langOpts,
+                                separateSessions: retryUntagged ? false : separateSessions
+                            });
+                            if (droppedTag) {
+                                console.error(
+                                    `   ↳ ${lang}: the untagged token was accepted — `
+                                    + `${config.gameName} refuses the worker tag. Turn OFF `
+                                    + `"Separate session per worker" for it (that run uses 1 worker).`
+                                );
+                            }
                             lastError = null;
                             break;
                         } catch (e) {
@@ -618,12 +678,24 @@ async function runJob(config, status, browsers) {
 
                             lastError = e;
                             console.error(
-                                `✖ ${lang}: attempt ${attempt}/${ATTEMPTS_PER_LANG} failed — ${e.message}`
+                                `✖ ${lang}: attempt ${attempt}/${ATTEMPTS_PER_LANG}`
+                                + `${retryUntagged ? ' (untagged)' : ''} failed — ${e.message}`
                             );
                         }
                     }
 
                     if (lastError) {
+                        // A refusal says the platform would not open THIS session,
+                        // not why. So state which token shapes were actually tried
+                        // — guessing the cause here is how the bell_bang hunt went
+                        // wrong three times.
+                        if (/platform refused the session/.test(lastError.message)) {
+                            const tried = droppedTag
+                                ? 'tagged and untagged tokens both refused — not the worker tag'
+                                : `token used: ${separateSessions ? 'tagged per worker' : 'untagged'}`;
+                            lastError = new Error(`${lastError.message} (${tried})`);
+                        }
+
                         failures.push({ lang, message: lastError.message });
                         status.failed = failures.map(f => f.lang);
                         console.error(`✖ ${lang}: giving up, moving on`);

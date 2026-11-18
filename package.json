@@ -1,6 +1,6 @@
 {
   "name": "qa-tool",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -39,6 +39,7 @@
       "!cf-access.json",
       "!cf-session.json",
       "!client-id.json",
+      "!last-run.log",
       "!games-cache.json",
       "!screenshots/**/*",
       "!reports/**/*",

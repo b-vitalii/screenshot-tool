@@ -14,16 +14,92 @@ const CACHE_FILE = path.join(__dirname, 'games-cache.json');
 const NAV_TIMEOUT = 30000;   // page.goto
 const GAMES_TIMEOUT = 30000; // GR.Options.available_games showing up
 
+// The short URL we used to build is NOT what the playground opens. The
+// playground appends the whole dev-flag block, and golden_teapot answers
+// SERVER_ERROR without it while the same URL with the block attached runs
+// fine — same game, same plain token. So build the launch URL the way the
+// playground does, flag for flag.
+//
+// Most of these are deliberately empty: an empty flag means "platform
+// default", which is exactly what the playground sends. The four that carry
+// a 0 are the ones that help a screenshot run — no idle timeout, no reality
+// check, no artificial minimum spin time.
+const LAUNCH_PARAMS = {
+    allow_http_debug: '',
+    dev_min_spin_time: '0',
+    dev_min_gs_time: '0',
+    reality_check_interval: '0',
+    dev_session_idle_timeout: '0',
+    quickspin: '',
+    dev_quick_spin_default_value: '',
+    dev_show_game_name: '',
+    dev_allow_autoplay: '',
+    dev_disable_autoplay_in_bonus_game: '',
+    dev_show_autoplay_menu: '',
+    dev_show_autoplay_total_bet_confirmation: '',
+    dev_autoplay_menu_loss_limit: '',
+    dev_autoplay_menu_single_win_limit: '',
+    dev_autoplay_menu_bet_change: '',
+    dev_autoplay_menu_rounds: '',
+    dev_show_net_position: '',
+    dev_show_winnings: '',
+    dev_disable_buy_bonus: '',
+    dev_allow_gamble: '',
+    dev_authenticity_enabled: '',
+    dev_show_rtp_in_common_rules: '',
+    dev_show_min_max_bet_in_common_rules: '',
+    dev_show_button_explanations_in_common_rules: '',
+    dev_show_max_exposure_in_common_rules: '',
+    dev_show_max_exposure_frequency_in_common_rules: '',
+    dev_show_rtp_in_game: '',
+    dev_show_persistence_description: '',
+    dev_show_time: '',
+    dev_show_session_time: '',
+    dev_show_paytable_on_start: '',
+    dev_allow_paytable_during_spin: '',
+    dev_show_demo_mode_in_game: '',
+    dev_show_lower_bet_popup: '',
+    dev_glory_to_ukraine: '',
+    dev_show_compliance_version: '',
+    dev_show_additional_math_info: '',
+    dev_show_math_changed_error: '',
+    dev_show_win_up_to_info: '',
+    dev_allow_shop: '',
+    dev_disable_spin_on_play: '',
+    dev_disable_reel_skipping: '',
+    dev_disable_gold_bet: '',
+    dev_disable_line_switching: '',
+    dev_generate_pt_details: '0',
+    dev_allow_freebet_deferred_use: '',
+    dev_allow_freebet_rejection: '',
+    dev_show_balance_switch_popup_after_freebet: '',
+    dev_show_replay_button: '',
+    dev_game_client_asset_mode: ''
+};
+
 function buildGameUrl(game, email) {
     const mail = (email && String(email).trim()) || DEFAULT_EMAIL;
     const ts = Math.floor(Date.now() / 1000);
-    const token = encodeURIComponent(`EUR:${game}-${mail}+seamless`);
 
-    return `https://betman.hraymo.team.goreel.tech/betlabel-hraymo/game/`
-        + `?profile=default&token=${token}&game=${game}&wl=prod&ts=${ts}`
-        + `&title=${game}&lang=en&sound=&mobile=1&incognito=`
-        + `&exit_url=%2F%2Fbetlabel.hraymo.team.goreel.tech`
-        + `&cashier_url=%2F%2Fbetlabel.hraymo.team.goreel.tech%2Fcashier%2F`;
+    const u = new URL('https://betman.hraymo.team.goreel.tech/betlabel-hraymo/game/');
+    const q = u.searchParams;
+
+    q.set('profile', 'default');
+    q.set('token', `EUR:${game}-${mail}+seamless`);
+    q.set('game', game);
+    q.set('wl', 'prod');
+    q.set('ts', String(ts));
+    q.set('title', game);
+    q.set('lang', 'en');
+    q.set('sound', '');
+    q.set('mobile', '1');
+    q.set('incognito', '');
+    q.set('exit_url', '//betlabel.hraymo.team.goreel.tech');
+    q.set('cashier_url', '//betlabel.hraymo.team.goreel.tech/cashier/');
+
+    for (const [k, v] of Object.entries(LAUNCH_PARAMS)) q.set(k, v);
+
+    return u.toString();
 }
 
 // ── cache ───────────────────────────────────────────────────────────────────

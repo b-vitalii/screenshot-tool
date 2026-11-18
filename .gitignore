@@ -6,3 +6,4 @@ games-cache.json
 client-id.json
 cf-access.json
 cf-session.json
+last-run.log

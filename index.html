@@ -28,6 +28,10 @@
         .theme-switch { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
         .theme-switch button { padding: 10px 22px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font); }
         .theme-switch button:hover { color: var(--text); }
+        /* outside casino the two halves are just an emoji and a word on one line */
+        .theme-switch .chip-face { font-style: normal; }
+        .theme-switch .chip-name { font-weight: inherit; margin-left: 6px; }
+        body.casino .theme-switch .chip-name { margin-left: 0; }
         .theme-switch button.active { background: var(--accent); border-color: var(--accent2); color: #fff; }
 
         html.theme-reveal::view-transition-old(root),
@@ -103,6 +107,892 @@
         @keyframes bgSpin { to { transform: rotate(360deg); } }
         body.cyber .btn-games { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; color: #22d3ee; box-shadow: none; border-radius: 6px; }
         body.cyber .btn-games:hover:not(:disabled) { border-color: #06b6d4; box-shadow: 0 0 10px rgba(6,182,212,0.25); }
+        /* ═══════════ CASINO ═══════════ */
+        body.casino {
+            --bg: #1a0b11; --card: #2b1018; --card2: #230d14; --input-bg: #140710;
+            --text: #ffe9b5; --muted: #b58e67; --accent: #d4af37; --accent2: #f7dd82;
+            --accent-grad: linear-gradient(145deg, #f7dd82, #c9a227);
+            --lbl: #f7dd82; --shadow-dark: #0b0408; --shadow-light: #351520;
+            --border: #5e2232; --status: #f7dd82;
+            background:
+                radial-gradient(ellipse at 50% -10%, rgba(212,175,55,0.16), transparent 60%),
+                repeating-linear-gradient(135deg, #1a0b11 0 14px, #1d0d13 14px 28px);
+        }
+        /* neon: the glow has to come from text-shadow, not a gradient fill —
+           a clipped gradient cannot spill light past the glyph edges */
+        body.casino h1 {
+            font-family: Georgia, 'Times New Roman', serif; letter-spacing: 1px;
+            color: #fff6d8; -webkit-text-fill-color: #fff6d8; background: none;
+            text-shadow:
+                0 0 4px #fff3c4, 0 0 11px #f7dd82, 0 0 22px #d4af37,
+                0 0 42px rgba(212,175,55,0.75), 0 0 72px rgba(180,18,27,0.5);
+            animation: neonHum 4.2s ease-in-out infinite;
+        }
+        /* the tube never sits perfectly still */
+        @keyframes neonHum {
+            0%, 100% { opacity: 1; }
+            47%      { opacity: 0.93; }
+            52%      { opacity: 1; }
+        }
+        /* and one letter has a bad contact */
+        body.casino h1 .flick { animation: letterFlick 6.5s steps(1, end) infinite; }
+        @keyframes letterFlick {
+            0%, 70%, 72.5%, 74.5%, 77%, 100% { opacity: 1; text-shadow: inherit; }
+            71%, 73.5%, 76%                  { opacity: 0.25; text-shadow: 0 0 3px rgba(247,221,130,0.4); }
+        }
+        body.casino .app-sub { color: #c79a6b; }
+        body.casino .card { border: 2px solid #6b2838; box-shadow: 0 0 0 1px rgba(247,221,130,0.12), 0 18px 40px rgba(0,0,0,0.5); }
+
+        /* chasing marquee bulbs around every card */
+        /* isolate + z-index:-1 puts the bulbs above the card's own background but
+           below its content, WITHOUT turning every child into a stacking context —
+           that is what trapped the game dropdown under the URL field below it */
+        body.casino .card { position: relative; isolation: isolate; }
+        /* isolate makes each card its own stacking context, so a menu overflowing
+           one card was covered by the NEXT card. Lift the card while it is open. */
+        body.casino .card:has(.game-dd.open), body.casino .card:has(.dd.open) { z-index: 60; }
+
+        /* the menus themselves still wore the dark theme's blue-grey */
+        body.casino .game-menu, body.casino .dd-menu {
+            background: linear-gradient(170deg, #3a1322, #26080f);
+            border: 1px solid #8a6a1c;
+            box-shadow: 0 18px 44px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(247,221,130,0.12);
+        }
+        body.casino .game-opt, body.casino .dd-opt { color: #e8cfa0; }
+        body.casino .game-opt:hover, body.casino .dd-opt:hover { background: rgba(247,221,130,0.12); color: #fff; }
+        body.casino .game-opt.sel, body.casino .dd-opt.sel {
+            background: linear-gradient(145deg, #d4af37, #9a7b1b); color: #2a0a12;
+        }
+        body.casino .game-opt .tag { background: rgba(247,221,130,0.18); color: #f7dd82; }
+        body.casino .card::before {
+            content: ''; position: absolute; inset: -10px; border-radius: 22px; pointer-events: none; z-index: -1;
+            background:
+                radial-gradient(circle, #f7dd82 2.4px, transparent 3px) repeat-x 0 0 / 24px 6px,
+                radial-gradient(circle, #f7dd82 2.4px, transparent 3px) repeat-x 0 100% / 24px 6px,
+                radial-gradient(circle, #f7dd82 2.4px, transparent 3px) repeat-y 0 0 / 6px 24px,
+                radial-gradient(circle, #f7dd82 2.4px, transparent 3px) repeat-y 100% 0 / 6px 24px;
+            filter: drop-shadow(0 0 4px rgba(247,221,130,0.8));
+            animation: marqueeChase 1.1s linear infinite, marqueeFlicker 9s steps(1, end) infinite;
+            opacity: 0.85;
+        }
+        /* a real marquee has a loose contact somewhere: the chase stays perfect,
+           and a second animation dips the whole string for a few frames at odd
+           intervals. Every card gets its own offset so they never blink together. */
+        @keyframes marqueeFlicker {
+            0%, 56%, 59.4%, 61%, 97%   { filter: drop-shadow(0 0 4px rgba(247,221,130,0.8)); opacity: 0.85; }
+            57%, 60%                   { filter: drop-shadow(0 0 1px rgba(247,221,130,0.3)); opacity: 0.34; }
+            97.6%                      { filter: drop-shadow(0 0 1px rgba(247,221,130,0.3)); opacity: 0.4; }
+        }
+        body.casino .card:nth-of-type(2)::before { animation-delay: 0s, -2.3s; }
+        body.casino .card:nth-of-type(3)::before { animation-delay: 0s, -5.1s; }
+        body.casino .card:nth-of-type(4)::before { animation-delay: 0s, -7.4s; }
+        body.casino .card:nth-of-type(5)::before { animation-delay: 0s, -3.8s; }
+        /* one dead bulb, parked at a spot JS moves around every few seconds */
+        body.casino .card::after {
+            content: ''; position: absolute; top: -10px; left: var(--dead-x, 30%);
+            width: 7px; height: 7px; border-radius: 50%; z-index: -1; pointer-events: none;
+            background: #2a1016; box-shadow: 0 0 3px 2px #1a0b11;
+            opacity: var(--dead-on, 0); transition: opacity 0.25s;
+        }
+        /* each layer keeps its own edge: shift only along that edge, or the bottom
+           row and right column snap back to the top-left and cross the card */
+        @keyframes marqueeChase { to { background-position: 24px 0, -24px 100%, 0 -24px, 100% 24px; } }
+
+        /* everything sways a little, each at its own pace */
+        @keyframes casinoBob { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-3px) rotate(-0.25deg); } }
+        body.casino .card { animation: casinoBob 3.4s ease-in-out infinite; }
+        body.casino .card:nth-of-type(2) { animation-duration: 3.9s; animation-delay: -0.7s; }
+        body.casino .card:nth-of-type(3) { animation-duration: 3.1s; animation-delay: -1.4s; }
+        body.casino .card:nth-of-type(4) { animation-duration: 4.2s; animation-delay: -2.1s; }
+        body.casino .card:nth-of-type(5) { animation-duration: 3.6s; animation-delay: -0.3s; }
+        body.casino .lang-grid label { animation: casinoBob 2.6s ease-in-out infinite; }
+        body.casino .lang-grid label:nth-child(3n)   { animation-delay: -0.5s; animation-duration: 3.0s; }
+        body.casino .lang-grid label:nth-child(3n+1) { animation-delay: -1.1s; animation-duration: 2.3s; }
+        /* ── the game selector as the cabinet's display board ─────────── */
+        body.casino .game-trigger {
+            background: linear-gradient(180deg, #0c0409, #16070d 45%, #0c0409);
+            border: 2px solid #8a6a1c; border-radius: 10px;
+            box-shadow:
+                inset 0 0 24px rgba(0,0,0,0.9),
+                inset 0 1px 0 rgba(247,221,130,0.18),
+                0 0 0 1px rgba(0,0,0,0.6);
+            font-family: Georgia, 'Times New Roman', serif; letter-spacing: 1.5px;
+            color: #f7dd82; text-shadow: 0 0 8px rgba(247,221,130,0.55);
+            text-transform: uppercase; overflow: hidden;
+        }
+        /* glass: a highlight across the top half and faint scanlines */
+        body.casino .game-trigger::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.09), transparent 46%),
+                repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.25) 2px 3px);
+        }
+        body.casino .game-trigger > * { position: relative; z-index: 1; }
+        body.casino .game-trigger .gt-val { font-weight: 700; }
+        body.casino .game-trigger .gt-val.placeholder {
+            color: #7a5a2a; text-shadow: none; letter-spacing: 2px;
+        }
+        /* the board flickers once as a new title lands on it */
+        body.casino .game-trigger.swap .gt-val { animation: boardSwap 0.5s steps(1, end) both; }
+        @keyframes boardSwap {
+            0%, 18%, 34%  { opacity: 0.15; }
+            10%, 26%, 100% { opacity: 1; }
+        }
+        body.casino .game-trigger::after { color: #f7dd82; text-shadow: 0 0 8px rgba(247,221,130,0.6); }
+        body.casino .game-dd.open .game-trigger {
+            box-shadow:
+                inset 0 0 24px rgba(0,0,0,0.9),
+                inset 0 1px 0 rgba(247,221,130,0.18),
+                0 0 0 2px #f7dd82, 0 0 20px rgba(247,221,130,0.4);
+        }
+
+        /* the refresh button becomes a gold chip that riffles */
+        body.casino .btn-games {
+            border-radius: 50%; border: 2px solid #8a6a1c;
+            background: radial-gradient(circle at 36% 30%, #f7dd82, #c9a227 62%, #8a6a1c);
+            color: #2b1018;
+            box-shadow:
+                inset 0 0 0 4px rgba(255,255,255,0.18),
+                inset 0 0 0 5px rgba(0,0,0,0.22),
+                0 5px 12px rgba(0,0,0,0.6);
+        }
+        body.casino .btn-games:hover:not(:disabled) {
+            border-color: #f7dd82; transform: translateY(-2px);
+            box-shadow:
+                inset 0 0 0 4px rgba(255,255,255,0.25),
+                inset 0 0 0 5px rgba(0,0,0,0.22),
+                0 0 18px rgba(247,221,130,0.55), 0 8px 16px rgba(0,0,0,0.65);
+        }
+        body.casino .btn-games .bg-ic { animation: none; }
+        body.casino .btn-games.shuffling .bg-ic { animation: chipRiffle 0.75s ease-in-out infinite; }
+        @keyframes chipRiffle {
+            0%   { transform: rotate(0deg) scale(1); }
+            25%  { transform: rotate(-150deg) scale(0.86); }
+            60%  { transform: rotate(-200deg) scale(1.1); }
+            100% { transform: rotate(-360deg) scale(1); }
+        }
+
+        /* ── powering the sign up when the theme comes on ─────────────── */
+        /* A custom property has to be registered or it cannot be interpolated —
+           without this the sweep would jump from 0 to 360 in one frame. */
+        @property --sweep {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+        }
+        /* the bulbs light up around the perimeter, one card after another */
+        body.casino.power-on .card::before {
+            -webkit-mask: conic-gradient(from -90deg, #000 0deg, #000 var(--sweep), transparent var(--sweep));
+                    mask: conic-gradient(from -90deg, #000 0deg, #000 var(--sweep), transparent var(--sweep));
+            animation: marqueeChase 1.1s linear infinite, bulbSweep 0.85s ease-out both;
+        }
+        @keyframes bulbSweep { from { --sweep: 0deg; } to { --sweep: 360deg; } }
+        body.casino.power-on .card:nth-of-type(2)::before { animation-delay: 0s, 0.09s; }
+        body.casino.power-on .card:nth-of-type(3)::before { animation-delay: 0s, 0.18s; }
+        body.casino.power-on .card:nth-of-type(4)::before { animation-delay: 0s, 0.27s; }
+        body.casino.power-on .card:nth-of-type(5)::before { animation-delay: 0s, 0.36s; }
+
+        /* then the tube strikes: dead, a few false starts, then steady */
+        body.casino.power-on h1 { animation: neonStrike 1.2s steps(1, end) both; }
+        @keyframes neonStrike {
+            0%, 44%   { opacity: 0.12; text-shadow: none; }
+            46%, 50%  { opacity: 1; text-shadow: 0 0 4px #fff3c4, 0 0 16px #f7dd82; }
+            48%, 53%  { opacity: 0.15; text-shadow: none; }
+            56%       { opacity: 1; text-shadow: 0 0 4px #fff3c4, 0 0 18px #f7dd82, 0 0 34px #d4af37; }
+            60%       { opacity: 0.3;  text-shadow: 0 0 3px rgba(247,221,130,0.4); }
+            64%, 100% { opacity: 1;
+                        text-shadow: 0 0 4px #fff3c4, 0 0 11px #f7dd82, 0 0 22px #d4af37,
+                                     0 0 42px rgba(212,175,55,0.75), 0 0 72px rgba(180,18,27,0.5); }
+        }
+        /* the house sign waits its turn and comes up last */
+        body.casino.power-on .house-sign i { animation: houseChase 5.4s linear infinite 0.95s; opacity: 0; }
+        body.casino.power-on .house-sign { animation: houseFadeIn 0.5s ease-out 0.95s both; }
+        @keyframes houseFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body.casino.power-on .house-sign i { opacity: 1; }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.casino.power-on .card::before,
+            body.casino.power-on h1,
+            body.casino.power-on .house-sign,
+            body.casino .house-sign i { animation: none; }
+        }
+
+        /* ── the house sign: the venue's name above the machine's ─────── */
+        .house-sign { display: none; }
+        body.casino .house-sign {
+            display: flex; justify-content: center; gap: 7px; margin: 0 0 14px;
+        }
+        body.casino .house-sign i {
+            font-style: normal; font-family: Georgia, 'Times New Roman', serif;
+            font-size: 19px; font-weight: 700; letter-spacing: 1px;
+            width: 34px; height: 40px; display: grid; place-items: center;
+            border-radius: 6px; position: relative;
+            background: linear-gradient(170deg, #3a1322, #1d070d);
+            border: 1.5px solid #8a6a1c;
+            color: #6b4a1e;                                   /* unlit filament */
+            text-shadow: none;
+            animation: houseChase 5.4s linear infinite;
+        }
+        /* each letter takes its turn, then the whole word answers at the end */
+        body.casino .house-sign i:nth-child(1) { animation-delay: 0s; }
+        body.casino .house-sign i:nth-child(2) { animation-delay: 0.16s; }
+        body.casino .house-sign i:nth-child(3) { animation-delay: 0.32s; }
+        body.casino .house-sign i:nth-child(4) { animation-delay: 0.48s; }
+        body.casino .house-sign i:nth-child(5) { animation-delay: 0.64s; }
+        body.casino .house-sign i:nth-child(6) { animation-delay: 0.80s; }
+        @keyframes houseChase {
+            0%, 14%  { color: #6b4a1e; text-shadow: none; border-color: #8a6a1c;
+                       box-shadow: inset 0 0 10px rgba(0,0,0,0.6); }
+            4%, 10%  { color: #fff6d8; border-color: #f7dd82;
+                       text-shadow: 0 0 6px #f7dd82, 0 0 16px #d4af37;
+                       box-shadow: inset 0 0 12px rgba(247,221,130,0.35), 0 0 16px rgba(247,221,130,0.45); }
+            /* the full-word flash, after the chase has gone round */
+            72%, 76%, 80% { color: #fff6d8; border-color: #f7dd82;
+                       text-shadow: 0 0 7px #f7dd82, 0 0 20px #d4af37;
+                       box-shadow: inset 0 0 12px rgba(247,221,130,0.4), 0 0 20px rgba(247,221,130,0.55); }
+            74%, 78%, 100% { color: #6b4a1e; text-shadow: none; border-color: #8a6a1c;
+                       box-shadow: inset 0 0 10px rgba(0,0,0,0.6); }
+        }
+        /* the bulb row along the top of each letterbox */
+        body.casino .house-sign i::before {
+            content: ''; position: absolute; left: 4px; right: 4px; top: 3px; height: 3px;
+            background: radial-gradient(circle, currentColor 1.1px, transparent 1.4px) repeat-x 0 0 / 7px 3px;
+            opacity: 0.85;
+        }
+
+        /* ── the theme switch becomes a row of chips ──────────────────── */
+        body.casino .theme-switch { gap: 18px; align-items: flex-start; }
+        body.casino .theme-switch button {
+            background: none; border: 0; padding: 0; box-shadow: none;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            animation: casinoBob 3.2s ease-in-out infinite;
+        }
+        body.casino .theme-switch .chip-face {
+            width: 62px; height: 62px; border-radius: 50%; position: relative;
+            display: grid; place-items: center; font-size: 23px; font-style: normal;
+            background: radial-gradient(circle at 36% 30%, var(--chip-hi, #d6333d), var(--chip, #8f0f17));
+            box-shadow:
+                inset 0 0 0 5px rgba(255,255,255,0.16),
+                inset 0 0 0 6px rgba(0,0,0,0.3),
+                0 6px 14px rgba(0,0,0,0.6);
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        /* the lighter edge spots every real chip has, masked into a ring */
+        body.casino .theme-switch .chip-face::before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: repeating-conic-gradient(from 11deg, #f6efe2 0deg 15deg, transparent 15deg 45deg);
+            -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%, #000 85%, transparent 86%);
+                    mask: radial-gradient(circle, transparent 60%, #000 61%, #000 85%, transparent 86%);
+            opacity: 0.85;
+        }
+        body.casino #th-light  { --chip: #b9ad96; --chip-hi: #efe7d4; }
+        body.casino #th-dark   { --chip: #10131f; --chip-hi: #39405c; }
+        body.casino #th-cyber  { --chip: #0c5c42; --chip-hi: #1f9c6f; }
+        body.casino #th-casino { --chip: #8f0f17; --chip-hi: #d6333d; }
+        body.casino .theme-switch .chip-name {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.6px; color: #c79a6b;
+            transition: color 0.18s;
+        }
+        body.casino .theme-switch button:hover .chip-face { transform: translateY(-3px); }
+        body.casino .theme-switch button.active .chip-face {
+            transform: translateY(-5px);
+            box-shadow:
+                inset 0 0 0 5px rgba(255,255,255,0.22),
+                inset 0 0 0 6px rgba(0,0,0,0.3),
+                0 0 0 3px #f7dd82, 0 0 22px rgba(247,221,130,0.65), 0 10px 20px rgba(0,0,0,0.7);
+        }
+        body.casino .theme-switch button.active .chip-name { color: #f7dd82; }
+        /* the stock active style must not paint a box behind a chip */
+        body.casino .theme-switch button.active { background: none; border-color: transparent; }
+        body.casino .theme-switch button:nth-child(2) { animation-delay: -0.8s; }
+        body.casino .theme-switch button:nth-child(3) { animation-delay: -1.6s; }
+        body.casino .theme-switch button:nth-child(4) { animation-delay: -2.4s; }
+
+        body.casino .icon-badge, body.casino .card-head .ch-ic { box-shadow: 0 0 18px rgba(247,221,130,0.55), inset 0 1px 0 rgba(255,255,255,0.4); }
+        body.casino .lang-grid label.checked { box-shadow: inset 0 0 0 2px #7a5a12, 0 0 14px rgba(247,221,130,0.5); color: #2b1018; }
+        body.casino .sub-label, body.casino .card-head .ch-title { color: #f7dd82; }
+
+        /* the Start button becomes the machine's lever: a shaft that sticks out
+           above the button and swings down when you press it. overflow must be
+           visible or the base rule clips the whole arm away. */
+        .lever { display: none; }
+        body.casino #startBtn {
+            background: linear-gradient(145deg, #f7dd82, #c9a227); color: #2b1018; text-shadow: none;
+            padding-right: 76px; position: relative; overflow: visible; margin-top: 58px;
+        }
+        body.casino .lever {
+            display: block; position: absolute; right: 30px; bottom: 50%;
+            width: 9px; height: 62px; border-radius: 5px; transform-origin: 50% 100%;
+            background: linear-gradient(90deg, #6b5410, #f7dd82 45%, #8a6a1c);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            transform: rotate(0deg); transition: transform 0.22s cubic-bezier(0.3, 1.5, 0.5, 1);
+            pointer-events: none;
+        }
+        /* the ball on top */
+        body.casino .lever::before {
+            content: ''; position: absolute; top: -19px; left: 50%; transform: translateX(-50%);
+            width: 28px; height: 28px; border-radius: 50%;
+            background: radial-gradient(circle at 34% 28%, #ff9a9a, #c2121b 62%, #6d0309);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 -3px 6px rgba(0,0,0,0.45);
+        }
+        /* the pivot plate it turns on */
+        body.casino .lever::after {
+            content: ''; position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
+            width: 24px; height: 24px; border-radius: 50%;
+            background: radial-gradient(circle at 38% 32%, #3a1322, #15060a);
+            box-shadow: inset 0 0 0 2px #8a6a1c, 0 3px 8px rgba(0,0,0,0.6);
+        }
+        body.casino #startBtn:hover:not(:disabled) .lever { transform: rotate(17deg); }
+        body.casino #startBtn.pulling .lever { transform: rotate(118deg); }
+        body.casino #startBtn:disabled .lever { opacity: 0.45; transform: rotate(0deg); }
+
+        /* ── ratio presets become table plaques ───────────────────────── */
+        body.casino .ratio-grid .ratio-opt {
+            background: linear-gradient(165deg, #3a1322, #1d070d);
+            border: 2px solid #8a6a1c; color: #e8cfa0; border-radius: 9px;
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.18), 0 5px 14px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        /* a suit pip in the corner, cycling like a deck */
+        body.casino .ratio-grid .ratio-opt::before {
+            content: '\2660'; position: absolute; top: 5px; left: 7px;
+            font-size: 10px; color: rgba(247,221,130,0.45); line-height: 1;
+        }
+        body.casino .ratio-grid .ratio-opt:nth-child(4n+2)::before { content: '\2665'; }
+        body.casino .ratio-grid .ratio-opt:nth-child(4n+3)::before { content: '\2666'; }
+        body.casino .ratio-grid .ratio-opt:nth-child(4n)::before   { content: '\2663'; }
+        body.casino .ratio-grid .ratio-opt:hover {
+            color: #fff; border-color: #f7dd82; transform: translateY(-3px) rotate(-1.4deg);
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.35), 0 10px 22px rgba(0,0,0,0.6);
+        }
+        body.casino .ratio-grid .ratio-opt.checked {
+            background: linear-gradient(160deg, #f7dd82, #c9a227); color: #2b1018; border-color: #f7dd82;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 0 20px rgba(247,221,130,0.55), 0 6px 16px rgba(0,0,0,0.55);
+        }
+        body.casino .ratio-grid .ratio-opt.checked::before { color: rgba(43,16,24,0.5); }
+        body.casino .ratio-grid .ratio-opt.is-custom { border-style: dashed; }
+        body.casino .ratio-grid .ratio-opt.is-custom.checked { border-style: solid; }
+        body.casino .ratio-custom input { background: #1d070d; color: #f7dd82; border: 1px solid #8a6a1c; }
+        body.casino .ratio-custom button { background: linear-gradient(145deg, #3a1322, #1d070d); color: #f7dd82; border: 1px solid #8a6a1c; }
+        body.casino .ratio-custom .rc-preview { color: #f7dd82; }
+
+        /* ── Cancel and the gallery row: buttons on green felt ─────────── */
+        body.casino #cancelBtn {
+            background: linear-gradient(145deg, #b4121b, #6d0309); color: #f7dd82;
+            border: 2px solid #8a6a1c; box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+        body.casino #cancelBtn:hover { border-color: #f7dd82; box-shadow: 0 9px 24px rgba(180,18,27,0.5); }
+        body.casino .btn-row .btn-sm {
+            background: linear-gradient(165deg, #14532d, #06230f); color: #f0e0b0;
+            border: 2px solid #8a6a1c; border-radius: 11px;
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.16), 0 5px 14px rgba(0,0,0,0.5);
+            transition: all 0.16s;
+        }
+        body.casino .btn-row .btn-sm:hover {
+            color: #fff; border-color: #f7dd82; transform: translateY(-2px);
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.35), 0 9px 20px rgba(0,0,0,0.6);
+        }
+        body.casino .btn-row .btn-sm:active { transform: translateY(1px); }
+        body.casino .btn-row .btn-sm.danger {
+            background: linear-gradient(165deg, #6d0309, #2c0205);
+        }
+
+        /* language chips land like reels: each one blurs through a few codes
+           before stopping, left to right */
+        /* a real reel: a column of codes scrolls up behind a window and eases to a
+           stop. Text that merely flickers does not read as a slot machine. */
+        body.casino .lang-grid label.reeling {
+            animation: none; overflow: hidden; position: relative;
+            background: linear-gradient(180deg, #120509, #2a0f17 18%, #2a0f17 82%, #120509);
+            border-color: #8a6a1c; color: #f7dd82;
+            box-shadow: inset 0 10px 14px -8px #000, inset 0 -10px 14px -8px #000, 0 0 12px rgba(247,221,130,0.35);
+        }
+        /* absolute, or the strip's full height becomes the chip's height and the
+           whole Languages card balloons to a dozen screens tall */
+        body.casino .lang-grid label.reeling .reel-strip {
+            position: absolute; top: 0; left: 0; right: 0;
+            display: flex; flex-direction: column; align-items: center;
+            will-change: transform;
+        }
+        body.casino .lang-grid label.reeling .reel-strip b {
+            font-weight: 700; line-height: 1; padding: 0; opacity: 0.85;
+        }
+        /* the glass: a highlight band across the whole grid while it spins */
+        body.casino .lang-grid.spinning { position: relative; }
+        body.casino .lang-grid.spinning::after {
+            content: ''; position: absolute; inset: -6px; pointer-events: none; border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%, transparent 65%, rgba(0,0,0,0.35));
+            box-shadow: inset 0 0 26px rgba(247,221,130,0.25);
+        }
+        body.casino .lang-grid label.landed {
+            animation: reelLand 0.46s cubic-bezier(0.2, 1.6, 0.35, 1);
+            box-shadow: 0 0 18px rgba(247,221,130,0.75);
+        }
+        @keyframes reelLand {
+            0%   { transform: translateY(-9px) scaleY(1.22); }
+            55%  { transform: translateY(3px) scaleY(0.92); }
+            100% { transform: translateY(0) scaleY(1); }
+        }
+
+        /* ── toggles become casino chips ─────────────────────────────── */
+        body.casino .toggle-field .switch {
+            background: repeating-conic-gradient(#2b2b2b 0 18deg, #111 18deg 36deg);
+            border: 2px solid #d9d9d9; border-radius: 50%;
+            width: 34px; height: 34px; position: relative; transition: transform 0.35s, background 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.55), inset 0 0 0 4px rgba(255,255,255,0.08);
+        }
+        body.casino .toggle-field .switch::before,
+        body.casino .toggle-field .switch::after { display: none; }
+        body.casino .toggle-field.on .switch {
+            background: repeating-conic-gradient(#b4121b 0 18deg, #7d0a11 18deg 36deg);
+            border-color: #f7dd82;
+            transform: rotate(180deg) scale(1.06);
+            box-shadow: 0 0 16px rgba(247,221,130,0.65), inset 0 0 0 4px rgba(247,221,130,0.25);
+        }
+        body.casino .toggle-field.on { border-color: #8a6a1c; }
+
+        /* ── orientation: green felt, each pick flips like a dealt card ── */
+        body.casino .segmented {
+            background: linear-gradient(180deg, #0f3d25, #0a2a1a);
+            border: 2px solid #6b2838; box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+        }
+        body.casino .seg { position: relative; color: #cbb98a; }
+        body.casino .seg::after {
+            content: '♠'; position: absolute; right: 9px; top: 6px; font-size: 13px;
+            color: rgba(247,221,130,0.25); transition: all 0.25s;
+        }
+        body.casino .seg:nth-child(2)::after { content: '♥'; color: rgba(220,60,70,0.3); }
+        body.casino .seg:nth-child(3)::after { content: '♦'; color: rgba(220,60,70,0.3); }
+        body.casino .seg.active {
+            background: linear-gradient(145deg, #f7dd82, #c9a227); color: #2b1018;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
+            animation: cardDeal 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+        }
+        body.casino .seg.active::after { color: rgba(43,16,24,0.55); transform: scale(1.25); }
+        @keyframes cardDeal {
+            0%   { transform: rotateY(-78deg) translateY(-6px); }
+            60%  { transform: rotateY(12deg) translateY(2px); }
+            100% { transform: rotateY(0) translateY(0); }
+        }
+
+        /* ── workers: a four-segment wheel you can click ─────────────── */
+        .wheel-wrap { display: none; }
+        body.casino .wheel-wrap { display: flex; align-items: center; gap: 18px; margin-top: 24px; }
+        body.casino #workersDD { display: none; }
+        .wheel {
+            width: 132px; height: 132px; border-radius: 50%; position: relative; flex-shrink: 0;
+            border: 5px solid #d4af37;
+            box-shadow: 0 0 0 3px #6b2838, 0 10px 28px rgba(0,0,0,0.6), inset 0 0 22px rgba(0,0,0,0.7);
+            background: conic-gradient(#b4121b 0deg 90deg, #141414 90deg 180deg, #b4121b 180deg 270deg, #141414 270deg 360deg);
+            transition: transform 2.6s cubic-bezier(0.15, 0.85, 0.15, 1);
+            cursor: pointer;
+        }
+        .wheel::after {
+            content: ''; position: absolute; inset: 38%; border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #f7dd82, #9a7b1b);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+        }
+        /* each segment is a full-size box that is merely rotated, so all four
+           overlapped and the last one in the DOM swallowed every click — the
+           wheel always answered "4". Clip each to its own 90 degree wedge. */
+        .wheel-seg {
+            position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center;
+            padding-top: 9px; font-weight: 800; font-size: 16px; color: #f7dd82; cursor: pointer;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            clip-path: polygon(50% 50%, 0% 0%, 100% 0%);
+        }
+        .wheel-seg span { display: block; transition: transform 0.2s, filter 0.2s; }
+        .wheel-seg:hover span { transform: scale(1.35); filter: drop-shadow(0 0 7px #f7dd82); }
+        .wheel-seg.sel span { color: #fff; transform: scale(1.45); filter: drop-shadow(0 0 9px #fff); }
+        .wheel-pin {
+            position: absolute; top: -17px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent;
+            border-top: 16px solid #f7dd82; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8)); z-index: 2;
+        }
+        .wheel-info { display: flex; flex-direction: column; gap: 9px; }
+        .wheel-val { font-family: Georgia, serif; font-size: 20px; color: #f7dd82; }
+        .wheel-spin {
+            padding: 9px 16px; border-radius: 10px; border: 2px solid #8a6a1c; cursor: pointer;
+            background: linear-gradient(145deg, #b4121b, #7d0a11); color: #f7dd82;
+            font-weight: 700; font-size: 12px; font-family: inherit;
+        }
+        .wheel-spin:disabled { opacity: 0.55; cursor: default; }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.casino .seg.active { animation: none; }
+            .wheel { transition: none; }
+        }
+
+        /* ── progress as a stack of chips on green felt ───────────────── */
+        body.casino .progress-wrap {
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 6px, transparent 6px 12px),
+                linear-gradient(170deg, #14532d, #06230f);
+            border: 2px solid #8a6a1c; border-radius: 12px; height: 56px;
+            box-shadow: inset 0 0 26px rgba(0,0,0,0.65), 0 0 0 1px rgba(247,221,130,0.14);
+        }
+        body.casino .progress-track-glow { display: none; }
+        /* the filled bar becomes a thin betting line along the bottom */
+        body.casino #progressBar {
+            height: 4px; position: absolute; bottom: 0; left: 0; border-radius: 0;
+            background: linear-gradient(90deg, #d4af37, #f7dd82);
+            box-shadow: 0 0 12px rgba(247,221,130,0.8);
+        }
+        body.casino #progressBar::after { display: none; }
+        body.casino .progress-label {
+            font-family: Georgia, 'Times New Roman', serif; color: #f7dd82;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9); letter-spacing: 1px;
+        }
+        .chip-tray { display: none; }
+        body.casino .chip-tray {
+            display: flex; align-items: flex-end; gap: 3px;
+            position: absolute; inset: 0 12px 6px 12px; z-index: 1; pointer-events: none;
+            overflow: hidden;
+        }
+        .chip-tray i {
+            width: 16px; height: 16px; border-radius: 50%; flex: 0 0 auto;
+            background: conic-gradient(#b4121b 0 25%, #141414 0 50%, #b4121b 0 75%, #141414 0);
+            box-shadow: 0 0 0 1.5px #d4af37, 0 2px 4px rgba(0,0,0,0.7);
+            animation: chipDrop 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+        }
+        /* every fifth chip is a gold one, so a long tray stays countable */
+        .chip-tray i:nth-child(5n) {
+            background: conic-gradient(#f7dd82 0 25%, #9a7b1b 0 50%, #f7dd82 0 75%, #9a7b1b 0);
+        }
+        @keyframes chipDrop {
+            from { opacity: 0; transform: translateY(-26px) rotate(-120deg) scale(0.7); }
+            to   { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+        }
+
+        /* ── gallery cards are dealt from the dealer's side ────────────── */
+        /* Only the first cards are dealt. A visible deal needs ~0.12s between
+           cards, and 300 of those would be half a minute of waiting before the
+           gallery settles — so the rest simply appear. */
+        body.casino .gallery-item {
+            animation: cardIn 0.3s ease both;
+            border: 1px solid #8a6a1c; border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.08);
+        }
+        body.casino .gallery-item.dealt {
+            animation: cardDealIn 0.72s cubic-bezier(0.18, 0.86, 0.22, 1) both;
+        }
+        body.casino .gallery-item:hover {
+            transform: translateY(-8px) rotate(-1.5deg);
+            border-color: #f7dd82; box-shadow: 0 16px 36px rgba(0,0,0,0.7), 0 0 18px rgba(247,221,130,0.35);
+        }
+        @keyframes cardDealIn {
+            0%   { opacity: 0; transform: translate(-340px, -300px) rotate(-38deg) scale(0.5); }
+            45%  { opacity: 1; }
+            82%  { transform: translate(0, 0) rotate(2.5deg) scale(1.04); }
+            100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body.casino .gallery-item, body.casino .gallery-item.dealt { animation: cardIn 0.3s ease both; }
+            .chip-tray i, .die { animation: none; }
+        }
+
+        /* ── the brass button nobody can walk past ────────────────────── */
+        .luck-box { display: none; }
+        body.casino .luck-box {
+            display: flex; flex-direction: column; align-items: center; gap: 9px;
+            margin-left: auto; padding: 14px 20px; border-radius: 12px;
+            background: linear-gradient(170deg, #3a2a12, #1c1308);
+            border: 2px solid #8a6a1c;
+            box-shadow: inset 0 0 18px rgba(0,0,0,0.7), 0 6px 16px rgba(0,0,0,0.5);
+        }
+        .luck-btn {
+            width: 58px; height: 58px; border-radius: 50%; border: 0; cursor: pointer; padding: 0;
+            background: radial-gradient(circle at 36% 28%, #ff8e8e, #c2121b 55%, #6d0309);
+            box-shadow:
+                0 0 0 5px #4a3410, 0 0 0 7px #8a6a1c,
+                inset 0 -5px 10px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.7);
+            transition: transform 0.09s, box-shadow 0.09s;
+        }
+        .luck-btn:active, .luck-btn.down {
+            transform: translateY(7px) scale(0.94);
+            background: radial-gradient(circle at 36% 28%, #e06a6a, #8d0d14 55%, #4d0206);
+            box-shadow: 0 0 0 5px #4a3410, 0 0 0 7px #8a6a1c, inset 0 4px 12px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.8);
+        }
+        /* a ring of light leaves the dome on every press */
+        .luck-box { position: relative; }
+        .luck-ring {
+            position: absolute; left: 50%; top: 32px; width: 58px; height: 58px;
+            margin: -29px 0 0 -29px; border-radius: 50%; pointer-events: none;
+            border: 3px solid rgba(247,221,130,0.9);
+            animation: luckRing 0.55s ease-out both;
+        }
+        @keyframes luckRing {
+            from { opacity: 0.9; transform: scale(0.75); }
+            to   { opacity: 0; transform: scale(2.6); }
+        }
+        body.casino .luck-box.fired { border-color: #f7dd82; box-shadow: inset 0 0 18px rgba(0,0,0,0.7), 0 0 26px rgba(247,221,130,0.5); }
+        body.casino .luck-box { transition: box-shadow 0.25s, border-color 0.25s; }
+        .luck-plate { transition: color 0.2s, text-shadow 0.2s; }
+        body.casino .luck-box.fired .luck-plate { color: #fff6d8; text-shadow: 0 0 10px rgba(247,221,130,0.9); }
+        .luck-plate {
+            font-family: Georgia, serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+            color: #f0d79a; text-shadow: 0 1px 0 rgba(0,0,0,0.8);
+            padding: 3px 9px; border-radius: 4px;
+            background: linear-gradient(180deg, #6b5016, #3a2a0d);
+            box-shadow: inset 0 1px 0 rgba(247,221,130,0.3);
+        }
+
+        /* the lights go out, then the sign comes back on */
+        #blackout {
+            position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+            background: #000; opacity: 0;
+            animation: blackoutFade 1.9s ease-in-out both;
+            display: grid; place-items: center;
+        }
+        @keyframes blackoutFade {
+            0% { opacity: 0; } 8%, 72% { opacity: 0.985; } 100% { opacity: 0; }
+        }
+        /* two eyes open in the dark, look at you, and are gone */
+        #blackout .eyes { display: flex; gap: 54px; animation: eyesPeek 1.9s ease-in-out both; }
+        /* a soft glow alone read as nothing on black — they need a pupil to be
+           recognisable as eyes at a glance */
+        #blackout .eyes i {
+            width: 52px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+            background: radial-gradient(ellipse at 50% 50%, #fffdf2 0%, #f7dd82 46%, rgba(212,175,55,0.25) 78%, rgba(212,175,55,0) 100%);
+            box-shadow: 0 0 34px rgba(247,221,130,0.95), 0 0 70px rgba(247,221,130,0.45);
+            animation: eyeBlink 1.9s steps(1, end) both;
+        }
+        #blackout .eyes i::after {
+            content: ''; width: 9px; height: 19px; border-radius: 50%;
+            background: #140608; box-shadow: 0 0 5px rgba(20,6,8,0.9);
+        }
+        @keyframes eyesPeek {
+            0%, 16% { opacity: 0; } 26%, 58% { opacity: 1; } 70%, 100% { opacity: 0; }
+        }
+        @keyframes eyeBlink {
+            0%, 37%, 42%, 100% { transform: scaleY(1); }
+            39%                { transform: scaleY(0.08); }
+        }
+
+        /* a hand of cards bursts out of the button and scatters */
+        #cardBurst { position: fixed; inset: 0; z-index: 9996; pointer-events: none; overflow: hidden; }
+        .burst-card {
+            position: absolute; width: 46px; height: 64px; border-radius: 6px;
+            background: linear-gradient(170deg, #fdfaf2, #ded5bd);
+            border: 1.5px solid #8a6a1c;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 0 0 1.5px rgba(255,255,255,0.7);
+            font-family: Georgia, serif; font-weight: 700; font-size: 13px; color: #1a0a10;
+            display: grid; place-items: center; line-height: 1.05; text-align: center;
+            transform: translate(-50%, -50%) rotate(0deg) scale(0.4);
+            animation: cardFly 1.15s cubic-bezier(0.17, 0.78, 0.26, 1) forwards;
+        }
+        .burst-card.red { color: #a81620; }
+        @keyframes cardFly {
+            0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scale(0.35); }
+            14%  { opacity: 1; }
+            70%  { opacity: 1; }
+            100% { opacity: 0;
+                   transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+                              rotate(var(--rot)) scale(1); }
+        }
+
+        /* the whole table takes a nudge */
+        body.nudge .card { animation: tableNudge 0.65s cubic-bezier(0.3, 1.5, 0.4, 1) both !important; }
+        @keyframes tableNudge {
+            0% { transform: none; } 22% { transform: translateX(-9px) rotate(-1.1deg); }
+            55% { transform: translateX(6px) rotate(0.7deg); } 100% { transform: none; }
+        }
+
+        /* the bulbs run the other way for a while */
+        body.rev-marquee .card::before { animation-direction: reverse, normal; }
+
+        /* a card turns over with a word of advice */
+        #fortune {
+            position: fixed; left: 50%; top: 42%; z-index: 9997; pointer-events: none;
+            width: 238px; min-height: 150px; padding: 22px 20px; border-radius: 12px;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(170deg, #fdfaf2, #d8cfb6);
+            border: 2px solid #8a6a1c;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.8), inset 0 0 0 2px rgba(255,255,255,0.6);
+            font-family: Georgia, serif; font-size: 14px; line-height: 1.45; color: #2b1018;
+            display: grid; place-items: center; text-align: center;
+            animation: fortuneFlip 2.6s ease-in-out both;
+        }
+        #fortune::before, #fortune::after {
+            position: absolute; font-size: 15px; color: #a81620;
+        }
+        #fortune::before { content: '\2660'; top: 7px; left: 9px; }
+        #fortune::after  { content: '\2660'; bottom: 7px; right: 9px; transform: rotate(180deg); }
+        @keyframes fortuneFlip {
+            0%   { opacity: 0; transform: translate(-50%, -50%) rotateY(90deg) scale(0.7); }
+            18%  { opacity: 1; transform: translate(-50%, -50%) rotateY(0deg) scale(1); }
+            80%  { opacity: 1; transform: translate(-50%, -50%) rotateY(0deg) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -52%) rotateY(-24deg) scale(0.94); }
+        }
+
+        /* ── the three language buttons become table plaques ──────────── */
+        body.casino .actions button {
+            background: linear-gradient(165deg, #3a1322, #1d070d);
+            border: 2px solid #8a6a1c; border-radius: 9px; color: #e8cfa0;
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: 1.6px; text-transform: uppercase; font-weight: 700;
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.16), 0 4px 12px rgba(0,0,0,0.5);
+            transition: all 0.16s;
+        }
+        body.casino .actions button:hover {
+            color: #fff; border-color: #f7dd82; transform: translateY(-2px);
+            box-shadow: inset 0 0 0 1px rgba(247,221,130,0.35), 0 8px 18px rgba(0,0,0,0.6);
+        }
+        body.casino .actions button:active { transform: translateY(1px); }
+        /* the one that commits everything gets the gold plaque */
+        body.casino #langAllBtn {
+            background: linear-gradient(160deg, #f7dd82, #c9a227);
+            color: #2b1018; border-color: #f7dd82;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 0 16px rgba(247,221,130,0.4), 0 4px 12px rgba(0,0,0,0.5);
+        }
+        body.casino #langAllBtn:hover { color: #1a0a10; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6), 0 0 26px rgba(247,221,130,0.7); }
+        /* riffle the icon while the language list is being re-read */
+        body.casino #langRefreshBtn.shuffling .lr-ic { display: inline-block; animation: chipRiffle 0.75s ease-in-out infinite; }
+
+        /* ── two table gestures: going all in, and the croupier's rake ──── */
+        body.casino .lang-grid { position: relative; }
+
+        /* Select All: every chip turns over in a wave */
+        body.casino .lang-grid.all-in label {
+            animation: chipAllIn 0.55s cubic-bezier(0.3, 1.35, 0.4, 1) both;
+            animation-delay: var(--wave, 0s);
+        }
+        @keyframes chipAllIn {
+            0%   { transform: rotateY(0deg) scale(1); }
+            45%  { transform: rotateY(88deg) scale(1.14); }
+            100% { transform: rotateY(0deg) scale(1); }
+        }
+        body.casino .lang-grid.all-in::before {
+            content: 'ALL IN'; position: absolute; left: 50%; top: 50%; z-index: 4;
+            transform: translate(-50%, -50%); pointer-events: none;
+            font-family: Georgia, serif; font-size: 30px; font-weight: 700; letter-spacing: 5px;
+            color: #f7dd82; text-shadow: 0 0 10px rgba(247,221,130,0.9), 0 4px 10px rgba(0,0,0,0.85);
+            animation: allInStamp 0.95s ease-out both;
+        }
+        @keyframes allInStamp {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(2.1) rotate(-14deg); }
+            22%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-7deg); }
+            70%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.06) rotate(-7deg); }
+        }
+
+        /* Clear All: the croupier rakes the chips off the table */
+        body.casino .lang-grid label.raked {
+            animation: chipRake 0.52s ease-in-out both;
+            animation-delay: var(--wave, 0s);
+        }
+        @keyframes chipRake {
+            0%   { transform: none; opacity: 1; }
+            52%  { transform: translateX(34px) rotate(11deg); opacity: 0.12; }
+            100% { transform: none; opacity: 1; }
+        }
+
+        /* ── suits drifting up behind everything ──────────────────────── */
+        #suitDrift { display: none; }
+        body.casino #suitDrift {
+            display: block; position: fixed; inset: 0; z-index: 0;
+            pointer-events: none; overflow: hidden;
+        }
+        #suitDrift span {
+            position: absolute; bottom: -8vh; font-size: 26px; line-height: 1;
+            color: rgba(247, 221, 130, 0.11);
+            animation: suitRise linear infinite;
+        }
+        #suitDrift span.red { color: rgba(201, 42, 54, 0.14); }
+        @keyframes suitRise {
+            from { transform: translateY(0) rotate(0deg); opacity: 0; }
+            12%  { opacity: 1; }
+            88%  { opacity: 1; }
+            to   { transform: translateY(-118vh) rotate(var(--spin, 40deg)); opacity: 0; }
+        }
+        /* the app sits above the drift */
+        body.casino .container, body.casino .theme-switch { position: relative; z-index: 1; }
+
+        /* ── a glint running across the gold, the way metal catches a light ── */
+        /* The button is overflow:visible so the lever can stick out, which means
+           a pseudo-element that MOVES also leaks outside it — that stray slab to
+           the left of the button. So the layer stays pinned to the button and the
+           highlight travels inside it, as a background position. Nothing to leak. */
+        body.casino #startBtn::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+            background: linear-gradient(100deg,
+                transparent 42%, rgba(255,255,255,0.55) 50%, transparent 58%);
+            background-size: 300% 100%;
+            background-repeat: no-repeat;
+            background-position: 180% 0;
+            animation: goldGlint 6.5s ease-in-out infinite;
+        }
+        body.casino #startBtn:disabled::before { animation-play-state: paused; opacity: 0.3; }
+        @keyframes goldGlint {
+            0%, 74%   { background-position: 180% 0; }
+            92%, 100% { background-position: -80% 0; }
+        }
+
+        /* ── two dice that pick a random sample to eyeball ────────────── */
+        .dice-box { display: none; }
+        body.casino .dice-box {
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+            margin: 0 0 14px; padding: 12px 16px; border-radius: 12px;
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 6px, transparent 6px 12px),
+                linear-gradient(170deg, #14532d, #06230f);
+            border: 2px solid #8a6a1c;
+            box-shadow: inset 0 0 22px rgba(0,0,0,0.6);
+        }
+        .dice-roll {
+            padding: 9px 16px; border-radius: 10px; border: 2px solid #8a6a1c; cursor: pointer;
+            background: linear-gradient(145deg, #b4121b, #7d0a11); color: #f7dd82;
+            font-weight: 700; font-size: 12px; font-family: inherit;
+        }
+        .dice-roll:disabled { opacity: 0.55; cursor: default; }
+        .dice-pair { display: flex; gap: 8px; }
+        .die {
+            width: 38px; height: 38px; border-radius: 8px; flex: 0 0 auto;
+            background: linear-gradient(150deg, #fdfaf2, #cfc5ad);
+            box-shadow: 0 0 0 1.5px #8a6a1c, 0 4px 10px rgba(0,0,0,0.6);
+            display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            padding: 5px; gap: 1px;
+        }
+        .die b { width: 7px; height: 7px; border-radius: 50%; background: #1a0a0f; align-self: center; justify-self: center; }
+        .die.rolling { animation: dieTumble 0.72s cubic-bezier(0.3, 0.9, 0.25, 1) both; }
+        @keyframes dieTumble {
+            0%   { transform: translateY(0) rotate(0); }
+            35%  { transform: translateY(-26px) rotate(220deg); }
+            70%  { transform: translateY(0) rotate(400deg); }
+            85%  { transform: translateY(-7px) rotate(430deg); }
+            100% { transform: translateY(0) rotate(450deg); }
+        }
+        .dice-text { font-family: Georgia, serif; font-size: 14px; color: #f7dd82; }
+        .dice-text .dt-sub { display: block; font-size: 11px; opacity: 0.75; font-family: var(--font); }
+        .dice-clear {
+            padding: 7px 13px; border-radius: 9px; cursor: pointer; font-size: 11px; font-weight: 700;
+            background: transparent; color: #e8cfa0; border: 1px solid #8a6a1c; font-family: inherit;
+        }
+
+        /* coin shower + jackpot banner */
+        #coinRain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .coin { position: absolute; top: -40px; font-size: 26px; animation: coinFall linear forwards; }
+        @keyframes coinFall { to { transform: translateY(105vh) rotate(var(--spin)); opacity: 0.15; } }
+        #jackpot {
+            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 10000; font-family: Georgia, serif; font-size: 10vw; font-weight: 700;
+            color: #f7dd82; text-shadow: 0 0 24px rgba(247,221,130,0.9), 0 6px 0 #a8161d, 0 10px 30px rgba(0,0,0,0.6);
+            animation: jackpotPop 2.6s ease-out forwards; letter-spacing: 4px;
+        }
+        @keyframes jackpotPop {
+            0% { opacity: 0; transform: scale(0.4) rotate(-6deg); }
+            18% { opacity: 1; transform: scale(1.12) rotate(2deg); }
+            30% { transform: scale(1) rotate(-1deg); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.05); }
+        }
+
+        /* anyone who asked the OS for less motion gets a still casino */
+        @media (prefers-reduced-motion: reduce) {
+            body.casino .card, body.casino .lang-grid label, body.casino .theme-switch button { animation: none; }
+            body.casino .card::before { animation: none; }
+        }
+
         .or-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
         .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
         .email-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
@@ -131,7 +1021,58 @@
         .sess-bar button:disabled { opacity: 0.6; cursor: default; }
         body.light .sess-bar.ok { background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.3); color: #047857; }
         body.light .sess-bar.warn { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.35); color: #b45309; }
-        body.cyber .sess-bar { border-radius: 4px; font-family: var(--font); }
+        /* ── session bar, per theme ──────────────────────────────────── */
+        body.cyber .sess-bar {
+            border-radius: 4px; font-family: var(--font); letter-spacing: 0.5px;
+            background: #060e1c; border: 1px solid #123a4d; color: #0891b2;
+        }
+        body.cyber .sess-bar.ok {
+            background: rgba(6,182,212,0.07); border-color: #1e4a5f; color: #22d3ee;
+            box-shadow: 0 0 18px rgba(6,182,212,0.12);
+        }
+        body.cyber .sess-bar.ok .sess-dot { background: #22d3ee; box-shadow: 0 0 8px #22d3ee; }
+        body.cyber .sess-bar.warn {
+            background: rgba(245,158,11,0.08); border-color: #7c5410; color: #fbbf24;
+        }
+        body.cyber .sess-bar.warn .sess-dot { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+        body.cyber .sess-bar button {
+            background: linear-gradient(90deg, #06b6d4, #10b981); color: #012;
+            border: 1px solid #67e8f9; border-radius: 4px; font-family: var(--font);
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 0 14px rgba(6,182,212,0.35);
+        }
+        body.cyber .sess-bar button:hover { box-shadow: 0 0 24px rgba(6,182,212,0.7); }
+
+        body.casino .sess-bar {
+            border: 2px solid #8a6a1c; border-radius: 12px;
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 6px, transparent 6px 12px),
+                linear-gradient(170deg, #3a1322, #1d070d);
+            color: #e8cfa0; box-shadow: inset 0 0 20px rgba(0,0,0,0.55);
+        }
+        body.casino .sess-bar.ok {
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 6px, transparent 6px 12px),
+                linear-gradient(170deg, #14532d, #06230f);
+            border-color: #8a6a1c; color: #f0e0b0;
+        }
+        body.casino .sess-bar.ok .sess-dot { background: #f7dd82; box-shadow: 0 0 8px rgba(247,221,130,0.8); }
+        body.casino .sess-bar.warn {
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.14) 0 6px, transparent 6px 12px),
+                linear-gradient(170deg, #5e1b14, #2c0a06);
+            border-color: #8a6a1c; color: #ffcf9a;
+        }
+        body.casino .sess-bar.warn .sess-dot { background: #ff9a3c; box-shadow: 0 0 8px rgba(255,154,60,0.8); }
+        /* white on gold is unreadable — the chip-gold button takes dark text */
+        body.casino .sess-bar button {
+            background: linear-gradient(145deg, #f7dd82, #c9a227); color: #2b1018;
+            border: 1.5px solid #8a6a1c; border-radius: 10px; font-weight: 700;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+        }
+        body.casino .sess-bar button:hover { border-color: #f7dd82; box-shadow: 0 0 16px rgba(247,221,130,0.5); }
+
+        body.light .sess-bar button { color: #fff; }
         .lang-note.checking { background: rgba(99,102,241,0.12); border-color: rgba(129,140,248,0.4); color: var(--accent2); }
         .lang-note.checking::before { content: '⏳'; }
         .lang-note.ok { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); color: #6ee7b7; }
@@ -719,7 +1660,7 @@
         body.light .game-opt { color: #292524; }
         body.light .game-opt:hover { background: #ddd9d1; }
 
-        body.cyber { --bg: #030812; --font: 'SF Mono','Fira Code',monospace; --text: #67e8f9; --muted: #0e7490; --status: #22d3ee; background: #030812; }
+        body.cyber { --bg: #030812; --font: 'SF Mono','Fira Code',monospace; --text: #67e8f9; --muted: #0e7490; --status: #22d3ee; --accent: #06b6d4; --accent2: #67e8f9; background: #030812; }
         body.cyber .theme-switch button { background: #060e1c; border-color: #123a4d; color: #0891b2; font-family: var(--font); }
         body.cyber .theme-switch button.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; border-color: #67e8f9; }
         body.cyber .icon-badge { background: linear-gradient(145deg, #06b6d4, #0891b2); border-radius: 8px; box-shadow: 0 0 20px rgba(6,182,212,0.6); color: #012; }
@@ -926,6 +1867,7 @@
         <button onclick="setTheme('light')" id="th-light">☀️ Light</button>
         <button onclick="setTheme('dark')" id="th-dark" class="active">🌙 Dark</button>
         <button onclick="setTheme('cyber')" id="th-cyber">⚡ Cyberpunk</button>
+        <button onclick="setTheme('casino')" id="th-casino">🎰 Casino</button>
     </div>
 
     <div class="cyber-strip">
@@ -933,6 +1875,10 @@
         <span class="s-name">SCREENSHOT-TOOL</span>
         <span class="s-name" id="stripVer" style="margin-left:8px;color:#0891b2;"></span>
         <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="house-sign" id="houseSign" aria-hidden="true">
+        <i>H</i><i>R</i><i>A</i><i>Y</i><i>M</i><i>O</i>
     </div>
 
     <div class="app-head">
@@ -989,9 +1935,9 @@
     <div class="card">
         <label class="title">Languages</label>
         <div class="actions">
-            <button type="button" onclick="selectAll()">Select All</button>
-            <button type="button" onclick="clearAll()">Clear All</button>
-            <button type="button" id="langRefreshBtn" onclick="refreshLangs()" title="Re-read the languages this game supports">↻ Refresh</button>
+            <button type="button" id="langAllBtn" onclick="selectAll()">Select All</button>
+            <button type="button" id="langNoneBtn" onclick="clearAll()">Clear All</button>
+            <button type="button" id="langRefreshBtn" onclick="refreshLangs()" title="Re-read the languages this game supports"><span class="lr-ic">↻</span> Refresh</button>
         </div>
         <div id="langCount">Selected languages: 0</div>
         <div id="langFilterNote" class="lang-note" hidden></div>
@@ -1078,6 +2024,20 @@
                 <div class="dd-opt" data-val="4" onclick="pickWorker(this,'4 workers')"><span>4 workers <span class="sub">· if your pc is a monster</span></span><span class="check">✓</span></div>
             </div>
         </div>
+        <div class="wheel-wrap" id="wheelWrap">
+            <div style="position:relative;">
+                <div class="wheel-pin"></div>
+                <div class="wheel" id="workersWheel"></div>
+            </div>
+            <div class="wheel-info">
+                <span class="wheel-val" id="wheelVal">1 worker</span>
+                <button type="button" class="wheel-spin" id="wheelSpin" onclick="spinWorkerWheel()">🎲 Spin it</button>
+            </div>
+            <div class="luck-box">
+                <button type="button" class="luck-btn" id="luckBtn" onclick="pressYourLuck()" aria-label="Press your luck"></button>
+                <span class="luck-plate">Press your luck</span>
+            </div>
+        </div>
         <input type="hidden" id="workers" value="1">
     </div>
 
@@ -1090,11 +2050,6 @@
         </div>
         <input type="checkbox" id="headless" checked style="display:none;">
 
-        <div class="toggle-field on" id="sepSessionsToggle" onclick="toggleField('sepSessionsToggle','separateSessions')">
-            <div class="tf-text"><span class="tf-icon">🎫</span><div>Separate session per worker<div class="tf-desc">Tags the token so workers don't evict each other. Turn OFF for games that reject tagged tokens (bell_bang) — the run then uses 1 worker.</div></div></div>
-            <div class="switch"></div>
-        </div>
-        <input type="checkbox" id="separateSessions" checked style="display:none;">
 
         <div style="height:12px"></div>
 
@@ -1134,7 +2089,7 @@
         <input type="checkbox" id="enSocExtra" style="display:none;">
     </div>
 
-    <button id="startBtn" class="btn" onclick="start()"><span class="btn-label">📸 Start Screenshots</span></button>
+    <button id="startBtn" class="btn" onclick="start()"><span class="btn-label">📸 Start Screenshots</span><span class="lever" aria-hidden="true"></span></button>
     <button id="cancelBtn" class="btn" onclick="cancelJob()">🛑 Cancel</button>
 
     <div class="btn-row">
@@ -1147,6 +2102,7 @@
     <div class="progress-section">
         <div class="progress-wrap">
             <div class="progress-track-glow"></div>
+            <div class="chip-tray" id="chipTray" aria-hidden="true"></div>
             <div id="progressBar"></div>
             <div class="progress-label" id="progressLabel">Ready to capture</div>
         </div>
@@ -1225,10 +2181,16 @@
         return DEFAULT_EMAIL;
     }
 
-    function buildGameUrl(game, email) {
-        const ts = Math.floor(Date.now() / 1000);
-        const token = encodeURIComponent(`EUR:${game}-${email}+seamless`);
-        return `https://betman.hraymo.team.goreel.tech/betlabel-hraymo/game/?profile=default&token=${token}&game=${game}&wl=prod&ts=${ts}&title=${game}&lang=en&sound=&mobile=1&incognito=&exit_url=%2F%2Fbetlabel.hraymo.team.goreel.tech&cashier_url=%2F%2Fbetlabel.hraymo.team.goreel.tech%2Fcashier%2F`;
+    // The launch URL is built in ONE place — gamesList.js on the server. This
+    // page used to keep its own copy, and when the server's grew the full
+    // dev-flag block the two drifted: a game picked from the list opened a
+    // different URL than the same game pasted by hand, and only the pasted one
+    // worked. Never rebuild it here.
+    async function buildGameUrl(game, email) {
+        const res = await fetch(`/game-url?game=${encodeURIComponent(game)}&email=${encodeURIComponent(email || '')}`);
+        const data = await res.json();
+        if (!data || !data.url) throw new Error((data && data.message) || 'Could not build the game URL');
+        return data.url;
     }
 
     // extract email from a pasted URL's token (EUR:game-EMAIL+seamless)
@@ -1295,7 +2257,7 @@
         const btn = document.getElementById('gamesRefreshBtn');
 
         gamesRefreshing = true;
-        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+        if (btn) { btn.disabled = true; btn.classList.add('loading', 'shuffling'); }
 
         showToast('Updating games list...', 'info');
 
@@ -1320,7 +2282,7 @@
             showToast(`Could not update the games list: ${e.message}`, 'error', 6000);
         } finally {
             gamesRefreshing = false;
-            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+            if (btn) { btn.disabled = false; btn.classList.remove('loading', 'shuffling'); }
         }
     }
 
@@ -1461,6 +2423,75 @@
         }).join('');
 
         grid.dataset.rendered = '1';
+
+        if (isCasino()) spinLangReels(grid, list);
+    }
+
+    // Codes flicker past, then each chip stops in turn — the point is to make the
+    // moment the list changes impossible to miss, so nobody runs 27 languages on a
+    // game that supports 22.
+    function spinLangReels(grid, finalList) {
+        if (reducedMotion()) return;
+
+        const labels = [...grid.querySelectorAll('label')];
+        const pool = (finalList.length > 3 ? finalList : FALLBACK_LANGS).map(c => c.toUpperCase());
+
+        grid.classList.add('spinning');
+        let landedCount = 0;
+
+        labels.forEach((label, i) => {
+            const final = finalList[i];
+            if (!final) return;
+
+            const input = label.querySelector('input.lang');
+            const height = label.getBoundingClientRect().height;
+            const text = label.textContent.trim();
+
+            // build the strip: a run of random codes with the real one last
+            const spinCount = 12 + (i % 5) * 3;
+            const codes = [];
+            for (let n = 0; n < spinCount; n++) codes.push(pool[Math.floor(Math.random() * pool.length)]);
+            codes.push(final.toUpperCase());
+
+            label.classList.add('reeling');
+            label.style.height = height + 'px';      // hold the chip's own size
+            label.textContent = '';
+            label.appendChild(input);
+
+            const strip = document.createElement('span');
+            strip.className = 'reel-strip';
+            codes.forEach(c => {
+                const b = document.createElement('b');
+                b.textContent = c;
+                b.style.height = height + 'px';
+                b.style.display = 'flex';
+                b.style.alignItems = 'center';
+                strip.appendChild(b);
+            });
+            label.appendChild(strip);
+
+            const travel = height * (codes.length - 1);
+            strip.style.transform = 'translateY(0)';
+
+            // slight stagger so the row stops left to right, like reels do
+            const dur = 900 + i * 110;
+            requestAnimationFrame(() => {
+                strip.style.transition = `transform ${dur}ms cubic-bezier(0.12, 0.72, 0.18, 1)`;
+                strip.style.transform = `translateY(${-travel}px)`;
+            });
+
+            setTimeout(() => {
+                label.classList.remove('reeling');
+                label.style.height = '';
+                label.textContent = '';
+                label.appendChild(input);
+                label.append(text);
+                label.classList.add('landed');
+                setTimeout(() => label.classList.remove('landed'), 480);
+
+                if (++landedCount >= labels.length) grid.classList.remove('spinning');
+            }, dur + 30);
+        });
     }
 
     function setSupportedLangs(list) {
@@ -1476,7 +2507,13 @@
             showToast('Pick a game first', 'info');
             return;
         }
-        loadLangsForGame(currentGameForLangs, true);
+        const btn = document.getElementById('langRefreshBtn');
+        if (btn) btn.classList.add('shuffling');
+        try {
+            await loadLangsForGame(currentGameForLangs, true);
+        } finally {
+            if (btn) btn.classList.remove('shuffling');
+        }
     }
 
     async function loadLangsForGame(game, force = false) {
@@ -1528,6 +2565,15 @@
         const v = document.getElementById('gameVal');
         v.textContent = game;
         v.classList.remove('placeholder');
+
+        // the board blinks once as the new title settles on it
+        const board = document.querySelector('.game-trigger');
+        if (board && isCasino() && !reducedMotion()) {
+            board.classList.remove('swap');
+            void board.offsetWidth;
+            board.classList.add('swap');
+            setTimeout(() => board.classList.remove('swap'), 600);
+        }
         document.getElementById('gameDD').classList.remove('open');
         // clear manual URL since we now use dropdown
         document.getElementById('url').value = '';
@@ -1565,24 +2611,469 @@
     });
 
     // resolve the final URL to use (dropdown game OR manual URL)
-    function resolveGameUrl() {
+    async function resolveGameUrl() {
         const manual = document.getElementById('url').value.trim();
         if (manual) return manual;
-        if (selectedGame) return buildGameUrl(selectedGame, getEmail());
+        if (selectedGame) return await buildGameUrl(selectedGame, getEmail());
         return '';
     }
     let currentIndex = 0;
 
     function applyTheme(t) {
+        if (t !== 'casino') { clearCasinoFx(); stopCasinoAmbience(); }
         document.body.className = t;
-        ['light','dark','cyber'].forEach(x => document.getElementById('th-'+x).classList.toggle('active', x === t));
+        if (t === 'casino') startCasinoAmbience();
+        ['light','dark','cyber','casino'].forEach(x => document.getElementById('th-'+x).classList.toggle('active', x === t));
         try { localStorage.setItem('qa-theme', t); } catch(e) {}
         const label = document.querySelector('#startBtn .btn-label');
-        if (label) label.textContent = (t === 'cyber') ? '▶ Initiate Capture' : '📸 Start Screenshots';
+        if (label) label.textContent =
+            t === 'cyber'  ? '▶ Initiate Capture' :
+            t === 'casino' ? '🎰 Pull the Lever'  : '📸 Start Screenshots';
+
+        // the three language buttons say what they actually do at a casino table
+        setLangButtonLabels(t === 'casino');
+
+        if (t === 'casino') { buildWorkerWheel(); syncWorkerWheel(); }
+    }
+
+    /* ===== CASINO EXTRAS ===== */
+
+    // the lever swings on press and springs back; the class is harmless in the
+    // other themes, where .lever is not rendered at all
+    (function wireLever() {
+        const btn = document.getElementById('startBtn');
+        if (!btn) return;
+        btn.addEventListener('pointerdown', () => {
+            if (btn.disabled) return;
+            btn.classList.add('pulling');
+            setTimeout(() => btn.classList.remove('pulling'), 520);
+        });
+    })();
+
+    // The wheel is a real picker, not a toy: clicking a segment selects it at once.
+    // Spinning is the toy, and it lands on a real choice — nobody has to wait out
+    // an animation just to set the worker count.
+    const WHEEL_SEGMENTS = 4;
+    let wheelTurns = 0;
+
+    function buildWorkerWheel() {
+        const wheel = document.getElementById('workersWheel');
+        if (!wheel || wheel.dataset.built) return;
+
+        for (let i = 0; i < WHEEL_SEGMENTS; i++) {
+            const seg = document.createElement('div');
+            seg.className = 'wheel-seg';
+            seg.dataset.val = String(i + 1);
+            // each label sits at the top of its own quarter
+            seg.style.transform = `rotate(${i * (360 / WHEEL_SEGMENTS) + 45}deg)`;
+            const txt = document.createElement('span');
+            txt.textContent = String(i + 1);
+            txt.style.transform = 'none';
+            seg.appendChild(txt);
+            seg.onclick = e => { e.stopPropagation(); setWorkers(i + 1); };
+            wheel.appendChild(seg);
+        }
+        wheel.dataset.built = '1';
+        syncWorkerWheel();
+    }
+
+    function setWorkers(n) {
+        n = Math.min(Math.max(parseInt(n, 10) || 1, 1), WHEEL_SEGMENTS);
+        document.getElementById('workers').value = String(n);
+
+        // keep the original dropdown in step — it is still the control in other themes
+        document.querySelectorAll('#workersDD .dd-opt').forEach(o => {
+            o.classList.toggle('sel', o.dataset.val === String(n));
+        });
+        const ddVal = document.querySelector('#workersDD .dd-val');
+        if (ddVal) ddVal.textContent = n === 1 ? '1 worker' : `${n} workers`;
+
+        syncWorkerWheel();
+    }
+
+    function syncWorkerWheel() {
+        const n = parseInt(document.getElementById('workers').value, 10) || 1;
+        document.querySelectorAll('#workersWheel .wheel-seg').forEach(seg => {
+            seg.classList.toggle('sel', seg.dataset.val === String(n));
+        });
+        const val = document.getElementById('wheelVal');
+        if (val) val.textContent = n === 1 ? '1 worker' : `${n} workers`;
+    }
+
+    function spinWorkerWheel() {
+        const wheel = document.getElementById('workersWheel');
+        const btn = document.getElementById('wheelSpin');
+        if (!wheel) return;
+
+        const pick = 1 + Math.floor(Math.random() * WHEEL_SEGMENTS);
+
+        if (reducedMotion()) { setWorkers(pick); return; }
+
+        if (btn) btn.disabled = true;
+
+        // land the chosen quarter under the pin, after a few full turns
+        const per = 360 / WHEEL_SEGMENTS;
+        wheelTurns += 4;
+        wheel.style.transform = `rotate(${wheelTurns * 360 - (pick - 1) * per}deg)`;
+
+        setTimeout(() => {
+            setWorkers(pick);
+            if (btn) btn.disabled = false;
+            rainCoins(10, 500);
+        }, 2650);
+    }
+
+
+    // body carries a transient 'power-on' class during the sign's start-up, so
+    // every theme check has to look for the class, never compare the whole string
+    function isCasino() {
+        return document.body.classList.contains('casino');
+    }
+
+    function reducedMotion() {
+        try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+    }
+
+    // coins live up to 5s, and a deferred shower fires 250ms after a switch —
+    // both outlast a fast theme change, so every entry point re-checks the theme
+    // ── ambient casino life ───────────────────────────────────────────────
+    // All of it is decoration: it is built once, lives on <body> so nothing can
+    // trap it in a stacking context, and is torn down when the theme changes.
+    const SUITS = ['\u2660', '\u2665', '\u2666', '\u2663'];
+    let deadBulbTimer = null;
+
+    function buildSuitDrift() {
+        if (document.getElementById('suitDrift')) return;
+        const layer = document.createElement('div');
+        layer.id = 'suitDrift';
+        layer.setAttribute('aria-hidden', 'true');
+
+        for (let i = 0; i < 9; i++) {
+            const el = document.createElement('span');
+            const suit = SUITS[i % 4];
+            el.textContent = suit;
+            if (suit === '\u2665' || suit === '\u2666') el.className = 'red';
+            el.style.left = `${4 + Math.random() * 92}vw`;
+            el.style.fontSize = `${18 + Math.random() * 22}px`;
+            el.style.animationDuration = `${26 + Math.random() * 26}s`;
+            el.style.animationDelay = `${-Math.random() * 40}s`;   // already in flight
+            el.style.setProperty('--spin', `${Math.random() * 120 - 60}deg`);
+            layer.appendChild(el);
+        }
+        document.body.appendChild(layer);
+    }
+
+    // one bulb out at a time, moving to a new spot on a new card now and then
+    function startDeadBulb() {
+        if (deadBulbTimer) return;
+        const move = () => {
+            document.querySelectorAll('.card').forEach(c => c.style.setProperty('--dead-on', '0'));
+            const cards = document.querySelectorAll('.card');
+            if (cards.length) {
+                const card = cards[Math.floor(Math.random() * cards.length)];
+                card.style.setProperty('--dead-x', `${8 + Math.random() * 80}%`);
+                card.style.setProperty('--dead-on', '1');
+            }
+        };
+        move();
+        deadBulbTimer = setInterval(move, 7000);
+    }
+
+    function stopDeadBulb() {
+        clearInterval(deadBulbTimer);
+        deadBulbTimer = null;
+        document.querySelectorAll('.card').forEach(c => c.style.setProperty('--dead-on', '0'));
+    }
+
+    // Split each theme button into a chip face and a name underneath. Done once
+    // for every theme — the markup is inert anywhere but casino, where CSS turns
+    // it into a chip. "Cyberpunk" never fits inside a 62px disc, so the name
+    // lives below it and only the emoji is stamped on the chip.
+    (function buildThemeChips() {
+        document.querySelectorAll('.theme-switch button').forEach(btn => {
+            if (btn.querySelector('.chip-face')) return;
+            const raw = btn.textContent.trim();
+            const sep = raw.indexOf(' ');
+            const face = sep > 0 ? raw.slice(0, sep) : raw;
+            const name = sep > 0 ? raw.slice(sep + 1) : '';
+            btn.textContent = '';
+            const i = document.createElement('i');
+            i.className = 'chip-face';
+            i.textContent = face;
+            const b = document.createElement('b');
+            b.className = 'chip-name';
+            b.textContent = name;
+            btn.append(i, b);
+        });
+    })();
+
+    // give one letter of the title a bad contact (done once, kept for every theme)
+    (function markFlickerLetter() {
+        const h1 = document.querySelector('h1');
+        if (!h1 || !h1.firstChild || h1.firstChild.nodeType !== 3) return;
+        const text = h1.firstChild.nodeValue;
+        const i = text.indexOf('S');            // the S of "Screenshot"
+        if (i < 0) return;
+        const span = document.createElement('span');
+        span.className = 'flick';
+        span.textContent = text[i];
+        h1.replaceChild(document.createTextNode(text.slice(i + 1)), h1.firstChild);
+        h1.insertBefore(span, h1.firstChild);
+        h1.insertBefore(document.createTextNode(text.slice(0, i)), span);
+    })();
+
+    let powerOnTimer = null;
+
+    function startCasinoAmbience() {
+        if (reducedMotion()) return;
+        buildSuitDrift();
+        startDeadBulb();
+        powerUpSign();
+    }
+
+    // The sign comes on the way a real one does: bulbs sweep round the frame,
+    // the tube strikes with a couple of false starts, then the house name.
+    // The dead bulb waits until the sweep is done, or it looks like a gap.
+    function powerUpSign() {
+        clearTimeout(powerOnTimer);
+        stopDeadBulb();
+        document.body.classList.remove('power-on');
+        void document.body.offsetWidth;          // replay on a re-entry
+        document.body.classList.add('power-on');
+        powerOnTimer = setTimeout(() => {
+            document.body.classList.remove('power-on');
+            if (document.body.classList.contains('casino')) startDeadBulb();
+        }, 1500);
+    }
+
+    function stopCasinoAmbience() {
+        ['suitDrift', 'blackout', 'fortune', 'cardBurst'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        document.body.classList.remove('rev-marquee', 'nudge');
+        clearTimeout(powerOnTimer);
+        document.body.classList.remove('power-on');
+        stopDeadBulb();
+    }
+
+    // ── press your luck ───────────────────────────────────────────────────
+    // Pure mischief: one of a handful of short effects, never the same one
+    // twice in a row. Nothing here touches a setting or the run.
+    const FORTUNES = [
+        'Довіряйте своїм розробникам. Але перевіряйте локалі.',
+        'Десь зараз переклад вилазить за кнопку.',
+        'Чотири воркери — нуль жалю.',
+        'Казино завжди виграє. Але скріншоти ваші.',
+        'Найдовший пейтейбл чекає саме на вас.',
+        'Вірте скріншоту, а не памʼяті.',
+        'Сьогодні барабани на вашому боці.',
+        'Один баг уже знайдено. Просто ще не вами.',
+        'Хто не оновив список мов — грає наосліп.',
+        'Ставки зроблено. Ставок більше немає.',
+        'QA не вірить у вдачу. QA вірить у повторний прогін.',
+        'Та мова, яку ви зняли останньою, і зламана.'
+    ];
+
+    let lastLuck = -1;
+    let luckBusy = false;
+
+    // Weighted, because the blackout is the one that startles — at equal odds it
+    // turned up every other press and stopped being a surprise at all.
+    const LUCK_EFFECTS = [
+        { weight: 4, run: () => showFortune() },
+        { weight: 3, run: () => burstCards() },
+        { weight: 3, run: () => reverseMarquee() },
+        { weight: 3, run: () => nudgeTable() },
+        { weight: 1, run: () => blackoutAndRelight() }
+    ];
+
+    function pressYourLuck() {
+        if (!isCasino() || luckBusy) return;
+
+        const btn = document.getElementById('luckBtn');
+        const box = document.querySelector('.luck-box');
+        if (btn) {
+            btn.classList.add('down');
+            setTimeout(() => btn.classList.remove('down'), 160);
+        }
+        if (box && !reducedMotion()) {
+            box.classList.add('fired');
+            setTimeout(() => box.classList.remove('fired'), 420);
+            const ring = document.createElement('span');
+            ring.className = 'luck-ring';
+            box.appendChild(ring);
+            setTimeout(() => ring.remove(), 600);
+        }
+
+        if (reducedMotion()) { showFortune(); return; }
+
+        const total = LUCK_EFFECTS.reduce((n, e) => n + e.weight, 0);
+        let pick, guard = 0;
+        do {
+            let roll = Math.random() * total;
+            pick = LUCK_EFFECTS.findIndex(e => (roll -= e.weight) < 0);
+            guard++;
+        } while (pick === lastLuck && guard < 8);      // never the same twice running
+        lastLuck = pick;
+
+        luckBusy = true;
+        LUCK_EFFECTS[pick].run();
+        setTimeout(() => { luckBusy = false; }, 900);
+    }
+
+    // the lights die, something looks back, then the sign comes on again
+    function blackoutAndRelight() {
+        const el = document.createElement('div');
+        el.id = 'blackout';
+        el.innerHTML = '<span class="eyes"><i></i><i></i></span>';
+        document.body.appendChild(el);
+        setTimeout(powerUpSign, 1250);
+        setTimeout(() => el.remove(), 2000);
+    }
+
+    // A hand bursts out of the button itself and scatters. Spinning the wheel
+    // here only duplicated the Spin it button sitting right next to it.
+    const BURST_RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7'];
+    const BURST_SUITS = [['\u2660', 0], ['\u2665', 1], ['\u2666', 1], ['\u2663', 0]];
+
+    function burstCards() {
+        const btn = document.getElementById('luckBtn');
+        if (!btn) return;
+
+        const r = btn.getBoundingClientRect();
+        const ox = r.left + r.width / 2;
+        const oy = r.top + r.height / 2;
+
+        const layer = document.createElement('div');
+        layer.id = 'cardBurst';
+        document.body.appendChild(layer);
+
+        const count = 9;
+        for (let i = 0; i < count; i++) {
+            const card = document.createElement('div');
+            const [suit, red] = BURST_SUITS[Math.floor(Math.random() * 4)];
+            card.className = 'burst-card' + (red ? ' red' : '');
+            card.textContent = BURST_RANKS[Math.floor(Math.random() * BURST_RANKS.length)] + suit;
+            card.style.left = ox + 'px';
+            card.style.top = oy + 'px';
+
+            // Fan out to the left and up — the button sits near the right edge,
+            // so the spread is clamped to the viewport or half the hand lands
+            // outside the window and simply never appears.
+            const angle = (-175 + (i / (count - 1)) * 95) * Math.PI / 180;
+            const dist = 240 + Math.random() * 300;
+            const pad = 60;
+            const dx = Math.min(Math.max(Math.cos(angle) * dist, pad - ox), window.innerWidth - pad - ox);
+            const dy = Math.min(Math.max(Math.sin(angle) * dist, pad - oy), window.innerHeight - pad - oy);
+            card.style.setProperty('--dx', `${dx}px`);
+            card.style.setProperty('--dy', `${dy}px`);
+            card.style.setProperty('--rot', `${Math.random() * 900 - 450}deg`);
+            card.style.animationDelay = `${i * 0.035}s`;
+            layer.appendChild(card);
+        }
+
+        setTimeout(() => layer.remove(), 1700);
+    }
+
+    function reverseMarquee() {
+        document.body.classList.add('rev-marquee');
+        setTimeout(() => document.body.classList.remove('rev-marquee'), 4200);
+    }
+
+    function nudgeTable() {
+        document.body.classList.remove('nudge');
+        void document.body.offsetWidth;
+        document.body.classList.add('nudge');
+        setTimeout(() => document.body.classList.remove('nudge'), 800);
+    }
+
+    function showFortune() {
+        const old = document.getElementById('fortune');
+        if (old) old.remove();
+        const el = document.createElement('div');
+        el.id = 'fortune';
+        el.textContent = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 2700);
+    }
+
+    // One chip per finished task, capped at what the tray can actually hold —
+    // a 300-shot run must not try to render 300 chips every 300ms.
+    const CHIP_MAX = 46;
+
+    function syncChipTray(percent) {
+        const tray = document.getElementById('chipTray');
+        if (!tray) return;
+
+        if (!isCasino()) {
+            if (tray.childElementCount) tray.textContent = '';
+            return;
+        }
+
+        const want = Math.min(CHIP_MAX, Math.round((percent / 100) * CHIP_MAX));
+
+        if (want < tray.childElementCount) tray.textContent = '';   // a new run starts empty
+
+        const have = tray.childElementCount;   // read AFTER the reset, or the
+                                               // stagger below goes negative
+        for (let i = have; i < want; i++) {
+            const chip = document.createElement('i');
+            chip.style.animationDelay = `${Math.min(i - have, 6) * 0.045}s`;
+            tray.appendChild(chip);
+        }
+    }
+
+    function clearCasinoFx() {
+        const tray = document.getElementById('chipTray');
+        if (tray) tray.textContent = '';
+        const layer = document.getElementById('coinRain');
+        if (layer) layer.remove();
+        const jp = document.getElementById('jackpot');
+        if (jp) jp.remove();
+    }
+
+    function rainCoins(count = 26, spread = 1400) {
+        if (reducedMotion() || !isCasino()) return;
+
+        let layer = document.getElementById('coinRain');
+        if (!layer) {
+            layer = document.createElement('div');
+            layer.id = 'coinRain';
+            document.body.appendChild(layer);
+        }
+
+        for (let i = 0; i < count; i++) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.textContent = Math.random() < 0.18 ? '💰' : '🪙';
+            coin.style.left = Math.random() * 100 + 'vw';
+            coin.style.animationDuration = (1.6 + Math.random() * 1.8) + 's';
+            coin.style.animationDelay = (Math.random() * spread / 1000) + 's';
+            coin.style.setProperty('--spin', (Math.random() * 1080 - 540) + 'deg');
+            coin.style.fontSize = (18 + Math.random() * 16) + 'px';
+            layer.appendChild(coin);
+            setTimeout(() => coin.remove(), 5000);
+        }
+
+        setTimeout(() => { if (layer && !layer.children.length) layer.remove(); }, 6000);
+    }
+
+    // only ever fires on a run that found nothing — the rarest and best outcome
+    function jackpot() {
+        if (!isCasino() || reducedMotion()) return;
+
+        const el = document.createElement('div');
+        el.id = 'jackpot';
+        el.textContent = 'JACKPOT!';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 2700);
+
+        rainCoins(70, 2200);
     }
 
     function setTheme(t) {
-        if (document.body.className === t) return;
+        if (document.body.classList.contains(t)) return;
 
         const root = document.documentElement;
         const btn = document.getElementById('th-' + t);
@@ -1597,6 +3088,7 @@
 
         if (!document.startViewTransition || reduced || !btn) {
             applyTheme(t);
+            if (t === 'casino') rainCoins();
             return;
         }
 
@@ -1611,6 +3103,8 @@
         root.classList.add('theme-reveal');
 
         const transition = document.startViewTransition(() => applyTheme(t));
+
+        if (t === 'casino') setTimeout(() => rainCoins(), 250);
 
         const DUR = 620;
         const EASE = 'cubic-bezier(0.33, 1, 0.68, 1)';   // out-cubic: quick, then settles
@@ -1857,7 +3351,9 @@
         document.querySelector('#workersDD .dd-val').textContent = label;
         document.getElementById('workers').value = el.dataset.val;
         document.getElementById('workersDD').classList.remove('open');
+        syncWorkerWheel();
     }
+
     document.addEventListener('click', (e) => {
         const dd = document.getElementById('workersDD');
         if (dd && !dd.contains(e.target)) dd.classList.remove('open');
@@ -1920,6 +3416,7 @@
             document.getElementById('gallery').style.display = 'none';
             document.getElementById('progressBar').style.width = '0%';
             document.getElementById('progressLabel').innerText = 'Ready to capture';
+            syncChipTray(0);
             showToast('Screenshots cleared', 'success');
         } else { showToast('Failed to clear screenshots', 'error'); }
     }
@@ -1948,6 +3445,8 @@
             issuesData = { total: 0, broken: 0, suspect: 0, shots: 0, byType: {}, byLang: {}, issues: [] };
         }
         issueFilters = { group: 'all', lang: 'all', type: 'all', shot: 'all' };
+        diceSample = null;
+        diceFaces = [1, 1];
         galleryTs = Date.now();
         activeLangFilter = 'all';
         searchQuery = '';
@@ -2208,6 +3707,7 @@
                 html += `<div class="lang-chip ${activeLangFilter===folder.name?'active':''}" onclick="filterLang('${folder.name}')">${folder.name.toUpperCase()}<span class="cnt">${c}</span></div>`;
             });
             html += '</div></div>';
+            html += diceBoxHtml();
 
             const visible = langFolders().filter(f => activeLangFilter === 'all' || f.name === activeLangFilter);
             let bodyHtml = '';
@@ -2869,7 +4369,9 @@
         return `<div class="compare-grid">${cards}</div>`;
     }
 
-    function matchesSearch(lang, fileName) {
+    function matchesSearch(lang, fileName, file) {
+        // an active dice sample narrows the grid the same way the search box does
+        if (diceSample && file && !diceSample.has(file.url)) return false;
         if (!searchQuery) return true;
         return (lang && lang.toLowerCase().includes(searchQuery)) || (fileName && fileName.toLowerCase().includes(searchQuery));
     }
@@ -2884,7 +4386,7 @@
         let inner = '';
 
         // direct files (rare)
-        const df = directFiles.filter(f => matchesSearch(lang, f.name));
+        const df = directFiles.filter(f => matchesSearch(lang, f.name, f));
         if (df.length) {
             inner += '<div class="images-grid">';
             df.forEach(file => { inner += galleryCard(file, ts); });
@@ -2893,7 +4395,7 @@
 
         modeFolders.forEach(modeFolder => {
             const kids = modeFolder.children || [];
-            const ownFiles = kids.filter(i => i.type === 'file' && matchesSearch(lang, i.name));
+            const ownFiles = kids.filter(i => i.type === 'file' && matchesSearch(lang, i.name, i));
             const ratioFolders = kids.filter(i => i.type !== 'file');
 
             let modeInner = '';
@@ -2906,7 +4408,7 @@
             }
 
             ratioFolders.forEach(ratioFolder => {
-                const files = (ratioFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name));
+                const files = (ratioFolder.children || []).filter(i => i.type === 'file' && matchesSearch(lang, i.name, i));
                 if (!files.length) return;
                 const dims = ratioDimsOf(ratioFolder.name, modeFolder.name);
                 modeInner += `<div class="folder-ratio sh-mark" data-sh-lang="${lang}" data-sh-mode="${modeFolder.name}" data-sh-ratio="${ratioFolder.name}" data-sh-count="${files.length}">
@@ -2932,10 +4434,103 @@
         return `<div class="folder"><div class="folder-lang sh-mark" data-sh-lang="${lang}"><span class="lang-badge">${lang.toUpperCase()}</span><span class="lang-line"></span></div>${inner}</div>`;
     }
 
+    // ── dice: pick a random handful of shots to actually look at ──────────
+    // Nobody eyeballs 300 screenshots. Rolling for a random sample is real QA
+    // practice; the dice are just the costume. `null` means no sample is active.
+    let diceSample = null;
+    let diceRolling = false;
+    // the rolled faces must live in state: renderGallery() rebuilds the dice box
+    // right after a roll, and a box built from scratch would show 1 and 1 again
+    let diceFaces = [1, 1];
+
+    const PIPS = {
+        1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+    };
+
+    function dieHtml(n) {
+        const on = new Set(PIPS[n] || []);
+        let cells = '';
+        for (let i = 0; i < 9; i++) cells += on.has(i) ? '<b></b>' : '<span></span>';
+        return cells;
+    }
+
+    function paintDie(el, n) { el.innerHTML = dieHtml(n); }
+
+    function rollDice() {
+        if (diceRolling) return;
+        const a = document.getElementById('dieA');
+        const b = document.getElementById('dieB');
+        const btn = document.getElementById('diceRollBtn');
+        if (!a || !b) return;
+
+        const pool = flatScreens.length;
+        if (!pool) { showToast('No screenshots to sample yet', 'error', 3000); return; }
+
+        diceRolling = true;
+        if (btn) btn.disabled = true;
+        a.classList.remove('rolling'); b.classList.remove('rolling');
+        void a.offsetWidth;                       // restart the animation on a re-roll
+        a.classList.add('rolling'); b.classList.add('rolling');
+
+        // the faces flicker while the dice are in the air
+        const flicker = setInterval(() => {
+            paintDie(a, 1 + Math.floor(Math.random() * 6));
+            paintDie(b, 1 + Math.floor(Math.random() * 6));
+        }, 70);
+
+        setTimeout(() => {
+            clearInterval(flicker);
+            const x = 1 + Math.floor(Math.random() * 6);
+            const y = 1 + Math.floor(Math.random() * 6);
+            diceFaces = [x, y];
+            paintDie(a, x); paintDie(b, y);
+
+            const want = Math.min(x + y, pool);
+            const shuffled = flatScreens.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {     // Fisher-Yates
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            diceSample = new Set(shuffled.slice(0, want).map(f => f.url));
+
+            diceRolling = false;
+            if (btn) btn.disabled = false;
+            renderGallery();
+            rainCoins(6, 300);
+        }, 760);
+    }
+
+    function clearDiceSample() {
+        diceSample = null;
+        renderGallery();
+    }
+
+    function diceBoxHtml() {
+        const pool = flatScreens.length;
+        const text = diceSample
+            ? `Spot-check: ${diceSample.size} of ${pool}<span class="dt-sub">Roll again for a fresh sample</span>`
+            : `Roll for a random sample<span class="dt-sub">${pool} screenshot${pool === 1 ? '' : 's'} in this run</span>`;
+        return `<div class="dice-box">
+            <div class="dice-pair">
+                <div class="die" id="dieA">${dieHtml(diceFaces[0])}</div>
+                <div class="die" id="dieB">${dieHtml(diceFaces[1])}</div>
+            </div>
+            <button type="button" class="dice-roll" id="diceRollBtn" onclick="rollDice()">🎲 Roll the dice</button>
+            <span class="dice-text">${text}</span>
+            ${diceSample ? '<button type="button" class="dice-clear" onclick="clearDiceSample()">Show all</button>' : ''}
+        </div>`;
+    }
+
+    const DEAL_COUNT = 14;   // how many cards are dealt one by one
+
     function galleryCard(file, ts, ratioTag) {
-        const delay = (cardAnimIndex % 12) * 0.04; // wave effect, caps so it never drags
-        cardAnimIndex++;
-        return `<div class="gallery-item" style="animation-delay:${delay}s" title="${file.name}" onclick="openImage('${file.url}')">
+        const i = cardAnimIndex++;
+        const dealt = isCasino() && i < DEAL_COUNT;
+        // dealt cards need a real gap between them; everything else keeps the
+        // old quick wave that only exists to stop the grid popping in at once
+        const delay = dealt ? i * 0.12 : (i % 12) * 0.04;
+        return `<div class="gallery-item${dealt ? ' dealt' : ''}" style="animation-delay:${delay}s" title="${file.name}" onclick="openImage('${file.url}')">
             ${ratioTag ? `<div class="ratio-tag">${ratioTag}</div>` : ''}
             <div class="img-frame">
                 <img src="${file.url}?t=${ts}" loading="lazy" />
@@ -2959,24 +4554,107 @@
     }
 
     function validateForm() {
-        const hasUrl = !!resolveGameUrl();
+        // resolveGameUrl is async now, and a Promise is always truthy — asking it
+        // here would enable Start with nothing chosen. The question is only
+        // whether something IS chosen, which needs no URL at all.
+        const hasUrl = !!document.getElementById('url').value.trim() || !!selectedGame;
         const count = document.querySelectorAll('input.lang:checked').length;
         document.getElementById('startBtn').disabled = !hasUrl || count === 0;
     }
 
-    function selectAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = true); updateLangCount(); }
-    function clearAll() { document.querySelectorAll('input.lang').forEach(cb => cb.checked = false); updateLangCount(); }
+    // Only the wording and the look change — selectAll, clearAll and refreshLangs
+    // are untouched, and so are the chips and their reels.
+    function setLangButtonLabels(casino) {
+        const all = document.getElementById('langAllBtn');
+        const none = document.getElementById('langNoneBtn');
+        const ref = document.getElementById('langRefreshBtn');
+        if (all)  all.textContent  = casino ? 'All in' : 'Select All';
+        if (none) none.textContent = casino ? 'Rake' : 'Clear All';
+        if (ref) {
+            const ic = casino ? '🂠' : '↻';
+            const word = casino ? 'Shuffle' : 'Refresh';
+            ref.innerHTML = '';
+            const i = document.createElement('span');
+            i.className = 'lr-ic';
+            i.textContent = ic;
+            ref.append(i, document.createTextNode(' ' + word));
+        }
+    }
+
+    function langLabels() {
+        return Array.from(document.querySelectorAll('.lang-grid label'));
+    }
+
+    function casinoMotion() {
+        return isCasino() && !reducedMotion();
+    }
+
+    function selectAll() {
+        document.querySelectorAll('input.lang').forEach(cb => cb.checked = true);
+        updateLangCount();
+        if (casinoMotion()) allInWave();
+    }
+
+    function clearAll() {
+        // read what was on the table BEFORE unchecking, or there is nothing to rake
+        const onTable = casinoMotion()
+            ? langLabels().filter(l => l.querySelector('input.lang')?.checked)
+            : [];
+        document.querySelectorAll('input.lang').forEach(cb => cb.checked = false);
+        updateLangCount();
+        if (onTable.length) rakeSweep(onTable);
+    }
+
+    // every chip turns over, left to right
+    function allInWave() {
+        const grid = document.getElementById('langGrid');
+        if (!grid) return;
+        langLabels().forEach((l, i) => l.style.setProperty('--wave', `${(i % 16) * 0.03}s`));
+        grid.classList.remove('all-in');
+        void grid.offsetWidth;                 // one reflow, so a re-click replays it
+        grid.classList.add('all-in');
+        setTimeout(() => grid.classList.remove('all-in'), 1300);
+    }
+
+    // the croupier sweeps them off and the table is clear
+    function rakeSweep(labels) {
+        labels.forEach((l, i) => l.style.setProperty('--wave', `${Math.min(i, 18) * 0.022}s`));
+        labels.forEach(l => l.classList.add('raked'));
+        setTimeout(() => labels.forEach(l => l.classList.remove('raked')), 900);
+    }
 
     async function start() {
         if (!await ensureSession()) return;
 
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progressLabel').innerText = 'Starting... 0%';
+        syncChipTray(0);
         closeGallery();
         const startBtn = document.getElementById('startBtn');
         const headless = document.getElementById('headless').checked;
-        const separateSessions = document.getElementById('separateSessions').checked;
-        const url = resolveGameUrl();
+        // Always on. The switch that used to turn this off existed for a bug in the
+        // OLD tagging scheme (a suffix on the whole token) that 2.5.3 replaced.
+        // Since then no game has needed it off, and a game that refuses a tagged
+        // token is handled by the automatic untagged retry in runner.js.
+        const separateSessions = true;
+        // resolveGameUrl now asks the server, so it can fail. Unhandled, that
+        // rejection would make Start do nothing at all and say nothing — the
+        // exact silent-hang shape we have been chasing all day.
+        let url;
+        try {
+            url = await resolveGameUrl();
+        } catch (e) {
+            showToast(e.message || 'Could not build the game URL', 'error', 5000);
+            startBtn.disabled = false;
+            return;
+        }
+
+        if (!url) {
+            showToast('Pick a game or paste a game URL first', 'error', 4000);
+            startBtn.disabled = false;
+            return;
+        }
+
         const workers = parseInt(document.getElementById('workers').value, 10);
         const langs = Array.from(document.querySelectorAll('input.lang:checked')).map(el => el.value);
         const mode = document.getElementById('mode').value;
@@ -3371,6 +5049,9 @@
                     label.innerText = `100% · ${realCount} screenshot${realCount>1?'s':''}`;
                     setStatus('Done! You can download ZIP', 'done');
                     showToast(`Done! ${realCount} screenshot${realCount>1?'s':''} captured`, 'success', 4000);
+
+                    // nothing broken and nothing suspicious — worth a celebration
+                    if (!data.issues && !(data.failed || []).length) jackpot();
                 }
 
                 // an open gallery was showing the previous run — reload the tree and
@@ -3385,6 +5066,7 @@
                 const percent = data.progress ?? 0;
                 bar.style.width = percent + '%';
                 label.innerText = `${percent}% · ${data.total} tasks`;
+                syncChipTray(percent);
             }
             if (data.running) { jobRunning = true; startBtn.disabled = true; }
             else { startBtn.disabled = false; validateForm(); }
