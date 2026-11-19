@@ -21,9 +21,40 @@
         ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--accent-grad); border-radius: 10px; border: 2px solid var(--bg); }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
-        * { scrollbar-width: thin; scrollbar-color: var(--accent) var(--input-bg); }
+        /* NO scrollbar-width / scrollbar-color here: the moment either standard
+           property is set, Chromium drops every ::-webkit-scrollbar-* rule for
+           that element, and all the styling below silently stops applying. This
+           app only ever runs on Electron, so the webkit pseudo-elements win. */
         body.cyber ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #06b6d4, #10b981); box-shadow: 0 0 8px rgba(6,182,212,0.5); border: 2px solid #030812; }
         body.cyber ::-webkit-scrollbar-track { background: #060e1c; }
+
+        /* casino: the track is felt, the thumb is a chip seen edge-on — the
+           notches are what make a plain gold bar read as a stack of chips */
+        body.casino ::-webkit-scrollbar { width: 14px; height: 14px; }
+        body.casino ::-webkit-scrollbar-track {
+            background:
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.16) 0 5px, transparent 5px 10px),
+                linear-gradient(90deg, #06230f, #14532d 45%, #06230f);
+            border-radius: 0;
+            box-shadow: inset 1px 0 0 rgba(247,221,130,0.22), inset -1px 0 0 rgba(0,0,0,0.5);
+        }
+        body.casino ::-webkit-scrollbar-thumb {
+            border-radius: 8px; border: 3px solid #06230f;
+            background:
+                repeating-linear-gradient(0deg,
+                    rgba(43,16,24,0.55) 0 4px, transparent 4px 13px),
+                linear-gradient(90deg, #8a6a1c, #f7dd82 42%, #c9a227 70%, #7a5a12);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        }
+        body.casino ::-webkit-scrollbar-thumb:hover {
+            background:
+                repeating-linear-gradient(0deg,
+                    rgba(43,16,24,0.45) 0 4px, transparent 4px 13px),
+                linear-gradient(90deg, #c9a227, #fff3c4 42%, #f7dd82 70%, #9a7b1b);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 0 10px rgba(247,221,130,0.6);
+        }
+        body.casino ::-webkit-scrollbar-corner { background: #06230f; }
+        body.casino ::-webkit-scrollbar-button { display: none; }
 
         .theme-switch { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
         .theme-switch button { padding: 10px 22px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font); }
@@ -1660,7 +1691,19 @@
         body.light .game-opt { color: #292524; }
         body.light .game-opt:hover { background: #ddd9d1; }
 
-        body.cyber { --bg: #030812; --font: 'SF Mono','Fira Code',monospace; --text: #67e8f9; --muted: #0e7490; --status: #22d3ee; --accent: #06b6d4; --accent2: #67e8f9; background: #030812; }
+        /* Cyberpunk only redefined half the palette, so everything without an
+           explicit cyber rule — the ratio presets most visibly — fell through to
+           the dark theme's indigo. The full set, or the leak just moves around. */
+        body.cyber {
+            --bg: #030812; --font: 'SF Mono','Fira Code',monospace;
+            --text: #67e8f9; --muted: #0e7490; --status: #22d3ee;
+            --accent: #06b6d4; --accent2: #67e8f9;
+            --accent-grad: linear-gradient(90deg, #06b6d4, #10b981);
+            --card: #060e1c; --card2: #08111f; --input-bg: #061320;
+            --border: #123a4d; --lbl: #06b6d4;
+            --shadow-dark: #01060d; --shadow-light: #0a2332;
+            background: #030812;
+        }
         body.cyber .theme-switch button { background: #060e1c; border-color: #123a4d; color: #0891b2; font-family: var(--font); }
         body.cyber .theme-switch button.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; border-color: #67e8f9; }
         body.cyber .icon-badge { background: linear-gradient(145deg, #06b6d4, #0891b2); border-radius: 8px; box-shadow: 0 0 20px rgba(6,182,212,0.6); color: #012; }
@@ -1696,6 +1739,41 @@
         body.cyber .actions button:hover { border-color: #06b6d4; transform: none; }
         body.cyber #langCount { color: #10b981; font-family: var(--font); }
         body.cyber #langCount::before { content: '// '; }
+        /* ── aspect-ratio presets ────────────────────────────────────── */
+        body.cyber .ratio-head .rh-title { font-family: var(--font); color: #06b6d4; }
+        body.cyber .ratio-head .rh-base { font-family: var(--font); color: #0e7490; }
+        body.cyber .ratio-head .rh-base input {
+            background: rgba(6,182,212,0.05); border: 1px solid #123a4d; border-radius: 4px;
+            color: #67e8f9; font-family: var(--font);
+        }
+        body.cyber .ratio-grid .ratio-opt {
+            background: rgba(6,182,212,0.05); border: 1px solid #123a4d; border-radius: 4px;
+            color: #0891b2; font-family: var(--font); box-shadow: none;
+        }
+        body.cyber .ratio-grid .ratio-opt:hover {
+            color: #67e8f9; border-color: #06b6d4; transform: translateY(-2px);
+            box-shadow: 0 0 14px rgba(6,182,212,0.28);
+        }
+        body.cyber .ratio-grid .ratio-opt.checked {
+            background: linear-gradient(90deg, #06b6d4, #10b981);
+            color: #012; border-color: #67e8f9;
+            box-shadow: 0 0 18px rgba(6,182,212,0.45);
+        }
+        body.cyber .ratio-grid .ratio-opt.is-custom { border-style: dashed; }
+        body.cyber .ratio-grid .ratio-opt.is-custom.checked { border-style: solid; }
+        body.cyber .ratio-custom input {
+            background: rgba(6,182,212,0.05); border: 1px solid #123a4d; border-radius: 4px;
+            color: #67e8f9; font-family: var(--font);
+        }
+        body.cyber .ratio-custom .rc-sep { color: #0e7490; }
+        body.cyber .ratio-custom .rc-preview { color: #22d3ee; font-family: var(--font); }
+        body.cyber .ratio-custom button {
+            background: rgba(6,182,212,0.08); border: 1px solid #123a4d; border-radius: 4px;
+            color: #67e8f9; font-family: var(--font);
+        }
+        body.cyber .ratio-custom button:hover { border-color: #06b6d4; box-shadow: 0 0 12px rgba(6,182,212,0.3); }
+        body.cyber .ratio-hint { color: #0e7490; font-family: var(--font); }
+
         body.cyber .segmented { background: rgba(6,182,212,0.05); border: 1px solid #123a4d; box-shadow: none; }
         body.cyber .seg { color: #7dd3fc; font-family: var(--font); }
         body.cyber .seg.active { background: linear-gradient(90deg,#06b6d4,#10b981); color: #012; box-shadow: 0 0 16px rgba(6,182,212,0.5); }
